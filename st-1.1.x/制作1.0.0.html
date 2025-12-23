@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>音源管理系统 - 完整版</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Microsoft YaHei', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 { 
+      color: #333; 
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 25px;
+      font-size: 14px;
+    }
+    
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    .btn-primary { background: #667eea; color: white; }
+    .btn-primary:hover { background: #5568d3; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-success:hover { background: #218838; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-danger:hover { background: #c82333; }
+    .btn-info { background: #17a2b8; color: white; }
+    .btn-info:hover { background: #138496; }
+    .btn-warning { background: #ffc107; color: #333; }
+    .btn-warning:hover { background: #e0a800; }
+    
+    .filter-bar {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #fff3cd;
+      border-radius: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-bar label {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    .filter-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      background: white;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .checkbox-label:hover {
+      background: #e3f2fd;
+    }
+    .checkbox-label input {
+      cursor: pointer;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      padding: 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .stat-label {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background: white;
+    }
+    thead {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    th {
+      padding: 15px 10px;
+      text-align: left;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+    td {
+      padding: 12px 10px;
+      border-bottom: 1px solid #eee;
+      vertical-align: top;
+    }
+    tr:hover {
+      background: #f8f9fa;
+    }
+    
+    .file-name {
+      font-weight: 500;
+      color: #667eea;
+      font-family: 'Consolas', monospace;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .file-icon {
+      font-size: 18px;
+    }
+    .file-status {
+      font-size: 11px;
+      color: #28a745;
+      margin-left: 5px;
+    }
+    .no-file {
+      color: #dc3545;
+    }
+    
+    input[type="text"], select, textarea {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      width: 100%;
+      font-family: inherit;
+    }
+    
+    textarea {
+      min-height: 60px;
+      resize: vertical;
+    }
+    
+    .delete-btn, .download-btn, .sort-btn {
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin: 2px;
+    }
+    .delete-btn {
+      background: #dc3545;
+    }
+    .delete-btn:hover {
+      background: #c82333;
+    }
+    .download-btn {
+      background: #28a745;
+    }
+    .download-btn:hover {
+      background: #218838;
+    }
+    .sort-btn {
+      background: #6c757d;
+      padding: 4px 8px;
+      font-size: 16px;
+      line-height: 1;
+    }
+    .sort-btn:hover {
+      background: #5a6268;
+    }
+    .sort-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .add-row-btn {
+      width: 100%;
+      padding: 15px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 20px;
+      transition: all 0.3s;
+    }
+    .add-row-btn:hover {
+      background: #218838;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+      font-size: 16px;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .source-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .source-checkbox input {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+    .source-checkbox label {
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    .search-box {
+      padding: 10px 15px;
+      border: 2px solid #667eea;
+      border-radius: 5px;
+      font-size: 14px;
+      width: 300px;
+    }
+
+    .file-upload-cell {
+      position: relative;
+    }
+    .upload-btn {
+      background: #17a2b8;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      border: none;
+      display: inline-block;
+    }
+    .upload-btn:hover {
+      background: #138496;
+    }
+    .file-input {
+      display: none;
+    }
+
+    /* 链接相关样式 */
+    .note-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .note-text {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      width: 100%;
+      min-height: 40px;
+    }
+    
+    .links-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 5px;
+    }
+    
+    .link-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 15px;
+      font-size: 12px;
+      text-decoration: none;
+      transition: all 0.3s;
+      max-width: 200px;
+    }
+    
+    .link-tag:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    }
+    
+    .link-tag-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .link-tag-remove {
+      background: rgba(255,255,255,0.3);
+      border: none;
+      color: white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      font-size: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    
+    .link-tag-remove:hover {
+      background: rgba(255,255,255,0.5);
+    }
+    
+    .add-link-btn, .add-key-btn, .add-direct-btn {
+      background: #17a2b8;
+      color: white;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      align-self: flex-start;
+      margin-right: 5px;
+    }
+    
+    .add-link-btn:hover, .add-key-btn:hover, .add-direct-btn:hover {
+      background: #138496;
+    }
+
+    .add-key-btn {
+      background: #ffc107;
+      color: #333;
+    }
+    
+    .add-key-btn:hover {
+      background: #e0a800;
+    }
+
+    .add-direct-btn {
+      background: #28a745;
+      color: white;
+    }
+
+    .add-direct-btn:hover {
+      background: #218838;
+    }
+
+    .key-url-display {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 15px;
+      font-size: 11px;
+      color: #856404;
+      margin-top: 5px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .direct-url-display {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #d4edda;
+      border: 1px solid #28a745;
+      border-radius: 15px;
+      font-size: 11px;
+      color: #155724;
+      margin-top: 5px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .key-url-display .remove-key, .direct-url-display .remove-key {
+      margin-left: 8px;
+      cursor: pointer;
+      color: #dc3545;
+      font-weight: bold;
+    }
+
+    .key-url-display .remove-key:hover, .direct-url-display .remove-key:hover {
+      color: #c82333;
+    }
+
+    /* 排序按钮组 */
+    .sort-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    /* 弹窗样式 */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      animation: fadeIn 0.3s;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 10% auto;
+      padding: 30px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      animation: slideIn 0.3s;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #667eea;
+    }
+    
+    .modal-header h2 {
+      color: #333;
+      margin: 0;
+    }
+    
+    .close {
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      line-height: 1;
+    }
+    
+    .close:hover {
+      color: #000;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-group small {
+      display: block;
+      margin-top: 5px;
+      color: #666;
+      font-size: 12px;
+    }
+    
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 25px;
+    }
+    
+    .btn-modal {
+      padding: 10px 25px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    
+    .btn-modal-primary {
+      background: #667eea;
+      color: white;
+    }
+    
+    .btn-modal-primary:hover {
+      background: #5568d3;
+    }
+    
+    .btn-modal-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .btn-modal-secondary:hover {
+      background: #5a6268;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🎵 音源管理系统（完整版）</h1>
+  <p class="subtitle">✨ 支持上传.js文件 | 支持在线链接 | 支持密钥下载 | 备注支持多链接 | 手动排序</p>
+  
+  <!-- 工具栏 -->
+  <div class="toolbar">
+    <button class="btn btn-success" onclick="addNewRow()">➕ 添加文件</button>
+    <button class="btn btn-primary" onclick="exportToJSON()">💾 导出数据</button>
+    <button class="btn btn-warning" onclick="exportHTMLWithFiles()">📦 导出完整报告(含文件)</button>
+    <button class="btn btn-info" onclick="exportToMarkdown()">📝 导出Markdown</button>
+    <button class="btn btn-success" onclick="downloadAllFiles()">⬇️ 打包下载所有文件</button>
+    <input type="file" id="importJSON" style="display:none" accept=".json" onchange="importFromJSON(event)">
+    <button class="btn btn-primary" onclick="document.getElementById('importJSON').click()">📥 导入数据</button>
+    <button class="btn btn-danger" onclick="clearAll()">🗑️ 清空所有</button>
+    <input type="text" class="search-box" placeholder="🔍 搜索文件名..." oninput="filterTable()">
+  </div>
+  
+  <!-- 筛选栏 -->
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label>🔍 筛选不支持的源：</label>
+      <label class="checkbox-label">
+        <input type="checkbox" onchange="filterTable()" id="filter-kw"> 酷我(KW)
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" onchange="filterTable()" id="filter-kg"> 酷狗(KG)
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" onchange="filterTable()" id="filter-tx"> 腾讯(TX)
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" onchange="filterTable()" id="filter-wy"> 网易(WY)
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" onchange="filterTable()" id="filter-mg"> 咪咕(MG)
+      </label>
+      <button class="btn btn-info" onclick="clearFilters()">清除筛选</button>
+    </div>
+  </div>
+  
+  <!-- 统计卡片 -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-number" id="totalFiles">0</div>
+      <div class="stat-label">总文件数</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="uploadedCount">0</div>
+      <div class="stat-label">已上传文件</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="flacCount">0</div>
+      <div class="stat-label">FLAC/FLAC24音质</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="fullSupportCount">0</div>
+      <div class="stat-label">全平台支持</div>
+    </div>
+  </div>
+  
+  <!-- 主表格 -->
+  <div style="overflow-x: auto;">
+    <table id="mainTable">
+      <thead>
+        <tr>
+          <th width="80">排序</th>
+          <th width="60">序号</th>
+          <th width="250">文件名</th>
+          <th width="120">最高音质</th>
+          <th width="300">不支持的源</th>
+          <th width="350">备注 & 链接</th>
+          <th width="150">操作</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <!-- 动态生成 -->
+      </tbody>
+    </table>
+  </div>
+  
+  <button class="add-row-btn" onclick="addNewRow()">➕ 添加新文件</button>
+  
+</div>
+
+<!-- 添加链接弹窗 -->
+<div id="linkModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>🔗 添加链接</h2>
+      <span class="close" onclick="closeLinkModal()">&times;</span>
+    </div>
+    <div class="form-group">
+      <label>链接文字：</label>
+      <input type="text" id="linkText" placeholder="例如: 官方文档">
+    </div>
+    <div class="form-group">
+      <label>链接地址：</label>
+      <input type="text" id="linkUrl" placeholder="例如: https://example.com">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal btn-modal-secondary" onclick="closeLinkModal()">取消</button>
+      <button class="btn-modal btn-modal-primary" onclick="confirmAddLink()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 添加密钥链接弹窗 -->
+<div id="keyModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>🔑 添加密钥链接</h2>
+      <span class="close" onclick="closeKeyModal()">&times;</span>
+    </div>
+    <div class="form-group">
+      <label>密钥链接模板：</label>
+      <input type="text" id="keyUrlTemplate" placeholder="例如: https://api.ikunshare.com/script?key=">
+      <small>💡 链接末尾不需要加密钥，用户在报告中输入密钥后会自动拼接</small>
+    </div>
+    <div class="form-group">
+      <label>示例完整链接：</label>
+      <input type="text" id="keyUrlExample" placeholder="例如: https://api.ikunshare.com/script?key=123-456-789" readonly style="background: #f8f9fa;">
+      <small>📌 这只是示例，实际使用时用户会输入自己的密钥</small>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal btn-modal-secondary" onclick="closeKeyModal()">取消</button>
+      <button class="btn-modal btn-modal-primary" onclick="confirmAddKeyUrl()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 添加免费在线链接弹窗 -->
+<div id="directUrlModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>🌐 添加免费在线链接</h2>
+      <span class="close" onclick="closeDirectUrlModal()">&times;</span>
+    </div>
+    <div class="form-group">
+      <label>在线下载链接：</label>
+      <input type="text" id="directUrlInput" placeholder="例如: https://cdn.example.com/music.js">
+      <small>💡 用户点击下载时将直接访问此链接</small>
+    </div>
+    <div class="form-group">
+      <label>示例：</label>
+      <input type="text" value="https://cdn.jsdelivr.net/gh/user/repo/file.js" readonly style="background: #f8f9fa;">
+      <small>📌 支持 GitHub、CDN、直链等任何可访问的URL</small>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal btn-modal-secondary" onclick="closeDirectUrlModal()">取消</button>
+      <button class="btn-modal btn-modal-primary" onclick="confirmAddDirectUrl()">确定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// 数据存储
+let fileList = [];
+let currentEditingId = null;
+
+// 音质选项
+const qualityOptions = ['128k', '192k', '230k', '320k', 'flac', 'flac24bit', '扩展音质', '其他'];
+
+// 源平台
+const sources = ['kw', 'kg', 'tx', 'wy', 'mg'];
+const sourceNames = {
+  'kw': '酷我',
+  'kg': '酷狗',
+  'tx': '腾讯',
+  'wy': '网易',
+  'mg': '咪咕'
+};
+
+// 从localStorage加载数据
+function loadData() {
+  const saved = localStorage.getItem('musicQualityData');
+  if (saved) {
+    try {
+      fileList = JSON.parse(saved);
+      renderTable();
+      updateStats();
+    } catch (e) {
+      console.error('加载数据失败:', e);
+      fileList = [];
+    }
+  }
+}
+
+// 保存数据到localStorage
+function saveData() {
+  try {
+    localStorage.setItem('musicQualityData', JSON.stringify(fileList));
+    updateStats();
+  } catch (e) {
+    console.error('保存数据失败:', e);
+    alert('保存失败，数据可能过大！');
+  }
+}
+
+// 添加新行（添加到底部）
+function addNewRow() {
+  const newFile = {
+    id: Date.now(),
+    fileName: '',
+    quality: '320k',
+    unsupportedSources: [],
+    note: '',
+    links: [],
+    keyUrl: '',
+    directUrl: '',
+    fileContent: null,
+    fileSize: 0,
+    addedTime: new Date().toLocaleString('zh-CN')
+  };
+  
+  fileList.push(newFile);
+  saveData();
+  renderTable();
+  
+  setTimeout(() => {
+    const lastInput = document.querySelector('#tableBody tr:last-child input[type="text"]');
+    if (lastInput) {
+      lastInput.focus();
+      lastInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 100);
+}
+
+// 上移
+function moveUp(index) {
+  if (index > 0) {
+    [fileList[index], fileList[index - 1]] = [fileList[index - 1], fileList[index]];
+    saveData();
+    renderTable();
+  }
+}
+
+// 下移
+function moveDown(index) {
+  if (index < fileList.length - 1) {
+    [fileList[index], fileList[index + 1]] = [fileList[index + 1], fileList[index]];
+    saveData();
+    renderTable();
+  }
+}
+
+// 上传文件
+function uploadFile(id, event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  if (!file.name.endsWith('.js')) {
+    alert('只允许上传.js文件！');
+    event.target.value = '';
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const fileObj = fileList.find(f => f.id === id);
+    if (fileObj) {
+      fileObj.fileContent = e.target.result;
+      fileObj.fileName = file.name;
+      fileObj.fileSize = file.size;
+      saveData();
+      renderTable();
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// 下载单个文件
+function downloadFile(id) {
+  const file = fileList.find(f => f.id === id);
+  if (!file || !file.fileContent) {
+    alert('该文件未上传！');
+    return;
+  }
+  
+  const link = document.createElement('a');
+  link.href = file.fileContent;
+  link.download = file.fileName || 'download.js';
+  link.click();
+}
+
+// 删除行
+function deleteRow(id) {
+  if (confirm('确定要删除这条记录吗？')) {
+    fileList = fileList.filter(file => file.id !== id);
+    saveData();
+    renderTable();
+  }
+}
+
+// 更新文件名
+function updateFileName(id, value) {
+  const file = fileList.find(f => f.id === id);
+  if (file) {
+    file.fileName = value;
+    saveData();
+  }
+}
+
+// 更新音质
+function updateQuality(id, value) {
+  const file = fileList.find(f => f.id === id);
+  if (file) {
+    file.quality = value;
+    saveData();
+    renderTable();
+  }
+}
+
+// 更新不支持的源
+function updateUnsupportedSources(id, source, checked) {
+  const file = fileList.find(f => f.id === id);
+  if (file) {
+    if (checked) {
+      if (!file.unsupportedSources.includes(source)) {
+        file.unsupportedSources.push(source);
+      }
+    } else {
+      file.unsupportedSources = file.unsupportedSources.filter(s => s !== source);
+    }
+    saveData();
+    renderTable();
+  }
+}
+
+// 更新备注文字
+function updateNote(id, value) {
+  const file = fileList.find(f => f.id === id);
+  if (file) {
+    file.note = value;
+    saveData();
+  }
+}
+
+// 打开添加链接弹窗
+function openLinkModal(id) {
+  currentEditingId = id;
+  document.getElementById('linkText').value = '';
+  document.getElementById('linkUrl').value = '';
+  document.getElementById('linkModal').style.display = 'block';
+  setTimeout(() => {
+    document.getElementById('linkText').focus();
+  }, 100);
+}
+
+// 关闭链接弹窗
+function closeLinkModal() {
+  document.getElementById('linkModal').style.display = 'none';
+  currentEditingId = null;
+}
+
+// 确认添加链接
+function confirmAddLink() {
+  const text = document.getElementById('linkText').value.trim();
+  const url = document.getElementById('linkUrl').value.trim();
+  
+  if (!text) {
+    alert('请输入链接文字！');
+    return;
+  }
+  
+  if (!url) {
+    alert('请输入链接地址！');
+    return;
+  }
+  
+  let finalUrl = url;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    finalUrl = 'https://' + url;
+  }
+  
+  const file = fileList.find(f => f.id === currentEditingId);
+  if (file) {
+    if (!file.links) {
+      file.links = [];
+    }
+    file.links.push({
+      text: text,
+      url: finalUrl
+    });
+    saveData();
+    renderTable();
+  }
+  
+  closeLinkModal();
+}
+
+// 删除链接
+function removeLink(fileId, linkIndex) {
+  const file = fileList.find(f => f.id === fileId);
+  if (file && file.links) {
+    file.links.splice(linkIndex, 1);
+    saveData();
+    renderTable();
+  }
+}
+
+// 打开添加密钥链接弹窗
+function openKeyModal(id) {
+  currentEditingId = id;
+  const file = fileList.find(f => f.id === id);
+  document.getElementById('keyUrlTemplate').value = file?.keyUrl || '';
+  document.getElementById('keyUrlExample').value = '';
+  document.getElementById('keyModal').style.display = 'block';
+  setTimeout(() => {
+    document.getElementById('keyUrlTemplate').focus();
+  }, 100);
+}
+
+// 关闭密钥链接弹窗
+function closeKeyModal() {
+  document.getElementById('keyModal').style.display = 'none';
+  currentEditingId = null;
+}
+
+// 确认添加密钥链接
+function confirmAddKeyUrl() {
+  const keyUrl = document.getElementById('keyUrlTemplate').value.trim();
+  
+  if (!keyUrl) {
+    if (confirm('链接为空，是否删除已有的密钥链接？')) {
+      const file = fileList.find(f => f.id === currentEditingId);
+      if (file) {
+        file.keyUrl = '';
+        saveData();
+        renderTable();
+      }
+      closeKeyModal();
+    }
+    return;
+  }
+  
+  if (!keyUrl.startsWith('http://') && !keyUrl.startsWith('https://')) {
+    alert('请输入完整的URL（以http://或https://开头）');
+    return;
+  }
+  
+  const file = fileList.find(f => f.id === currentEditingId);
+  if (file) {
+    file.keyUrl = keyUrl;
+    saveData();
+    renderTable();
+  }
+  
+  closeKeyModal();
+}
+
+// 删除密钥链接
+function removeKeyUrl(fileId) {
+  const file = fileList.find(f => f.id === fileId);
+  if (file) {
+    file.keyUrl = '';
+    saveData();
+    renderTable();
+  }
+}
+
+// 打开添加直链弹窗
+function openDirectUrlModal(id) {
+  currentEditingId = id;
+  const file = fileList.find(f => f.id === id);
+  document.getElementById('directUrlInput').value = file?.directUrl || '';
+  document.getElementById('directUrlModal').style.display = 'block';
+  setTimeout(() => {
+    document.getElementById('directUrlInput').focus();
+  }, 100);
+}
+
+// 关闭直链弹窗
+function closeDirectUrlModal() {
+  document.getElementById('directUrlModal').style.display = 'none';
+  currentEditingId = null;
+}
+
+// 确认添加直链
+function confirmAddDirectUrl() {
+  const directUrl = document.getElementById('directUrlInput').value.trim();
+  
+  if (!directUrl) {
+    if (confirm('链接为空，是否删除已有的在线链接？')) {
+      const file = fileList.find(f => f.id === currentEditingId);
+      if (file) {
+        file.directUrl = '';
+        saveData();
+        renderTable();
+      }
+      closeDirectUrlModal();
+    }
+    return;
+  }
+  
+  if (!directUrl.startsWith('http://') && !directUrl.startsWith('https://')) {
+    alert('请输入完整的URL（以http://或https://开头）');
+    return;
+  }
+  
+  const file = fileList.find(f => f.id === currentEditingId);
+  if (file) {
+    file.directUrl = directUrl;
+    saveData();
+    renderTable();
+  }
+  
+  closeDirectUrlModal();
+}
+
+// 删除直链
+function removeDirectUrl(fileId) {
+  const file = fileList.find(f => f.id === fileId);
+  if (file) {
+    file.directUrl = '';
+    saveData();
+    renderTable();
+  }
+}
+
+// 监听密钥模板输入
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'keyUrlTemplate') {
+    const template = e.target.value.trim();
+    const exampleInput = document.getElementById('keyUrlExample');
+    if (template && exampleInput) {
+      exampleInput.value = template + '123-456-789-abcd-efgh';
+    } else if (exampleInput) {
+      exampleInput.value = '';
+    }
+  }
+});
+
+// 格式化文件大小
+function formatFileSize(bytes) {
+  if (!bytes || bytes === 0) return '';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return ' (' + Math.round(bytes / Math.pow(k, i) * 100) / 100 + sizes[i] + ')';
+}
+
+// 渲染表格
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  
+  if (fileList.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无数据，点击上方"添加文件"按钮开始</td></tr>';
+    return;
+  }
+  
+  let html = '';
+  let displayIndex = 1;
+  
+  fileList.forEach((file, index) => {
+    const isFiltered = checkFilter(file);
+    if (!isFiltered) return;
+    
+    const hasFile = file.fileContent ? true : false;
+    
+    // 渲染链接标签
+    let linksHtml = '';
+    if (file.links && file.links.length > 0) {
+      linksHtml = '<div class="links-container">';
+      file.links.forEach((link, linkIndex) => {
+        linksHtml += `
+          <a href="${link.url}" target="_blank" class="link-tag" title="${link.url}">
+            <span class="link-tag-text">🔗 ${link.text}</span>
+            <button class="link-tag-remove" onclick="event.preventDefault(); removeLink(${file.id}, ${linkIndex})">×</button>
+          </a>
+        `;
+      });
+      linksHtml += '</div>';
+    }
+
+    // 渲染密钥链接
+    let keyUrlHtml = '';
+    if (file.keyUrl) {
+      keyUrlHtml = `
+        <div class="key-url-display" title="${file.keyUrl}">
+          🔑 密钥链接: ${file.keyUrl}
+          <span class="remove-key" onclick="removeKeyUrl(${file.id})">×</span>
+        </div>
+      `;
+    }
+
+    // 渲染免费直链
+    let directUrlHtml = '';
+    if (file.directUrl) {
+      directUrlHtml = `
+        <div class="direct-url-display" title="${file.directUrl}">
+          🌐 在线链接: ${file.directUrl}
+          <span class="remove-key" onclick="removeDirectUrl(${file.id})">×</span>
+        </div>
+      `;
+    }
+    
+    html += `
+      <tr>
+        <td>
+          <div class="sort-buttons">
+            <button class="sort-btn" onclick="moveUp(${index})" ${index === 0 ? 'disabled' : ''} title="上移">▲</button>
+            <button class="sort-btn" onclick="moveDown(${index})" ${index === fileList.length - 1 ? 'disabled' : ''} title="下移">▼</button>
+          </div>
+        </td>
+        <td style="text-align: center; font-weight: bold; color: #666;">${displayIndex}</td>
+        <td class="file-upload-cell">
+          <div class="file-name">
+            <span class="file-icon">📜</span>
+            <div style="flex: 1;">
+              <input type="text" 
+                     value="${file.fileName}" 
+                     onchange="updateFileName(${file.id}, this.value)"
+                     placeholder="输入文件名或上传文件"
+                     style="border: ${file.fileName ? '1px solid #ddd' : '2px solid #ffc107'};">
+              ${hasFile ? `<span class="file-status">✅ 已上传${formatFileSize(file.fileSize)}</span>` : '<span class="file-status no-file">⚠️ 未上传</span>'}
+            </div>
+          </div>
+        </td>
+        <td>
+          <select onchange="updateQuality(${file.id}, this.value)" style="width: 100%;">
+            ${qualityOptions.map(q => `
+              <option value="${q}" ${file.quality === q ? 'selected' : ''}>${q}</option>
+            `).join('')}
+          </select>
+        </td>
+        <td>
+          <div class="checkbox-group">
+            ${sources.map(source => `
+              <div class="source-checkbox">
+                <input type="checkbox" 
+                       id="source-${file.id}-${source}"
+                       ${file.unsupportedSources.includes(source) ? 'checked' : ''}
+                       onchange="updateUnsupportedSources(${file.id}, '${source}', this.checked)">
+                <label for="source-${file.id}-${source}">${sourceNames[source]}</label>
+              </div>
+            `).join('')}
+            ${file.unsupportedSources.length === 0 ? '<span style="color: #28a745; font-size: 11px; font-weight: bold;">✓ 全支持</span>' : ''}
+          </div>
+        </td>
+        <td>
+          <div class="note-container">
+            <textarea 
+              class="note-text"
+              onchange="updateNote(${file.id}, this.value)"
+              placeholder="输入备注...">${file.note || ''}</textarea>
+            <div>
+              <button class="add-link-btn" onclick="openLinkModal(${file.id})">➕ 添加链接</button>
+              <button class="add-direct-btn" onclick="openDirectUrlModal(${file.id})">🌐 在线链接</button>
+              <button class="add-key-btn" onclick="openKeyModal(${file.id})">🔑 密钥链接</button>
+            </div>
+            ${linksHtml}
+            ${directUrlHtml}
+            ${keyUrlHtml}
+          </div>
+        </td>
+        <td>
+          <input type="file" id="file-${file.id}" class="file-input" accept=".js" onchange="uploadFile(${file.id}, event)">
+          <button class="upload-btn" onclick="document.getElementById('file-${file.id}').click()">
+            ${hasFile ? '📤 重传' : '📁 上传'}
+          </button>
+          ${hasFile ? `<button class="download-btn" onclick="downloadFile(${file.id})">⬇️ 下载</button>` : ''}
+          <button class="delete-btn" onclick="deleteRow(${file.id})">删除</button>
+        </td>
+      </tr>
+    `;
+    displayIndex++;
+  });
+  
+  tbody.innerHTML = html;
+}
+
+// 检查筛选条件
+function checkFilter(file) {
+  const searchBox = document.querySelector('.search-box');
+  if (searchBox && searchBox.value.trim()) {
+    const keyword = searchBox.value.toLowerCase();
+    if (!file.fileName.toLowerCase().includes(keyword) && 
+        !file.note.toLowerCase().includes(keyword)) {
+      return false;
+    }
+  }
+  
+  const activeFilters = sources.filter(source => 
+    document.getElementById(`filter-${source}`)?.checked
+  );
+  
+  if (activeFilters.length > 0) {
+    const hasMatch = activeFilters.some(source => 
+      file.unsupportedSources.includes(source)
+    );
+    if (!hasMatch) return false;
+  }
+  
+  return true;
+}
+
+// 筛选表格
+function filterTable() {
+  renderTable();
+}
+
+// 清除筛选
+function clearFilters() {
+  sources.forEach(source => {
+    const checkbox = document.getElementById(`filter-${source}`);
+    if (checkbox) checkbox.checked = false;
+  });
+  document.querySelector('.search-box').value = '';
+  filterTable();
+}
+
+// 更新统计
+function updateStats() {
+  const total = fileList.length;
+  const uploaded = fileList.filter(f => f.fileContent).length;
+  const flacCount = fileList.filter(f => 
+    f.quality === 'flac' || f.quality === 'flac24bit'
+  ).length;
+  const fullSupport = fileList.filter(f => 
+    f.unsupportedSources.length === 0
+  ).length;
+  
+  document.getElementById('totalFiles').textContent = total;
+  document.getElementById('uploadedCount').textContent = uploaded;
+  document.getElementById('flacCount').textContent = flacCount;
+  document.getElementById('fullSupportCount').textContent = fullSupport;
+}
+
+// 清空所有
+function clearAll() {
+  if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+    fileList = [];
+    saveData();
+    renderTable();
+  }
+}
+
+// 导出为JSON
+function exportToJSON() {
+  const dataStr = JSON.stringify(fileList, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '音源数据_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// 从JSON导入
+function importFromJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (confirm('确定要导入数据吗？这将覆盖当前所有数据！')) {
+        fileList = imported;
+        saveData();
+        renderTable();
+        alert('导入成功！');
+      }
+    } catch (err) {
+      alert('导入失败：文件格式错误\n' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// 导出为Markdown
+function exportToMarkdown() {
+  let md = '# 音源管理报告\n\n';
+  md += '生成时间: ' + new Date().toLocaleString('zh-CN') + '\n\n';
+  md += '总文件数: ' + fileList.length + '\n';
+  md += '已上传文件: ' + fileList.filter(f => f.fileContent).length + '\n\n';
+  md += '## 文件列表\n\n';
+  md += '| 序号 | 文件名 | 最高音质 | 不支持的源 | 备注 | 链接 |\n';
+  md += '|------|--------|----------|------------|------|------|\n';
+  
+  fileList.forEach((file, index) => {
+    const unsupported = file.unsupportedSources.length > 0 
+      ? file.unsupportedSources.map(s => sourceNames[s]).join(', ')
+      : '全支持';
+    const hasFile = file.fileContent ? '✅' : '⚠️';
+    
+    let links = '-';
+    if (file.links && file.links.length > 0) {
+      links = file.links.map(l => `[${l.text}](${l.url})`).join(' \\| ');
+    }
+    if (file.directUrl) {
+      links += (links === '-' ? '' : ' \\| ') + '🌐 在线下载';
+    }
+    if (file.keyUrl) {
+      links += (links === '-' ? '' : ' \\| ') + '🔑 需要密钥';
+    }
+    
+    md += '| ' + (index + 1) + ' | ' + hasFile + ' ' + (file.fileName || '(未命名)') + ' | ' + file.quality + ' | ' + unsupported + ' | ' + (file.note || '-') + ' | ' + links + ' |\n';
+  });
+  
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '音源报告_' + new Date().toISOString().slice(0,10) + '.md';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// 导出HTML（带文件下载和密钥功能）
+function exportHTMLWithFiles() {
+  const filesDataJSON = JSON.stringify(fileList.map(f => ({
+    fileName: f.fileName,
+    fileContent: f.fileContent,
+    quality: f.quality,
+    unsupportedSources: f.unsupportedSources,
+    note: f.note,
+    links: f.links,
+    keyUrl: f.keyUrl,
+    directUrl: f.directUrl
+  })));
+  
+  let htmlContent = '<!DOCTYPE html>\n';
+  htmlContent += '<html>\n<head>\n';
+  htmlContent += '<meta charset="UTF-8">\n';
+  htmlContent += '<title>音源管理报告（含文件 & 密钥下载）<\/title>\n';
+  htmlContent += '<style>\n';
+  htmlContent += 'body{font-family:Microsoft YaHei,Arial,sans-serif;max-width:1400px;margin:20px auto;padding:20px;background:#f5f5f5}';
+  htmlContent += 'h1{color:#333;border-bottom:3px solid #667eea;padding-bottom:10px}';
+  htmlContent += '.info-box{background:#e3f2fd;padding:15px;border-radius:8px;margin:20px 0}';
+  htmlContent += 'table{width:100%;border-collapse:collapse;margin:20px 0;background:white;box-shadow:0 2px 8px rgba(0,0,0,0.1)}';
+  htmlContent += 'th{background:#667eea;color:white;padding:12px;text-align:left}';
+  htmlContent += 'td{padding:10px;border-bottom:1px solid #ddd;vertical-align:top}';
+  htmlContent += 'tr:hover{background:#f8f9fa}';
+  htmlContent += '.download-btn{background:#28a745;color:white;padding:6px 12px;border:none;border-radius:4px;cursor:pointer;font-size:12px;text-decoration:none;display:inline-block;margin:2px}';
+  htmlContent += '.download-btn:hover{background:#218838}';
+  htmlContent += '.no-file{color:#999;font-style:italic}';
+  htmlContent += '.download-all-btn{background:#667eea;color:white;padding:12px 24px;border:none;border-radius:6px;cursor:pointer;font-size:16px;font-weight:bold;margin:10px 0}';
+  htmlContent += '.download-all-btn:hover{background:#5568d3}';
+  htmlContent += '.quality{padding:4px 10px;border-radius:12px;font-size:12px;font-weight:bold;display:inline-block}';
+  htmlContent += '.q-flac{background:#007bff;color:white}';
+  htmlContent += '.q-flac24bit{background:#6f42c1;color:white}';
+  htmlContent += '.q-320k{background:#28a745;color:white}';
+  htmlContent += '.q-128k{background:#ffc107;color:#333}';
+  htmlContent += '.unsupported{color:#dc3545;font-weight:bold}';
+  htmlContent += '.supported{color:#28a745;font-weight:bold}';
+  htmlContent += '.link-tag{display:inline-block;margin:3px;padding:4px 10px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border-radius:15px;font-size:11px;text-decoration:none}';
+  htmlContent += '.link-tag:hover{opacity:0.8}';
+  htmlContent += '.key-input-container{margin-top:10px;padding:10px;background:#fff3cd;border-radius:8px;border:2px solid #ffc107}';
+  htmlContent += '.key-input-container label{display:block;margin-bottom:5px;font-weight:bold;color:#856404}';
+  htmlContent += '.key-input-group{display:flex;gap:8px;align-items:center}';
+  htmlContent += '.key-input{flex:1;padding:8px;border:2px solid #ffc107;border-radius:4px;font-size:13px}';
+  htmlContent += '.key-download-btn{background:#ffc107;color:#333;padding:8px 16px;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:bold}';
+  htmlContent += '.key-download-btn:hover{background:#e0a800}';
+  htmlContent += '\n<\/style>\n<\/head>\n<body>\n';
+  
+  htmlContent += '<h1>🎵 音源管理报告<\/h1>\n';
+  htmlContent += '<div class="info-box">\n';
+  htmlContent += '<p><strong>生成时间:<\/strong> ' + new Date().toLocaleString('zh-CN') + '<\/p>\n';
+  htmlContent += '<p><strong>总文件数:<\/strong> ' + fileList.length + '<\/p>\n';
+  htmlContent += '<p><strong>已上传文件:<\/strong> ' + fileList.filter(f => f.fileContent).length + '<\/p>\n';
+  htmlContent += '<p><strong>在线链接:<\/strong> ' + fileList.filter(f => f.directUrl).length + '<\/p>\n';
+  htmlContent += '<p><strong>💡 提示:<\/strong> 部分文件支持密钥下载，请输入您的密钥后点击下载<\/p>\n';
+  htmlContent += '<\/div>\n';
+  
+  htmlContent += '<button class="download-all-btn" onclick="downloadAllFiles()">📦 打包下载所有免费文件<\/button>\n';
+  
+  htmlContent += '<table>\n<thead>\n<tr>\n';
+  htmlContent += '<th>序号<\/th><th>文件名<\/th><th>最高音质<\/th><th>不支持的源<\/th><th>备注 & 链接<\/th><th>下载<\/th>\n';
+  htmlContent += '<\/tr>\n<\/thead>\n<tbody>\n';
+  
+  fileList.forEach((file, index) => {
+    const unsupported = file.unsupportedSources.length > 0 
+      ? '<span class="unsupported">' + file.unsupportedSources.map(s => sourceNames[s]).join(', ') + '<\/span>'
+      : '<span class="supported">全支持<\/span>';
+    
+    const qualityClass = file.quality.includes('flac24') ? 'q-flac24bit' : 
+                        file.quality === 'flac' ? 'q-flac' :
+                        file.quality.includes('320') ? 'q-320k' : 'q-128k';
+    
+    let fileAction = '';
+    
+    // 优先级1: 在线链接
+    if (file.directUrl) {
+      fileAction += '<a href="' + file.directUrl + '" class="download-btn" download>⬇️ 在线下载<\/a><br>';
+    }
+    
+    // 优先级2: 上传的文件
+    if (file.fileContent) {
+      fileAction += '<a class="download-btn" onclick="downloadFile(' + index + ')">⬇️ 本地下载<\/a><br>';
+    }
+    
+    // 优先级3: 密钥下载
+    if (file.keyUrl) {
+      fileAction += '<div class="key-input-container">';
+      fileAction += '<label>🔑 付费版下载:<\/label>';
+      fileAction += '<div class="key-input-group">';
+      fileAction += '<input type="text" class="key-input" id="key-' + index + '" placeholder="请输入您的密钥...">';
+      fileAction += '<button class="key-download-btn" onclick="downloadWithKey(' + index + ')">下载<\/button>';
+      fileAction += '<\/div>';
+      fileAction += '<\/div>';
+    }
+    
+    if (!file.directUrl && !file.fileContent && !file.keyUrl) {
+      fileAction = '<span class="no-file">未配置下载<\/span>';
+    }
+    
+    let noteAndLinks = (file.note || '-') + '<br>';
+    if (file.links && file.links.length > 0) {
+      file.links.forEach(link => {
+        noteAndLinks += '<a href="' + link.url + '" target="_blank" class="link-tag">🔗 ' + link.text + '<\/a> ';
+      });
+    }
+    
+    htmlContent += '<tr>\n';
+    htmlContent += '<td>' + (index + 1) + '<\/td>\n';
+    htmlContent += '<td>' + (file.fileName || '(未命名)') + '<\/td>\n';
+    htmlContent += '<td><span class="quality ' + qualityClass + '">' + file.quality + '<\/span><\/td>\n';
+    htmlContent += '<td>' + unsupported + '<\/td>\n';
+    htmlContent += '<td>' + noteAndLinks + '<\/td>\n';
+    htmlContent += '<td>' + fileAction + '<\/td>\n';
+    htmlContent += '<\/tr>\n';
+  });
+  
+  htmlContent += '<\/tbody>\n<\/table>\n';
+  
+  htmlContent += '<script>\n';
+  htmlContent += 'var filesData=' + filesDataJSON + ';\n';
+  
+  // 普通文件下载
+  htmlContent += 'function downloadFile(index){';
+  htmlContent += 'var file=filesData[index];';
+  htmlContent += 'if(!file.fileContent){alert("该文件未上传!");return;}';
+  htmlContent += 'var link=document.createElement("a");';
+  htmlContent += 'link.href=file.fileContent;';
+  htmlContent += 'link.download=file.fileName||"download.js";';
+  htmlContent += 'link.click();';
+  htmlContent += '}\n';
+  
+  // 密钥下载
+  htmlContent += 'function downloadWithKey(index){';
+  htmlContent += 'var file=filesData[index];';
+  htmlContent += 'var keyInput=document.getElementById("key-"+index);';
+  htmlContent += 'var key=keyInput.value.trim();';
+  htmlContent += 'if(!key){alert("请输入密钥！");keyInput.focus();return;}';
+  htmlContent += 'if(!file.keyUrl){alert("该文件没有配置密钥链接！");return;}';
+  htmlContent += 'var downloadUrl=file.keyUrl+key;';
+  htmlContent += 'var link=document.createElement("a");';
+  htmlContent += 'link.href=downloadUrl;';
+  htmlContent += 'link.download=file.fileName||"download.js";';
+  htmlContent += 'link.click();';
+  htmlContent += 'alert("开始下载，如果没有反应请检查密钥是否正确！");';
+  htmlContent += '}\n';
+  
+  // 批量下载
+  htmlContent += 'function downloadAllFiles(){';
+  htmlContent += 'var validFiles=filesData.filter(function(f){return f.fileContent||f.directUrl;});';
+  htmlContent += 'if(validFiles.length===0){alert("没有可下载的免费文件!");return;}';
+  htmlContent += 'validFiles.forEach(function(file,index){';
+  htmlContent += 'setTimeout(function(){';
+  htmlContent += 'if(file.directUrl){';
+  htmlContent += 'var link=document.createElement("a");';
+  htmlContent += 'link.href=file.directUrl;';
+  htmlContent += 'link.download=file.fileName||"file_"+index+".js";';
+  htmlContent += 'link.click();';
+  htmlContent += '}else if(file.fileContent){';
+  htmlContent += 'var link=document.createElement("a");';
+  htmlContent += 'link.href=file.fileContent;';
+  htmlContent += 'link.download=file.fileName||"file_"+index+".js";';
+  htmlContent += 'link.click();';
+  htmlContent += '}';
+  htmlContent += '},index*500);';
+  htmlContent += '});';
+  htmlContent += 'alert("开始下载 "+validFiles.length+" 个免费文件...");';
+  htmlContent += '}\n';
+  htmlContent += '<\/script>\n';
+  
+  htmlContent += '<\/body>\n<\/html>';
+  
+  const blob = new Blob([htmlContent], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '音源完整报告_' + new Date().toISOString().slice(0,10) + '.html';
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  alert('导出成功！\n\n🌐 在线链接：可直接下载\n📦 本地文件：可直接下载\n🔑 付费文件：用户需输入密钥下载');
+}
+
+// 打包下载所有文件
+function downloadAllFiles() {
+  const validFiles = fileList.filter(f => f.fileContent);
+  
+  if (validFiles.length === 0) {
+    alert('没有已上传的文件！');
+    return;
+  }
+  
+  if (!confirm('将下载 ' + validFiles.length + ' 个文件，确定继续吗？')) {
+    return;
+  }
+  
+  validFiles.forEach((file, index) => {
+    setTimeout(() => {
+      const link = document.createElement('a');
+      link.href = file.fileContent;
+      link.download = file.fileName || 'file_' + index + '.js';
+      link.click();
+    }, index * 500);
+  });
+  
+  alert('开始下载 ' + validFiles.length + ' 个文件...');
+}
+
+// 点击弹窗外部关闭
+window.onclick = function(event) {
+  const linkModal = document.getElementById('linkModal');
+  const keyModal = document.getElementById('keyModal');
+  const directUrlModal = document.getElementById('directUrlModal');
+  
+  if (event.target === linkModal) {
+    closeLinkModal();
+  }
+  if (event.target === keyModal) {
+    closeKeyModal();
+  }
+  if (event.target === directUrlModal) {
+    closeDirectUrlModal();
+  }
+}
+
+// 键盘事件
+document.addEventListener('keydown', function(event) {
+  const linkModal = document.getElementById('linkModal');
+  const keyModal = document.getElementById('keyModal');
+  const directUrlModal = document.getElementById('directUrlModal');
+  
+  if (linkModal.style.display === 'block') {
+    if (event.key === 'Escape') {
+      closeLinkModal();
+    } else if (event.key === 'Enter' && event.ctrlKey) {
+      confirmAddLink();
+    }
+  }
+  
+  if (keyModal.style.display === 'block') {
+    if (event.key === 'Escape') {
+      closeKeyModal();
+    } else if (event.key === 'Enter' && event.ctrlKey) {
+      confirmAddKeyUrl();
+    }
+  }
+  
+  if (directUrlModal.style.display === 'block') {
+    if (event.key === 'Escape') {
+      closeDirectUrlModal();
+    } else if (event.key === 'Enter' && event.ctrlKey) {
+      confirmAddDirectUrl();
+    }
+  }
+});
+
+// 页面加载时初始化
+window.onload = function() {
+  loadData();
+  
+  if (fileList.length === 0) {
+    fileList = [
+      {
+        id: Date.now() + 1,
+        fileName: 'ikun.js',
+        quality: 'flac24bit',
+        unsupportedSources: [],
+        note: 'iKun音源 - 付费版支持超清音质',
+        links: [
+          { text: '官网', url: 'https://ikunshare.com' }
+        ],
+        keyUrl: 'https://api.ikunshare.com/script?key=',
+        directUrl: '',
+        fileContent: null,
+        fileSize: 0,
+        addedTime: new Date().toLocaleString('zh-CN')
+      },
+      {
+        id: Date.now() + 2,
+        fileName: 'music_cdn.js',
+        quality: '320k',
+        unsupportedSources: [],
+        note: '免费版 - CDN加速',
+        links: [
+          { text: 'GitHub', url: 'https://github.com/example' }
+        ],
+        keyUrl: '',
+        directUrl: 'https://cdn.jsdelivr.net/gh/user/repo/music.js',
+        fileContent: null,
+        fileSize: 0,
+        addedTime: new Date().toLocaleString('zh-CN')
+      },
+      {
+        id: Date.now() + 3,
+        fileName: 'hires_music.js',
+        quality: 'flac',
+        unsupportedSources: ['wy'],
+        note: 'Hi-Res音质 - 本地版本',
+        links: [],
+        keyUrl: '',
+        directUrl: '',
+        fileContent: null,
+        fileSize: 0,
+        addedTime: new Date().toLocaleString('zh-CN')
+      },
+      {
+        id: Date.now() + 4,
+        fileName: 'premium.js',
+        quality: 'flac24bit',
+        unsupportedSources: [],
+        note: '双版本 - 免费+付费',
+        links: [
+          { text: '文档', url: 'https://docs.example.com' }
+        ],
+        keyUrl: 'https://api.example.com/download?token=',
+        directUrl: 'https://cdn.example.com/premium-free.js',
+        fileContent: null,
+        fileSize: 0,
+        addedTime: new Date().toLocaleString('zh-CN')
+      }
+    ];
+    saveData();
+    renderTable();
+  }
+};
+</script>
+
+</body>
+</html>

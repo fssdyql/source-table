@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>插件列表管理器 v1.3.5</title>
+<style>
+    :root { --primary: #2563eb; --danger: #dc2626; --success: #16a34a; --bg: #f8fafc; --border: #e2e8f0; --text: #334155; }
+    body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; font-size: 14px; }
+    * { box-sizing: border-box; outline: none; }
+    
+    /* 主容器 */
+    .app { max-width: 1450px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: 92vh; border: 1px solid var(--border); }
+    
+    /* 头部 */
+    .head { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fff; border-radius: 8px 8px 0 0; }
+    .h-title { font-size: 18px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+    .ver-tag { font-size: 12px; background: #eff6ff; color: var(--primary); padding: 2px 8px; border-radius: 12px; border: 1px solid #bfdbfe; }
+    
+    /* 标签栏 */
+    .tabs { display: flex; gap: 2px; padding: 12px 20px 0; background: #f1f5f9; border-bottom: 1px solid var(--border); overflow-x: auto; }
+    .tab { padding: 8px 24px; background: #e2e8f0; border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; color: #64748b; font-weight: 500; transition: 0.2s; position: relative; top: 1px; white-space: nowrap; }
+    .tab:hover { background: #f8fafc; color: var(--primary); }
+    .tab.active { background: white; border-color: var(--border); border-bottom-color: white; color: var(--primary); font-weight: 700; z-index: 2; }
+    .tab-del { margin-left: 6px; font-size: 14px; color: #94a3b8; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; }
+    .tab-del:hover { background: #fecaca; color: #dc2626; }
+    .tab-add { padding: 8px 12px; font-weight: bold; font-size: 16px; color: #64748b; cursor: pointer; }
+    .tab-add:hover { color: var(--primary); background: #e2e8f0; border-radius: 6px 6px 0 0; }
+
+    /* 工具栏 */
+    .tools { padding: 12px 20px; display: flex; gap: 10px; align-items: center; background: white; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+    .spacer { flex: 1; }
+    .search { padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; width: 220px; transition: 0.2s; }
+    .search:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+
+    /* 表格区域 */
+    .main-area { flex: 1; overflow-y: auto; position: relative; }
+    table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+    th { position: sticky; top: 0; background: #f8fafc; z-index: 10; padding: 12px 16px; text-align: left; font-weight: 600; color: #475569; border-bottom: 1px solid var(--border); }
+    td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:hover { background: #f8fafc; }
+
+    /* 组件样式 */
+    .btn { padding: 6px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 4px; transition: 0.15s; font-family: inherit; }
+    .btn:active { transform: translateY(1px); }
+    .btn-pri { background: var(--primary); color: white; }
+    .btn-pri:hover { background: #1d4ed8; }
+    .btn-suc { background: var(--success); color: white; }
+    .btn-suc:hover { background: #15803d; }
+    .btn-dan { background: var(--danger); color: white; }
+    .btn-dan:hover { background: #b91c1c; }
+    .btn-sec { background: white; border: 1px solid #cbd5e1; color: #475569; }
+    .btn-sec:hover { background: #f1f5f9; border-color: #94a3b8; }
+    
+    .btn-sm { padding: 3px 8px; font-size: 12px; border-radius: 4px; }
+    .btn-icon { padding: 4px; border-radius: 4px; color: #64748b; background: transparent; border: 1px solid transparent; cursor: pointer; }
+    .btn-icon:hover { background: #f1f5f9; border-color: #e2e8f0; color: var(--primary); }
+
+    input[type="text"], select { padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; width: 100%; }
+    input[type="text"]:focus, select:focus { border-color: var(--primary); outline: none; }
+
+    /* 标签与状态 */
+    .tag-box { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .tag { font-size: 12px; padding: 2px 8px; border-radius: 4px; background: #f1f5f9; border: 1px solid #e2e8f0; display: inline-flex; align-items: center; color: #475569; }
+    .tag-link { color: #0369a1; background: #e0f2fe; border-color: #bae6fd; }
+    .tag-key { color: #b45309; background: #fffbeb; border-color: #fde68a; }
+    .tag-dl { color: #15803d; background: #dcfce7; border-color: #bbf7d0; }
+    .tag-close { margin-left: 5px; cursor: pointer; opacity: 0.5; font-weight: bold; }
+    .tag-close:hover { opacity: 1; color: var(--danger); }
+
+    /* 音质选择器特殊样式 */
+    .quality-wrapper { display: flex; gap: 4px; align-items: center; }
+    .quality-wrapper select { flex: 1; }
+    .quality-wrapper input { flex: 1; }
+
+    /* 弹窗 */
+    .modal-mask { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 50; backdrop-filter: blur(2px); }
+    .modal { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); background: white; width: 480px; padding: 24px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); animation: slideDown 0.2s ease-out; }
+    @keyframes slideDown { from { transform: translate(-50%, -20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+    .m-head { font-size: 18px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; }
+    .m-body { margin-bottom: 20px; }
+    .m-foot { text-align: right; display: flex; justify-content: flex-end; gap: 10px; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: #64748b; }
+    .chk-row { display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; transition: 0.1s; }
+    .chk-row:hover { background: #f8fafc; border-color: #cbd5e1; }
+    .chk-row input { width: 16px; height: 16px; accent-color: var(--primary); }
+
+    .empty-tip { text-align: center; padding: 60px; color: #94a3b8; font-style: italic; }
+</style>
+</head>
+<body>
+
+<div class="app">
+    <div class="head">
+        <div class="h-title">
+            插件列表管理器 <span class="ver-tag">v1.3.5</span>
+        </div>
+        <div style="font-size:12px; color:#94a3b8" id="lastSaveTime">就绪</div>
+    </div>
+
+    <!-- 标签栏 (JS生成) -->
+    <div class="tabs" id="tabsBar"></div>
+
+    <!-- 工具栏 -->
+    <div class="tools">
+        <button class="btn btn-suc" onclick="app.addItem()">➕ 新增文件</button>
+        <button class="btn btn-pri" onclick="app.exportHtml()">📤 导出列表</button>
+        <button class="btn btn-sec" onclick="app.exportJson()">💾 备份数据</button>
+        
+        <div class="spacer"></div>
+        
+        <input type="file" id="importFile" hidden onchange="app.importJson(this)">
+        <button class="btn btn-sec" onclick="document.getElementById('importFile').click()">📂 导入旧版/备份</button>
+        <button class="btn btn-dan" onclick="app.clearTab()">🗑️ 清空当前页</button>
+        
+        <input type="text" class="search" placeholder="🔍 搜索文件名..." id="searchInput" onkeyup="app.render()">
+    </div>
+
+    <!-- 列表 -->
+    <div class="main-area">
+        <table id="mainTable">
+            <thead>
+                <tr>
+                    <th width="60">排序</th>
+                    <th width="25%">文件名 & 状态</th>
+                    <th width="20%">音质 & 版本</th>
+                    <th width="35%">配置 (备注 / 链接 / Key)</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 弹窗：标签页管理 -->
+<div id="modalTabs" class="modal-mask">
+    <div class="modal">
+        <div class="m-head">标签页选项 <span style="cursor:pointer" onclick="ui.close()">×</span></div>
+        <div class="m-body">
+            <div class="form-group">
+                <label>内置标签页开关:</label>
+                <div style="display:flex; gap:10px">
+                    <label class="chk-row" style="flex:1">
+                        <input type="checkbox" id="chk_mf" onchange="app.toggleTabConfig('showMF')"> Music Free
+                    </label>
+                    <label class="chk-row" style="flex:1">
+                        <input type="checkbox" id="chk_ly" onchange="app.toggleTabConfig('showLY')"> 澜音
+                    </label>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top:20px; padding-top:20px; border-top:1px dashed #e2e8f0">
+                <label>添加自定义标签页:</label>
+                <div style="display:flex; gap:8px">
+                    <input type="text" id="newTabName" placeholder="输入标签名称...">
+                    <button class="btn btn-pri" onclick="app.addCustomTab()">添加</button>
+                </div>
+                <p style="font-size:12px; color:#94a3b8; margin-top:8px">提示：自定义标签页可在上方标签栏直接删除。只有 LX 页支持 Key 配置。</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗：Key 配置 -->
+<div id="modalKey" class="modal-mask">
+    <div class="modal">
+        <div class="m-head">Key 配置 (仅 LX 有效) <span style="cursor:pointer" onclick="ui.close()">×</span></div>
+        <div class="m-body">
+            <div class="form-group p-2 border rounded mb-3 bg-slate-50">
+                <label class="chk-row" style="border:none; padding:0; margin-bottom:5px; font-weight:bold; color:#b45309">
+                    <input type="checkbox" id="k_enable_url"> 启用在线导入 (URL拼接)
+                </label>
+                <input type="text" id="k_url" placeholder="https://api.example.com?key=">
+            </div>
+            <div class="form-group p-2 border rounded bg-slate-50">
+                <label class="chk-row" style="border:none; padding:0; margin-bottom:5px; font-weight:bold; color:#b45309">
+                    <input type="checkbox" id="k_enable_var"> 启用本地导入 (变量替换)
+                </label>
+                <input type="text" id="k_var" placeholder="变量名, 如: API_KEY">
+            </div>
+        </div>
+        <div class="m-foot">
+            <button class="btn btn-pri" onclick="app.saveKey()">保存配置</button>
+        </div>
+    </div>
+</div>
+
+<!-- 弹窗：添加链接 -->
+<div id="modalLink" class="modal-mask">
+    <div class="modal">
+        <div class="m-head">添加链接 <span style="cursor:pointer" onclick="ui.close()">×</span></div>
+        <div class="m-body">
+            <div class="form-group"><label>链接名称</label><input type="text" id="l_text" placeholder="官网 / 说明 / 购买页"></div>
+            <div class="form-group"><label>URL地址</label><input type="text" id="l_url" placeholder="http://..."></div>
+        </div>
+        <div class="m-foot"><button class="btn btn-pri" onclick="app.saveLink()">确定添加</button></div>
+    </div>
+</div>
+
+<!-- 弹窗：直链配置 -->
+<div id="modalDl" class="modal-mask">
+    <div class="modal">
+        <div class="m-head">配置直链下载 <span style="cursor:pointer" onclick="ui.close()">×</span></div>
+        <div class="m-body">
+            <div class="form-group">
+                <label>直链 URL:</label>
+                <input type="text" id="d_url" placeholder="http://...">
+                <p style="font-size:12px; color:#94a3b8; margin-top:5px">设置后，导出列表中将显示“直链下载”按钮，可代替本地文件下载。</p>
+            </div>
+        </div>
+        <div class="m-foot"><button class="btn btn-pri" onclick="app.saveDl()">保存</button></div>
+    </div>
+</div>
+
+<script>
+/**
+ * 核心逻辑 v1.3.5
+ * 针对本地运行优化，无外部依赖。
+ */
+
+// 预设音质列表 (LX/澜音专用)
+const PRESET_QUALITIES = ['128k', '320k', 'flac', 'flac24bit', 'master', 'dolby', 'sky'];
+
+const app = {
+    // 数据模型
+    data: {
+        config: { showMF: false, showLY: false },
+        customTabs: [],
+        items: [],
+        activeTab: 'LX'
+    },
+    
+    // 运行时状态
+    state: { editId: null },
+
+    init() {
+        this.load();
+        this.renderTabs();
+        this.render();
+        this.updateTime();
+    },
+
+    // --- 数据持久化 ---
+    save() {
+        try {
+            localStorage.setItem('pm_v135_db', JSON.stringify(this.data));
+            this.updateTime();
+        } catch(e) { console.error("Save failed:", e); }
+    },
+
+    load() {
+        const raw = localStorage.getItem('pm_v135_db');
+        if(raw) {
+            try {
+                const json = JSON.parse(raw);
+                if(json.items) this.data = json;
+            } catch(e) { console.error("Load failed:", e); }
+        }
+    },
+
+    updateTime() {
+        const now = new Date();
+        document.getElementById('lastSaveTime').innerText = '最后保存: ' + 
+            now.getHours().toString().padStart(2,'0') + ':' + 
+            now.getMinutes().toString().padStart(2,'0') + ':' + 
+            now.getSeconds().toString().padStart(2,'0');
+    },
+
+    // --- 标签页逻辑 ---
+    getTabs() {
+        let list = ['LX'];
+        if(this.data.config.showMF) list.push('Music Free');
+        if(this.data.config.showLY) list.push('澜音');
+        return list.concat(this.data.customTabs);
+    },
+
+    renderTabs() {
+        const tabs = this.getTabs();
+        // 修正当前 activeTab
+        if(!tabs.includes(this.data.activeTab)) this.data.activeTab = 'LX';
+
+        const html = tabs.map(t => {
+            const isActive = t === this.data.activeTab;
+            const isCustom = this.data.customTabs.includes(t);
+            // 只有自定义标签显示删除X
+            const delBtn = isCustom ? `<span class="tab-del" onclick="app.delCustomTab('${t}', event)">×</span>` : '';
+            return `<div class="tab ${isActive?'active':''}" onclick="app.switchTab('${t}')">${t} ${delBtn}</div>`;
+        }).join('');
+        
+        // 加上添加按钮
+        document.getElementById('tabsBar').innerHTML = html + `<div class="tab-add" onclick="ui.openTabOpt()" title="管理标签页">+</div>`;
+    },
+
+    switchTab(t) {
+        this.data.activeTab = t;
+        this.save();
+        this.renderTabs();
+        this.render();
+    },
+
+    toggleTabConfig(key) {
+        const chk = document.getElementById(key === 'showMF' ? 'chk_mf' : 'chk_ly');
+        this.data.config[key] = chk.checked;
+        this.save();
+        this.renderTabs();
+        this.render();
+    },
+
+    addCustomTab() {
+        const name = document.getElementById('newTabName').value.trim();
+        if(!name) return;
+        if(this.getTabs().includes(name)) return alert('标签名已存在');
+        this.data.customTabs.push(name);
+        this.data.activeTab = name;
+        this.save();
+        this.renderTabs();
+        this.render();
+        ui.close();
+        document.getElementById('newTabName').value = '';
+    },
+
+    delCustomTab(name, e) {
+        e.stopPropagation();
+        if(confirm(`确定删除标签 "${name}" 吗？该标签下的文件会被隐藏但不会删除。`)) {
+            this.data.customTabs = this.data.customTabs.filter(t => t !== name);
+            if(this.data.activeTab === name) this.data.activeTab = 'LX';
+            this.save();
+            this.renderTabs();
+            this.render();
+        }
+    },
+
+    clearTab() {
+        if(confirm(`确定清空当前页 (${this.data.activeTab}) 的所有数据吗？此操作不可恢复。`)) {
+            this.data.items = this.data.items.filter(i => i.tab !== this.data.activeTab);
+            this.save();
+            this.render();
+        }
+    },
+
+    // --- 列表渲染逻辑 ---
+    render() {
+        const tbody = document.getElementById('tableBody');
+        const kw = document.getElementById('searchInput').value.toLowerCase();
+        const curTab = this.data.activeTab;
+        
+        const list = this.data.items.filter(i => {
+            // 兼容旧数据：如果没有tab字段，默认归为LX
+            const iTab = i.tab || 'LX';
+            return iTab === curTab && (!kw || (i.name||'').toLowerCase().includes(kw));
+        });
+
+        if(list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="empty-tip">暂无内容，请点击左上角“新增文件”</td></tr>`;
+            return;
+        }
+
+        // 判断当前标签页是否支持音质下拉（LX和澜音）
+        const supportQualityPreset = ['LX', '澜音'].includes(curTab);
+        // Music Free 支持 .js 和 .json，其他只支持 .js
+        const acceptType = curTab === 'Music Free' ? '.js,.json' : '.js';
+
+        tbody.innerHTML = list.map(item => {
+            const hasFile = !!(item.file && item.file.content);
+            const statusBadge = hasFile 
+                ? `<span style="color:var(--success);font-size:12px;background:#dcfce7;padding:1px 6px;border-radius:4px;">✅ 已上传 (${formatSize(item.file.size)})</span>`
+                : `<span style="color:var(--danger);font-size:12px;background:#fee2e2;padding:1px 6px;border-radius:4px;">⚠️ 未上传</span>`;
+
+            // 1. 构建音质/版本 UI
+            let qualityUi = '';
+            if (supportQualityPreset) {
+                // 如果当前值不在预设中，且不为空，则认为是自定义模式
+                const isCustomMode = item.quality && !PRESET_QUALITIES.includes(item.quality);
+                
+                if (isCustomMode) {
+                    // 自定义模式：输入框 + 重置按钮
+                    qualityUi = `
+                        <div style="display:flex;gap:4px">
+                            <input type="text" value="${esc(item.quality)}" onchange="app.updateItem(${item.id}, 'quality', this.value)" placeholder="输入音质...">
+                            <button class="btn btn-sec btn-sm" onclick="app.updateItem(${item.id}, 'quality', '')" title="重置为下拉菜单">↺</button>
+                        </div>
+                    `;
+                } else {
+                    // 下拉模式
+                    const options = PRESET_QUALITIES.map(q => `<option value="${q}" ${item.quality===q?'selected':''}>${q}</option>`).join('');
+                    // 绑定特殊的 change 事件：如果选了 CUSTOM，则切换模式
+                    qualityUi = `
+                        <select onchange="if(this.value==='_CUSTOM_'){app.updateItem(${item.id},'quality','自定义');}else{app.updateItem(${item.id},'quality',this.value);}">
+                            <option value="">选择音质...</option>
+                            ${options}
+                            <option value="_CUSTOM_">✎ 自定义...</option>
+                        </select>
+                    `;
+                }
+            } else {
+                // 普通输入框
+                qualityUi = `<input type="text" value="${esc(item.quality)}" onchange="app.updateItem(${item.id}, 'quality', this.value)" placeholder="音质描述">`;
+            }
+            // 版本号输入框始终显示
+            qualityUi += `<input type="text" value="${esc(item.ver)}" onchange="app.updateItem(${item.id}, 'ver', this.value)" placeholder="版本号 (可选)" style="margin-top:4px;color:#666">`;
+
+            // 2. 标签显示
+            let tags = '';
+            if(item.dlLink) tags += `<span class="tag tag-dl">直链 <span class="tag-close" onclick="app.updateItem(${item.id}, 'dlLink', '')">×</span></span>`;
+            (item.links||[]).forEach((l, idx) => {
+                tags += `<span class="tag tag-link"><a href="${l.url}" target="_blank" style="text-decoration:none;color:inherit">${l.text}</a> <span class="tag-close" onclick="app.delLink(${item.id}, ${idx})">×</span></span>`;
+            });
+            // Key 状态 (仅 LX 显示)
+            if(curTab === 'LX') {
+                if(item.keyConfig?.enableUrl) tags += `<span class="tag tag-key">Key在线 <span class="tag-close" onclick="app.toggleKeyConfig(${item.id}, 'enableUrl', false)">×</span></span>`;
+                if(item.keyConfig?.enableVar) tags += `<span class="tag tag-key">Key本地 <span class="tag-close" onclick="app.toggleKeyConfig(${item.id}, 'enableVar', false)">×</span></span>`;
+            }
+
+            // 3. 按钮
+            const uploadBtn = `<input type="file" id="f_${item.id}" style="display:none" accept="${acceptType}" onchange="app.uploadFile(${item.id}, this)">
+                <button class="btn btn-pri btn-sm" onclick="document.getElementById('f_${item.id}').click()">${hasFile?'重传':'上传'}</button>`;
+            
+            const configBtns = `
+                <div style="display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap">
+                    <button class="btn-icon" onclick="app.openLinkModal(${item.id})" title="添加链接">🔗</button>
+                    <button class="btn-icon" onclick="app.openDlModal(${item.id})" title="配置直链">🌐</button>
+                    ${curTab==='LX' ? `<button class="btn-icon" onclick="app.openKeyModal(${item.id})" title="配置Key">🔑</button>` : ''}
+                </div>
+            `;
+
+            return `
+                <tr>
+                    <td align="center">
+                        <div style="display:flex;flex-direction:column;gap:2px">
+                            <button class="btn-icon" onclick="app.moveItem(${item.id}, -1)">▲</button>
+                            <button class="btn-icon" onclick="app.moveItem(${item.id}, 1)">▼</button>
+                        </div>
+                    </td>
+                    <td>
+                        <input type="text" value="${esc(item.name)}" onchange="app.updateItem(${item.id}, 'name', this.value)" placeholder="插件文件名" style="font-weight:bold;margin-bottom:4px">
+                        <div>${statusBadge} ${uploadBtn}</div>
+                    </td>
+                    <td valign="top">${qualityUi}</td>
+                    <td>
+                        <input type="text" value="${esc(item.note)}" onchange="app.updateItem(${item.id}, 'note', this.value)" placeholder="备注说明..." style="margin-bottom:4px">
+                        ${configBtns}
+                        <div class="tag-box">${tags}</div>
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:4px;flex-wrap:wrap">
+                            ${hasFile ? `<button class="btn btn-suc btn-sm" onclick="app.dlLocal(${item.id})">下载</button>` : ''}
+                            <button class="btn btn-dan btn-sm" onclick="app.delItem(${item.id})">删除</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    // --- 数据操作 ---
+    addItem() {
+        this.data.items.push({
+            id: Date.now(),
+            tab: this.data.activeTab,
+            name: '', ver: '', quality: '', note: '',
+            file: null, // { content: base64, size: int }
+            links: [], dlLink: '',
+            keyConfig: { enableUrl: false, url: '', enableVar: false, var: '' }
+        });
+        this.save();
+        this.render();
+    },
+
+    updateItem(id, field, val) {
+        const item = this.data.items.find(i => i.id === id);
+        if(item) {
+            item[field] = val;
+            this.save();
+            // 如果是修改音质(涉及UI切换)或dlLink(涉及标签)，需要重绘
+            if(field === 'quality' || field === 'dlLink') this.render();
+        }
+    },
+
+    delItem(id) {
+        if(confirm('确定删除此条目？')) {
+            this.data.items = this.data.items.filter(i => i.id !== id);
+            this.save();
+            this.render();
+        }
+    },
+
+    moveItem(id, dir) {
+        const idx = this.data.items.findIndex(i => i.id === id);
+        if(idx === -1) return;
+        const target = idx + dir;
+        if(target >= 0 && target < this.data.items.length) {
+            [this.data.items[idx], this.data.items[target]] = [this.data.items[target], this.data.items[idx]];
+            this.save();
+            this.render();
+        }
+    },
+
+    uploadFile(id, input) {
+        const file = input.files[0];
+        if(!file) return;
+        const r = new FileReader();
+        r.onload = e => {
+            const item = this.data.items.find(i => i.id === id);
+            if(item) {
+                if(!item.name) item.name = file.name;
+                item.file = { content: e.target.result, size: file.size };
+                this.save();
+                this.render();
+            }
+        };
+        r.readAsDataURL(file);
+        input.value = '';
+    },
+
+    dlLocal(id) {
+        const item = this.data.items.find(i => i.id === id);
+        if(item && item.file) {
+            const a = document.createElement('a');
+            a.href = item.file.content;
+            a.download = item.name || 'download';
+            a.click();
+        }
+    },
+
+    // --- Key 配置逻辑 ---
+    openKeyModal(id) {
+        this.state.editId = id;
+        const item = this.data.items.find(i => i.id === id);
+        const k = item.keyConfig || {};
+        ui.setCheck('k_enable_url', k.enableUrl);
+        ui.setVal('k_url', k.url || '');
+        ui.setCheck('k_enable_var', k.enableVar);
+        ui.setVal('k_var', k.var || '');
+        ui.open('modalKey');
+    },
+    saveKey() {
+        const item = this.data.items.find(i => i.id === this.state.editId);
+        if(item) {
+            item.keyConfig = {
+                enableUrl: ui.getCheck('k_enable_url'),
+                url: ui.getVal('k_url'),
+                enableVar: ui.getCheck('k_enable_var'),
+                var: ui.getVal('k_var')
+            };
+            this.save();
+            this.render();
+        }
+        ui.close();
+    },
+    toggleKeyConfig(id, type, val) {
+        const item = this.data.items.find(i => i.id === id);
+        if(item && item.keyConfig) {
+            item.keyConfig[type] = val;
+            this.save();
+            this.render();
+        }
+    },
+
+    // --- 链接/直链逻辑 ---
+    openLinkModal(id) {
+        this.state.editId = id;
+        ui.setVal('l_text', '');
+        ui.setVal('l_url', '');
+        ui.open('modalLink');
+    },
+    saveLink() {
+        const item = this.data.items.find(i => i.id === this.state.editId);
+        const text = ui.getVal('l_text');
+        const url = ui.getVal('l_url');
+        if(item && text && url) {
+            if(!item.links) item.links = [];
+            item.links.push({text, url});
+            this.save();
+            this.render();
+        }
+        ui.close();
+    },
+    delLink(itemId, idx) {
+        const item = this.data.items.find(i => i.id === itemId);
+        if(item) {
+            item.links.splice(idx, 1);
+            this.save();
+            this.render();
+        }
+    },
+    openDlModal(id) {
+        this.state.editId = id;
+        const item = this.data.items.find(i => i.id === id);
+        ui.setVal('d_url', item.dlLink || '');
+        ui.open('modalDl');
+    },
+    saveDl() {
+        this.updateItem(this.state.editId, 'dlLink', ui.getVal('d_url'));
+        ui.close();
+    },
+
+    // --- 导入导出 (兼容核心) ---
+    exportJson() {
+        const blob = new Blob([JSON.stringify(this.data, null, 2)], {type:'application/json'});
+        saveAs(blob, `备份_${Date.now()}.json`);
+    },
+    
+    importJson(input) {
+        const file = input.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                const json = JSON.parse(e.target.result);
+                // 兼容性处理
+                if(Array.isArray(json)) {
+                    // 旧版数组：只包含文件列表，默认全部放入LX
+                    if(confirm("检测到旧版备份数据，是否导入到 LX 标签页？")) {
+                        const newItems = json.map(old => normalizeOldItem(old));
+                        // 追加到现有数据还是覆盖？这里选择覆盖items但保留配置
+                        this.data.items = newItems;
+                        this.data.config = { showMF: false, showLY: false }; // 重置配置因为旧版没有
+                        this.data.customTabs = [];
+                        this.data.activeTab = 'LX';
+                        this.save();
+                        this.renderTabs();
+                        this.render();
+                        alert('导入成功！');
+                    }
+                } else if (json.items) {
+                    // 新版数据
+                    this.data = json;
+                    this.save();
+                    this.renderTabs();
+                    this.render();
+                    alert('导入成功！');
+                } else {
+                    alert('无法识别的数据格式');
+                }
+            } catch(err) {
+                console.error(err);
+                alert('JSON 解析失败');
+            }
+        };
+        reader.readAsText(file);
+        input.value = '';
+    },
+
+    exportHtml() {
+        const html = generateExportHtml(this.data);
+        const blob = new Blob([html], {type:'text/html'});
+        saveAs(blob, `插件列表_${getDs()}.html`);
+    }
+};
+
+// --- 辅助函数 ---
+function normalizeOldItem(old) {
+    // 将旧版数据结构转换为 v1.3.5 结构
+    return {
+        id: old.id || Date.now() + Math.random(),
+        tab: 'LX', // 默认为 LX
+        name: old.fileName || old.name || '',
+        ver: '', // 旧版可能没有版本号
+        quality: old.quality || '',
+        note: old.note || '',
+        file: (old.fileContent) ? { content: old.fileContent, size: old.fileSize || 0 } : null,
+        links: old.links || [],
+        dlLink: old.directUrl || '', // 旧版 directUrl -> dlLink
+        keyConfig: {
+            // keyMode 为 "link" -> enableUrl
+            enableUrl: (old.keyMode === 'link' || !!old.keyUrl),
+            url: old.keyUrl || '',
+            // keyMode 为 "local" (或 implied) -> enableVar
+            enableVar: (old.keyVariable && old.keyVariable !== ""),
+            var: old.keyVariable || ''
+        }
+    };
+}
+
+const ui = {
+    open(id) { document.getElementById(id).style.display = 'block'; },
+    close() { document.querySelectorAll('.modal-mask').forEach(e=>e.style.display='none'); app.state.editId=null; },
+    openTabOpt() {
+        document.getElementById('chk_mf').checked = app.data.config.showMF;
+        document.getElementById('chk_ly').checked = app.data.config.showLY;
+        this.open('modalTabs');
+    },
+    getVal(id) { return document.getElementById(id).value; },
+    setVal(id, v) { document.getElementById(id).value = v; },
+    getCheck(id) { return document.getElementById(id).checked; },
+    setCheck(id, v) { document.getElementById(id).checked = v; }
+};
+
+function esc(s) { return s ? s.replace(/"/g, "&quot;") : ""; }
+function formatSize(b) { 
+    if(!b) return ''; 
+    if(b < 1024) return b + 'B';
+    if(b < 1024*1024) return (b/1024).toFixed(1) + 'KB';
+    return (b/(1024*1024)).toFixed(1) + 'MB'; 
+}
+function getDs() { return new Date().toISOString().slice(0,10); }
+function saveAs(blob, name) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+}
+
+// --- 导出 HTML 生成逻辑 (内嵌，确保无依赖) ---
+function generateExportHtml(data) {
+    // 将数据序列化并嵌入 JS
+    const jsonStr = JSON.stringify(data);
+    
+    return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>插件列表</title>
+<style>
+body{font-family:-apple-system,sans-serif;background:#f4f6f8;color:#333;margin:0;padding:20px}
+.box{max-width:1000px;margin:0 auto;background:white;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.05);overflow:hidden}
+.tabs{background:#f9fafb;border-bottom:1px solid #e5e7eb;display:flex;overflow-x:auto}
+.tab{padding:12px 20px;cursor:pointer;font-weight:500;color:#6b7280;white-space:nowrap}
+.tab.active{background:white;color:#2563eb;font-weight:700;border-top:2px solid #2563eb}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;background:#f9fafb;padding:12px 15px;color:#4b5563;font-size:13px;border-bottom:1px solid #e5e7eb}
+td{padding:12px 15px;border-bottom:1px solid #e5e7eb;vertical-align:top}
+.tag{display:inline-block;padding:2px 6px;font-size:12px;border-radius:4px;margin-right:4px;background:#e0f2fe;color:#0284c7}
+.ver{background:#f3f4f6;color:#4b5563}
+.link{color:#2563eb;text-decoration:none;margin-right:8px;font-size:12px}
+.btn{display:inline-block;padding:6px 12px;background:#2563eb;color:white;border-radius:4px;text-decoration:none;font-size:12px;border:none;cursor:pointer}
+.btn-dl{background:#16a34a}
+.key-area{margin-top:5px;background:#fffbeb;padding:8px;border-radius:4px;border:1px solid #fef3c7}
+.key-row{display:flex;gap:5px;margin-bottom:5px}
+.key-row:last-child{margin-bottom:0}
+input{border:1px solid #d1d5db;padding:4px;flex:1;border-radius:4px}
+.empty{text-align:center;padding:40px;color:#9ca3af}
+</style>
+</head>
+<body>
+<div class="box">
+    <div style="padding:15px 20px;border-bottom:1px solid #eee;font-weight:bold;font-size:18px">插件列表</div>
+    <div class="tabs" id="t"></div>
+    <div id="c"></div>
+</div>
+<script>
+const DB=${jsonStr};
+let cur='LX';
+function getTabs(){
+    let l=['LX'];
+    if(DB.config.showMF)l.push('Music Free');
+    if(DB.config.showLY)l.push('澜音');
+    return l.concat(DB.customTabs);
+}
+function rT(){
+    const ts=getTabs();
+    if(!ts.includes(cur)) cur='LX';
+    document.getElementById('t').innerHTML=ts.map(t=>'<div class="tab '+(t===cur?'active':'')+'" onclick="sT(\\''+t+'\\')">'+t+'</div>').join('');
+}
+function sT(t){cur=t;rT();rL();}
+function rL(){
+    const l=DB.items.filter(i=>(i.tab||'LX')===cur);
+    const b=document.getElementById('c');
+    if(!l.length){b.innerHTML='<div class="empty">暂无内容</div>';return;}
+    let h='<table><thead><tr><th>名称</th><th>版本/音质</th><th>说明 & 链接</th><th width="200">下载</th></tr></thead><tbody>';
+    h+=l.map(i=>{
+        let tags='';
+        if(i.quality)tags+='<span class="tag">'+i.quality+'</span>';
+        if(i.ver)tags+='<span class="tag ver">v'+i.ver+'</span>';
+        let ls=(i.links||[]).map(k=>'<a href="'+k.url+'" target="_blank" class="link">🔗 '+k.text+'</a>').join('');
+        let dl='';
+        if(i.dlLink) dl+='<a href="'+i.dlLink+'" target="_blank" class="btn">🌐 直链</a> ';
+        if(i.file&&i.file.content){
+            const k=i.keyConfig||{};
+            const su=(cur==='LX'&&k.enableUrl&&k.url);
+            const sv=(cur==='LX'&&k.enableVar&&k.var);
+            if(!su&&!sv){
+                dl+='<button class="btn btn-dl" onclick="D('+i.id+')">⬇️ 下载</button>';
+            }else{
+                dl+='<div class="key-area">';
+                if(su) dl+='<div class="key-row"><input id="ku_'+i.id+'" placeholder="Key"><button onclick="KU('+i.id+')">Go</button></div>';
+                if(sv) dl+='<div class="key-row"><input id="kv_'+i.id+'" placeholder="Key"><button onclick="KV('+i.id+')">下载</button></div>';
+                dl+='</div>';
+            }
+        }
+        return '<tr><td><b>'+i.name+'</b></td><td>'+tags+'</td><td>'+(i.note||'-')+'<br>'+ls+'</td><td>'+dl+'</td></tr>';
+    }).join('');
+    b.innerHTML=h+'</tbody></table>';
+}
+window.D=id=>{
+    const i=DB.items.find(x=>x.id==id);
+    save(i.file.content,i.name);
+};
+window.KU=id=>{
+    const i=DB.items.find(x=>x.id==id);
+    const v=document.getElementById('ku_'+id).value;
+    if(v) window.open(i.keyConfig.url+v);
+};
+window.KV=id=>{
+    const i=DB.items.find(x=>x.id==id);
+    const v=document.getElementById('kv_'+id).value;
+    if(!v)return alert('请输入Key');
+    try{
+        const raw=atob(i.file.content.split(',')[1]);
+        const u8=new Uint8Array(raw.length);
+        for(let n=0;n<raw.length;n++)u8[n]=raw.charCodeAt(n);
+        let txt=new TextDecoder().decode(u8);
+        const vn=i.keyConfig.var;
+        // 简单替换 key
+        const re=new RegExp('((?:const|var|let)\\\\s+'+vn+'\\\\s*[:=]\\\\s*)[\\'\\"][\\'\\"]','g');
+        if(re.test(txt)){
+           txt=txt.replace(re,'$1"'+v+'"');
+           const b=new Blob([txt],{type:'text/javascript'});
+           const a=document.createElement('a');
+           a.href=URL.createObjectURL(b);
+           a.download=i.name;
+           a.click();
+        }else{alert('未找到变量: '+vn);}
+    }catch(e){console.error(e);alert('处理出错');}
+};
+function save(u,n){const a=document.createElement('a');a.href=u;a.download=n;a.click();}
+rT();rL();
+<\/script></body></html>`;
+}
+
+// 启动应用
+app.init();
+</script>
+</body>
+</html>

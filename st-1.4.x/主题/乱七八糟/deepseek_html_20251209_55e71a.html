@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TITLE}}</title>
+<style>
+    /* Cassette Futurism / Solarpunk 风格主题 */
+    :root {
+        --cream: #f5f5e9;
+        --mustard: #d4a017;
+        --burnt-orange: #cc5500;
+        --warm-grey: #8c8c7a;
+        --dark-brown: #3d2c1a;
+        --shadow-color: rgba(60, 45, 25, 0.25);
+        --grid-color: rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Courier New', monospace;
+        background-color: var(--cream);
+        background-image: 
+            linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+            linear-gradient(var(--grid-color) 1px, transparent 1px);
+        background-size: 20px 20px;
+        color: var(--dark-brown);
+        margin: 0;
+        padding: 0;
+        line-height: 1.4;
+        border: 12px solid var(--warm-grey);
+        border-top-width: 40px;
+        min-height: 100vh;
+        position: relative;
+        box-shadow: 8px 8px 0 var(--shadow-color);
+    }
+
+    /* 老式显示器顶部 */
+    .display-top {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 30px;
+        background: linear-gradient(to right, 
+            var(--mustard) 15%, 
+            var(--burnt-orange) 15%, 
+            var(--burnt-orange) 20%,
+            var(--warm-grey) 20%, 
+            var(--warm-grey) 25%,
+            var(--mustard) 25%, 
+            var(--mustard) 30%,
+            var(--burnt-orange) 30%, 
+            var(--burnt-orange) 35%,
+            var(--warm-grey) 35%
+        );
+        border-bottom: 2px solid var(--dark-brown);
+    }
+
+    /* 容器 */
+    .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 30px 20px;
+        position: relative;
+    }
+
+    /* 头部 */
+    header {
+        text-align: center;
+        padding: 30px 0 40px;
+        border-bottom: 3px solid var(--burnt-orange);
+        margin-bottom: 30px;
+        position: relative;
+    }
+    
+    header::after {
+        content: "";
+        position: absolute;
+        bottom: -6px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: var(--mustard);
+    }
+    
+    h1 {
+        font-family: 'Arial Black', 'Helvetica Bold', sans-serif;
+        font-size: 2.8rem;
+        font-weight: 900;
+        margin: 0 0 10px;
+        color: var(--burnt-orange);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-shadow: 3px 3px 0 var(--shadow-color);
+    }
+
+    .subtitle {
+        font-family: 'Courier New', monospace;
+        font-size: 1rem;
+        color: var(--warm-grey);
+        margin: 0 0 15px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+    }
+
+    .date-badge {
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        background: var(--mustard);
+        color: var(--dark-brown);
+        padding: 8px 20px;
+        font-size: 0.9rem;
+        border-radius: 0;
+        display: inline-block;
+        border: 2px solid var(--dark-brown);
+        box-shadow: 3px 3px 0 var(--shadow-color);
+    }
+
+    /* 标签栏 - 隐藏但保留结构 */
+    .tabs {
+        display: none; /* 隐藏标签栏，直接显示LX插件 */
+    }
+
+    /* 插件列表容器 */
+    .plugins-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 25px;
+        margin-bottom: 50px;
+    }
+
+    /* 单个插件卡片 */
+    .plugin-card {
+        background: rgba(255, 255, 255, 0.9);
+        border: 3px solid var(--warm-grey);
+        padding: 0;
+        position: relative;
+        box-shadow: 5px 5px 0 var(--shadow-color);
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .plugin-card:hover {
+        transform: translate(-3px, -3px);
+        box-shadow: 8px 8px 0 var(--shadow-color);
+        border-color: var(--burnt-orange);
+    }
+
+    /* 插件头部 - 颜色条 */
+    .card-header {
+        background: var(--dark-brown);
+        padding: 20px 25px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card-header::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--mustard) 0%, transparent 70%);
+        opacity: 0.3;
+    }
+
+    .plugin-name {
+        font-family: 'Arial Black', sans-serif;
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--cream);
+        margin: 0 0 12px;
+        line-height: 1.3;
+        position: relative;
+        z-index: 1;
+        text-transform: uppercase;
+    }
+
+    /* 标签行 */
+    .tags-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        position: relative;
+        z-index: 1;
+    }
+
+    .tag {
+        font-family: 'Courier New', monospace;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 6px 12px;
+        letter-spacing: 0.5px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .tag.ver {
+        background: var(--cream);
+        color: var(--dark-brown);
+    }
+    
+    .tag.quality {
+        background: var(--burnt-orange);
+        color: white;
+    }
+
+    /* 卡片主体 */
+    .card-body {
+        padding: 25px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .note-text {
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        color: var(--dark-brown);
+        line-height: 1.5;
+        margin-bottom: 20px;
+        flex: 1;
+    }
+
+    /* 链接行 */
+    .links-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .link-a {
+        text-decoration: none;
+        color: var(--warm-grey);
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 6px 14px;
+        background: var(--cream);
+        border-radius: 0;
+        transition: all 0.2s;
+        border: 1px solid var(--warm-grey);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .link-a:hover {
+        color: var(--burnt-orange);
+        background: var(--mustard);
+        border-color: var(--burnt-orange);
+        transform: translate(-1px, -1px);
+        box-shadow: 2px 2px 0 var(--shadow-color);
+    }
+
+    .link-a::before {
+        content: '↗';
+        font-weight: 800;
+        font-size: 12px;
+    }
+
+    /* 按钮区域 */
+    .card-actions {
+        margin-top: auto;
+        border-top: 1px solid var(--warm-grey);
+        padding-top: 20px;
+    }
+
+    .btn-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 20px;
+        text-decoration: none;
+        font-family: 'Arial Black', sans-serif;
+        font-weight: 800;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        cursor: pointer;
+        border: 2px solid var(--dark-brown);
+        transition: all 0.2s;
+        box-shadow: 3px 3px 0 var(--shadow-color);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn:hover {
+        transform: translate(1px, 1px);
+        box-shadow: 2px 2px 0 var(--shadow-color);
+    }
+
+    /* 主要下载按钮 */
+    .btn-dl {
+        background: var(--mustard);
+        color: var(--dark-brown);
+    }
+    
+    .btn-dl:hover {
+        background: var(--burnt-orange);
+        color: var(--cream);
+    }
+
+    /* 直链按钮 */
+    .btn-direct {
+        background: var(--warm-grey);
+        color: var(--cream);
+    }
+    
+    .btn-direct:hover {
+        background: var(--dark-brown);
+        color: var(--cream);
+    }
+
+    /* Key 区域 */
+    .key-area {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px dashed var(--warm-grey);
+    }
+    
+    .key-input-group {
+        display: flex;
+        margin-bottom: 12px;
+        border: 2px solid var(--dark-brown);
+        box-shadow: 3px 3px 0 var(--shadow-color);
+        transition: all 0.2s;
+    }
+    
+    .key-input-group:focus-within {
+        border-color: var(--burnt-orange);
+        box-shadow: 3px 3px 0 rgba(204, 85, 0, 0.3);
+    }
+    
+    .key-in {
+        flex: 1;
+        border: none;
+        padding: 12px 16px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        outline: none;
+        background: var(--cream);
+        color: var(--dark-brown);
+    }
+    
+    .key-go {
+        background: var(--dark-brown);
+        color: var(--cream);
+        border: none;
+        padding: 0 20px;
+        cursor: pointer;
+        font-family: 'Arial Black', sans-serif;
+        font-weight: 800;
+        font-size: 14px;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 60px;
+    }
+    
+    .key-go:hover {
+        background: var(--burnt-orange);
+    }
+
+    /* 空状态 */
+    .empty-state {
+        padding: 60px 40px;
+        text-align: center;
+        grid-column: 1 / -1;
+        border: 3px dashed var(--warm-grey);
+        background: rgba(255, 255, 255, 0.7);
+    }
+
+    .empty-icon {
+        font-size: 48px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-text {
+        font-family: 'Arial Black', sans-serif;
+        font-size: 1.2rem;
+        color: var(--warm-grey);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+    }
+
+    /* 页脚 */
+    .footer {
+        text-align: center;
+        padding: 30px 0;
+        color: var(--warm-grey);
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        border-top: 2px solid var(--warm-grey);
+        margin-top: 30px;
+    }
+
+    /* 加载动画 */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .plugin-card {
+        animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    /* 延迟动画 */
+    .plugin-card:nth-child(1) { animation-delay: 0.1s; }
+    .plugin-card:nth-child(2) { animation-delay: 0.2s; }
+    .plugin-card:nth-child(3) { animation-delay: 0.3s; }
+    .plugin-card:nth-child(4) { animation-delay: 0.4s; }
+    .plugin-card:nth-child(5) { animation-delay: 0.5s; }
+    .plugin-card:nth-child(6) { animation-delay: 0.6s; }
+
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+        body {
+            border-width: 8px;
+            border-top-width: 30px;
+        }
+        
+        h1 { 
+            font-size: 2rem;
+        }
+        
+        .container {
+            padding: 20px 15px;
+        }
+        
+        .plugins-container {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .btn-group {
+            grid-template-columns: 1fr;
+        }
+        
+        header {
+            padding: 20px 0 30px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        h1 { 
+            font-size: 1.6rem;
+        }
+        
+        .card-header,
+        .card-body {
+            padding: 15px;
+        }
+        
+        .plugin-name {
+            font-size: 1.2rem;
+        }
+        
+        .date-badge {
+            font-size: 0.8rem;
+            padding: 6px 15px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="display-top"></div>
+
+<div class="container">
+    <header>
+        <h1>{{TITLE}}</h1>
+        <p class="subtitle">Cassette Futurism / Solarpunk 风格插件库</p>
+        <div class="date-badge">{{DATE}}</div>
+    </header>
+
+    <!-- 标签栏 - 隐藏但保留结构 -->
+    <div class="tabs" id="tabContainer"></div>
+    
+    <!-- 插件列表容器 -->
+    <div class="plugins-container" id="listContainer"></div>
+    
+    <!-- 页脚 -->
+    <div class="footer">
+        <div>© {{DATE.slice(0,4)}} - Cassette Futurism LX 插件主题</div>
+        <div style="margin-top: 5px; font-size: 11px;">70-80年代复古未来主义风格</div>
+    </div>
+</div>
+
+<script>
+    // 数据注入 - 系统会自动替换 {{DATA}}
+    const DB = {{DATA}};
+    
+    // 初始化 - 只显示LX插件
+    function init() {
+        renderLXPlugins();
+    }
+
+    // 渲染LX插件列表
+    function renderLXPlugins() {
+        // 只过滤tab为'LX'的插件
+        const lxPlugins = DB.items.filter(i => (i.tab || 'LX') === 'LX');
+        const container = document.getElementById('listContainer');
+
+        if(lxPlugins.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📼</div>
+                    <div class="empty-text">没有找到LX插件</div>
+                    <p style="color: var(--warm-grey); margin-top: 12px; font-weight: 400;">
+                        当前没有可用的LX插件数据
+                    </p>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = lxPlugins.map(item => {
+            // 标签生成
+            let tags = '';
+            if(item.ver) tags += `<span class="tag ver">v${item.ver}</span>`;
+            if(item.quality) tags += `<span class="tag quality">${item.quality}</span>`;
+
+            // 链接生成
+            let links = '';
+            if(item.links && Array.isArray(item.links)) {
+                links = item.links.map(l => 
+                    `<a href="${l.url}" target="_blank" class="link-a">${l.text}</a>`
+                ).join('');
+            }
+
+            // 按钮生成
+            let actions = '';
+            
+            // 1. 直链
+            if(item.dlLink) {
+                actions += `<a href="${item.dlLink}" target="_blank" class="btn btn-direct">直链</a>`;
+            }
+            
+            // 2. 文件下载
+            if(item.file && item.file.content) {
+                actions += `<button class="btn btn-dl" onclick="dlFile(${item.id})">下载插件</button>`;
+            }
+
+            // Key 逻辑
+            let keyArea = '';
+            if(item.file && item.file.content && item.keyConfig) {
+                const k = item.keyConfig;
+                keyArea += '<div class="key-area">';
+                if(k.enableUrl && k.url) {
+                    keyArea += `
+                    <div class="key-input-group">
+                        <input id="ku_${item.id}" class="key-in" placeholder="输入Key在线导入...">
+                        <button class="key-go" onclick="keyUrl(${item.id})">→</button>
+                    </div>`;
+                }
+                if(k.enableVar && k.var) {
+                    keyArea += `
+                    <div class="key-input-group">
+                        <input id="kv_${item.id}" class="key-in" placeholder="输入Key生成文件...">
+                        <button class="key-go" onclick="keyVar(${item.id})">↓</button>
+                    </div>`;
+                }
+                keyArea += '</div>';
+            }
+
+            return `
+            <div class="plugin-card">
+                <div class="card-header">
+                    <div class="plugin-name">${item.name || '未命名插件'}</div>
+                    <div class="tags-row">${tags}</div>
+                </div>
+                <div class="card-body">
+                    <div class="note-text">${item.note || '暂无描述信息'}</div>
+                    ${links ? `<div class="links-row">${links}</div>` : ''}
+                    <div class="card-actions">
+                        <div class="btn-group">
+                            ${actions}
+                        </div>
+                        ${keyArea}
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // --- 功能函数 ---
+    window.dlFile = (id) => {
+        const item = DB.items.find(x => x.id == id);
+        if(item && item.file && item.file.content) {
+            const a = document.createElement('a');
+            a.href = item.file.content;
+            a.download = item.name || 'plugin';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    };
+
+    window.keyUrl = (id) => {
+        const item = DB.items.find(x => x.id == id);
+        const val = document.getElementById('ku_' + id).value;
+        if(val && item && item.keyConfig && item.keyConfig.url) {
+            window.open(item.keyConfig.url + val);
+        }
+    };
+
+    window.keyVar = (id) => {
+        const item = DB.items.find(x => x.id == id);
+        const val = document.getElementById('kv_' + id).value;
+        if(!val) return alert('请输入Key');
+        
+        if(!item || !item.file || !item.file.content || !item.keyConfig) {
+            return alert('插件配置不完整');
+        }
+        
+        try {
+            const base64Data = item.file.content.split(',')[1];
+            if (!base64Data) throw new Error('无效的Base64数据');
+            
+            const raw = atob(base64Data);
+            const u8 = new Uint8Array(raw.length);
+            for(let n = 0; n < raw.length; n++) {
+                u8[n] = raw.charCodeAt(n);
+            }
+            let txt = new TextDecoder().decode(u8);
+            
+            const vName = item.keyConfig.var;
+            // 简单的正则替换
+            const re = new RegExp('((?:const|var|let)\\s+' + vName + '\\s*[:=]\\s*)[\\\'"][\\\'"]', 'g');
+            
+            if(re.test(txt)){
+                txt = txt.replace(re, '$1"' + val + '"');
+                const blob = new Blob([txt], {type: 'text/javascript'});
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = item.name || 'plugin_with_key';
+                a.click();
+                URL.revokeObjectURL(a.href);
+            } else {
+                alert('变量未找到: ' + vName);
+            }
+        } catch(e) { 
+            console.error(e); 
+            alert('生成文件失败: ' + e.message);
+        }
+    };
+
+    // 初始化
+    init();
+</script>
+</body>
+</html>

@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>音源管理系统 - 强力修复版</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Microsoft YaHei', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 { 
+      color: #333; 
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 25px;
+      font-size: 14px;
+    }
+    
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    .btn-primary { background: #667eea; color: white; }
+    .btn-primary:hover { background: #5568d3; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-success:hover { background: #218838; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-danger:hover { background: #c82333; }
+    .btn-info { background: #17a2b8; color: white; }
+    .btn-info:hover { background: #138496; }
+    .btn-warning { background: #ffc107; color: #333; }
+    .btn-warning:hover { background: #e0a800; }
+    
+    .filter-bar {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #fff3cd;
+      border-radius: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-bar label {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    .filter-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      background: white;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .checkbox-label:hover {
+      background: #e3f2fd;
+    }
+    .checkbox-label input {
+      cursor: pointer;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      padding: 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .stat-label {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background: white;
+    }
+    thead {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    th {
+      padding: 15px 10px;
+      text-align: left;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+    td {
+      padding: 12px 10px;
+      border-bottom: 1px solid #eee;
+      vertical-align: top;
+    }
+    tr:hover {
+      background: #f8f9fa;
+    }
+    
+    .file-name {
+      font-weight: 500;
+      color: #667eea;
+      font-family: 'Consolas', monospace;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .file-icon {
+      font-size: 18px;
+    }
+    .file-status {
+      font-size: 11px;
+      color: #28a745;
+      margin-left: 5px;
+    }
+    .no-file {
+      color: #dc3545;
+    }
+    
+    input[type="text"], select, textarea {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      width: 100%;
+      font-family: inherit;
+    }
+    
+    textarea {
+      min-height: 60px;
+      resize: vertical;
+    }
+    
+    .delete-btn, .download-btn, .sort-btn {
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin: 2px;
+    }
+    .delete-btn {
+      background: #dc3545;
+    }
+    .delete-btn:hover {
+      background: #c82333;
+    }
+    .download-btn {
+      background: #28a745;
+    }
+    .download-btn:hover {
+      background: #218838;
+    }
+    .sort-btn {
+      background: #6c757d;
+      padding: 4px 8px;
+      font-size: 16px;
+      line-height: 1;
+    }
+    .sort-btn:hover {
+      background: #5a6268;
+    }
+    .sort-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .add-row-btn {
+      width: 100%;
+      padding: 15px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 20px;
+      transition: all 0.3s;
+    }
+    .add-row-btn:hover {
+      background: #218838;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+      font-size: 16px;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .source-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .source-checkbox input {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+    .source-checkbox label {
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    .search-box {
+      padding: 10px 15px;
+      border: 2px solid #667eea;
+      border-radius: 5px;
+      font-size: 14px;
+      width: 300px;
+    }
+
+    .file-upload-cell {
+      position: relative;
+    }
+    .upload-btn {
+      background: #17a2b8;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      border: none;
+      display: inline-block;
+    }
+    .upload-btn:hover {
+      background: #138496;
+    }
+    .file-input {
+      display: none;
+    }
+
+    .note-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .note-text {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      width: 100%;
+      min-height: 40px;
+    }
+    
+    .links-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 5px;
+    }
+    
+    .link-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 15px;
+      font-size: 12px;
+      text-decoration: none;
+      transition: all 0.3s;
+      max-width: 200px;
+    }
+    
+    .link-tag:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    }
+    
+    .link-tag-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .link-tag-remove {
+      background: rgba(255,255,255,0.3);
+      border: none;
+      color: white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      font-size: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    
+    .link-tag-remove:hover {
+      background: rgba(255,255,255,0.5);
+    }
+    
+    .add-link-btn, .add-key-btn, .add-direct-btn {
+      background: #17a2b8;
+      color: white;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      align-self: flex-start;
+      margin-right: 5px;
+    }
+    
+    .add-link-btn:hover, .add-key-btn:hover, .add-direct-btn:hover {
+      background: #138496;
+    }
+
+    .add-key-btn {
+      background: #ffc107;
+      color: #333;
+    }
+    
+    .add-key-btn:hover {
+      background: #e0a800;
+    }
+
+    .add-direct-btn {
+      background: #28a745;
+      color: white;
+    }
+
+    .add-direct-btn:hover {
+      background: #218838;
+    }
+
+    .key-url-display {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 15px;
+      font-size: 11px;
+      color: #856404;
+      margin-top: 5px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .direct-url-display {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #d4edda;
+      border: 1px solid #28a745;
+      border-radius: 15px;
+      font-size: 11px;
+      color: #155724;
+      margin-top: 5px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .key-url-display .remove-key, .direct-url-display .remove-key {
+      margin-left: 8px;
+      cursor: pointer;
+      color: #dc3545;
+      font-weight: bold;
+    }
+
+    .key-url-display .remove-key:hover, .direct-url-display .remove-key:hover {
+      color: #c82333;
+    }
+
+    .sort-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      animation: fadeIn 0.3s;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 10% auto;
+      padding: 30px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      animation: slideIn 0.3s;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #667eea;
+    }
+    
+    .modal-header h2 {
+      color: #333;
+      margin: 0;
+    }
+    
+    .close {
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      line-height: 1;
+    }
+    
+    .close:hover {
+      color: #000;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-group small {
+      display: block;
+      margin-top: 5px;
+      color: #666;
+      font-size: 12px;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 15px;
+    }
+
+    .radio-group label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-weight: normal;
+    }
+
+    .radio-group input[type="radio"] {
+      width: auto;
+      cursor: pointer;
+    }
+    
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 25px;
+    }
+    
+    .btn-modal {
+      padding: 10px 25px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    
+    .btn-modal-primary {
+      background: #667eea;
+      color: white;
+    }
+    
+    .btn-modal-primary:hover {
+      background: #5568d3;
+    }
+    
+    .btn-modal-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .btn-modal-secondary:hover {
+      background: #5a6268;
+    }
+
+    .mode-hint {
+      padding: 10px;
+      background: #e3f2fd;
+      border-left: 4px solid #2196F3;
+      border-radius: 4px;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #1976D2;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🎵 音源管理系统（完整版）</h1>
+  <p class="subtitle">✨ 支持上传.js文件 | 支持在线链接 | 支持密钥下载 | 支持本地密钥导入 | 备注支持多链接 | 手动排序</p>
+  
+  <div class="toolbar">
+    <button class="btn btn-success" onclick="addNewRow()">➕ 添加文件</button>
+    <button class="btn btn-primary" onclick="exportToJSON()">💾 导出数据</button>
+    <button class="btn btn-warning" onclick="exportHTMLWithFiles()">📦 导出完整报告(含文件)</button>
+    <button class="btn btn-info" onclick="exportToMarkdown()">📝 导出Markdown</button>
+    <button class="btn btn-success" onclick="downloadAllFiles()">⬇️ 打包下载所有文件</button>
+    <input type="file" id="importJSON" style="display:none" accept=".json" onchange="importFromJSON(event)">
+    <button class="btn btn-primary" onclick="document.getElementById('importJSON').click()">📥 导入数据</button>
+    <button class="btn btn-danger" onclick="clearAll()">🗑️ 清空所有</button>
+    <input type="text" class="search-box" placeholder="🔍 搜索文件名..." oninput="filterTable()">
+  </div>
+  
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label>🔍 筛选不支持的源：</label>
+      <label class="checkbox-label">
+        <input type="checkbox" onchange="filterTable()" id="filter-kw"> 酷我(KW)
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" onchange="filterTable()" id="filter-kg"> 酷狗(KG)
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" onchange="filterTable()" id="filter-tx"> 腾讯(TX)
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" onchange="filterTable()" id="filter-wy"> 网易(WY)
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" onchange="filterTable()" id="filter-mg"> 咪咕(MG)
+      </label>
+      <button class="btn btn-info" onclick="clearFilters()">清除筛选</button>
+    </div>
+  </div>
+  
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-number" id="totalFiles">0</div>
+      <div class="stat-label">总文件数</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="uploadedCount">0</div>
+      <div class="stat-label">已上传文件</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="flacCount">0</div>
+      <div class="stat-label">FLAC/FLAC24音质</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" id="fullSupportCount">0</div>
+      <div class="stat-label">全平台支持</div>
+    </div>
+  </div>
+  
+  <div style="overflow-x: auto;">
+    <table id="mainTable">
+      <thead>
+        <tr>
+          <th width="80">排序</th>
+          <th width="60">序号</th>
+          <th width="250">文件名</th>
+          <th width="120">最高音质</th>
+          <th width="300">不支持的源</th>
+          <th width="350">备注 & 链接</th>
+          <th width="150">操作</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  
+  <button class="add-row-btn" onclick="addNewRow()">➕ 添加新文件</button>
+</div>
+
+<!-- Modals -->
+<div id="linkModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>🔗 添加链接</h2>
+      <span class="close" onclick="closeLinkModal()">&times;</span>
+    </div>
+    <div class="form-group">
+      <label>链接文字：</label>
+      <input type="text" id="linkText" placeholder="例如: 官方文档">
+    </div>
+    <div class="form-group">
+      <label>链接地址：</label>
+      <input type="text" id="linkUrl" placeholder="例如: https://example.com">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal btn-modal-secondary" onclick="closeLinkModal()">取消</button>
+      <button class="btn-modal btn-modal-primary" onclick="confirmAddLink()">确定</button>
+    </div>
+  </div>
+</div>
+
+<div id="keyModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>🔑 添加密钥配置</h2>
+      <span class="close" onclick="closeKeyModal()">&times;</span>
+    </div>
+    <div class="form-group">
+      <label>选择密钥模式：</label>
+      <div class="radio-group">
+        <label>
+          <input type="radio" name="keyMode" value="link" checked onchange="toggleKeyMode()">
+          在线密钥链接
+        </label>
+        <label>
+          <input type="radio" name="keyMode" value="local" onchange="toggleKeyMode()">
+          本地密钥导入
+        </label>
+      </div>
+    </div>
+    <div id="keyLinkMode">
+      <div class="form-group">
+        <label>密钥链接模板：</label>
+        <input type="text" id="keyUrlTemplate" placeholder="例如: https://api.ikunshare.com/script?key=">
+        <small>💡 链接末尾不需要加密钥，用户在报告中输入密钥后会自动拼接</small>
+      </div>
+      <div class="form-group">
+        <label>示例完整链接：</label>
+        <input type="text" id="keyUrlExample" readonly style="background: #f8f9fa;">
+      </div>
+      <div class="mode-hint">
+        📌 <strong>在线模式：</strong>用户输入密钥后，从指定URL下载文件
+      </div>
+    </div>
+    <div id="keyLocalMode" style="display:none;">
+      <div class="form-group">
+        <label>密钥变量名：</label>
+        <input type="text" id="keyVariableName" value="API_KEY" placeholder="例如: API_KEY">
+        <small>💡 文件中的密钥变量名，默认为 API_KEY</small>
+      </div>
+      <div class="mode-hint">
+        📌 <strong>本地模式：</strong>用户输入密钥后，自动替换文件中的 <code>const API_KEY = ""</code>，并删除 (公益版)、(免费版) 等标记
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal btn-modal-secondary" onclick="closeKeyModal()">取消</button>
+      <button class="btn-modal btn-modal-primary" onclick="confirmAddKeyUrl()">确定</button>
+    </div>
+  </div>
+</div>
+
+<div id="directUrlModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>🌐 添加免费在线链接</h2>
+      <span class="close" onclick="closeDirectUrlModal()">&times;</span>
+    </div>
+    <div class="form-group">
+      <label>在线下载链接：</label>
+      <input type="text" id="directUrlInput" placeholder="例如: https://cdn.example.com/music.js">
+      <small>💡 用户点击下载时将直接访问此链接</small>
+    </div>
+    <div class="form-group">
+      <label>示例：</label>
+      <input type="text" value="https://cdn.jsdelivr.net/gh/user/repo/file.js" readonly style="background: #f8f9fa;">
+      <small>📌 支持 GitHub、CDN、直链等任何可访问的URL</small>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal btn-modal-secondary" onclick="closeDirectUrlModal()">取消</button>
+      <button class="btn-modal btn-modal-primary" onclick="confirmAddDirectUrl()">确定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let fileList = [];
+let currentEditingId = null;
+const qualityOptions = ['128k', '192k', '230k', '320k', 'flac', 'flac24bit', '扩展音质', '其他'];
+const sources = ['kw', 'kg', 'tx', 'wy', 'mg'];
+const sourceNames = {'kw': '酷我','kg': '酷狗','tx': '腾讯','wy': '网易','mg': '咪咕'};
+
+function loadData() {
+  const saved = localStorage.getItem('musicQualityData');
+  if (saved) {
+    try {
+      fileList = JSON.parse(saved);
+      renderTable();
+      updateStats();
+    } catch (e) {
+      console.error('加载数据失败:', e);
+      fileList = [];
+    }
+  }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem('musicQualityData', JSON.stringify(fileList));
+    updateStats();
+  } catch (e) {
+    console.error('保存数据失败:', e);
+    alert('保存失败，数据可能过大！');
+  }
+}
+
+function addNewRow() {
+  const newFile = {
+    id: Date.now(),
+    fileName: '',
+    quality: '320k',
+    unsupportedSources: [],
+    note: '',
+    links: [],
+    keyMode: '',
+    keyUrl: '',
+    keyVariable: '',
+    directUrl: '',
+    fileContent: null,
+    fileSize: 0,
+    addedTime: new Date().toLocaleString('zh-CN'),
+    author: '未知作者',
+    version: '1.0.0'
+  };
+  fileList.push(newFile);
+  saveData();
+  renderTable();
+  setTimeout(() => {
+    const lastInput = document.querySelector('#tableBody tr:last-child input[type="text"]');
+    if (lastInput) {
+      lastInput.focus();
+      lastInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 100);
+}
+
+function moveUp(index) {
+  if (index > 0) {
+    [fileList[index], fileList[index - 1]] = [fileList[index - 1], fileList[index]];
+    saveData();
+    renderTable();
+  }
+}
+
+function moveDown(index) {
+  if (index < fileList.length - 1) {
+    [fileList[index], fileList[index + 1]] = [fileList[index + 1], fileList[index]];
+    saveData();
+    renderTable();
+  }
+}
+
+function uploadFile(id, event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.name.endsWith('.js')) {
+    alert('只允许上传.js文件！');
+    event.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const fileObj = fileList.find(f => f.id === id);
+    if (fileObj) {
+      fileObj.fileContent = e.target.result;
+      fileObj.fileName = file.name;
+      fileObj.fileSize = file.size;
+      saveData();
+      renderTable();
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function downloadFile(id) {
+  const file = fileList.find(f => f.id === id);
+  if (!file || !file.fileContent) {
+    alert('该文件未上传！');
+    return;
+  }
+  const link = document.createElement('a');
+  link.href = file.fileContent;
+  link.download = file.fileName || 'download.js';
+  link.click();
+}
+
+function deleteRow(id) {
+  if (confirm('确定要删除这条记录吗？')) {
+    fileList = fileList.filter(file => file.id !== id);
+    saveData();
+    renderTable();
+  }
+}
+
+function updateFileName(id, value) {
+  const file = fileList.find(f => f.id === id);
+  if (file) {
+    file.fileName = value;
+    saveData();
+  }
+}
+
+function updateQuality(id, value) {
+  const file = fileList.find(f => f.id === id);
+  if (file) {
+    file.quality = value;
+    saveData();
+    renderTable();
+  }
+}
+
+function updateUnsupportedSources(id, source, checked) {
+  const file = fileList.find(f => f.id === id);
+  if (file) {
+    if (checked) {
+      if (!file.unsupportedSources.includes(source)) {
+        file.unsupportedSources.push(source);
+      }
+    } else {
+      file.unsupportedSources = file.unsupportedSources.filter(s => s !== source);
+    }
+    saveData();
+    renderTable();
+  }
+}
+
+function updateNote(id, value) {
+  const file = fileList.find(f => f.id === id);
+  if (file) {
+    file.note = value;
+    saveData();
+  }
+}
+
+function openLinkModal(id) {
+  currentEditingId = id;
+  document.getElementById('linkText').value = '';
+  document.getElementById('linkUrl').value = '';
+  document.getElementById('linkModal').style.display = 'block';
+  setTimeout(() => {
+    document.getElementById('linkText').focus();
+  }, 100);
+}
+
+function closeLinkModal() {
+  document.getElementById('linkModal').style.display = 'none';
+  currentEditingId = null;
+}
+
+function confirmAddLink() {
+  const text = document.getElementById('linkText').value.trim();
+  const url = document.getElementById('linkUrl').value.trim();
+  if (!text) {
+    alert('请输入链接文字！');
+    return;
+  }
+  if (!url) {
+    alert('请输入链接地址！');
+    return;
+  }
+  let finalUrl = url;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    finalUrl = 'https://' + url;
+  }
+  const file = fileList.find(f => f.id === currentEditingId);
+  if (file) {
+    if (!file.links) {
+      file.links = [];
+    }
+    file.links.push({
+      text: text,
+      url: finalUrl
+    });
+    saveData();
+    renderTable();
+  }
+  closeLinkModal();
+}
+
+function removeLink(fileId, linkIndex) {
+  const file = fileList.find(f => f.id === fileId);
+  if (file && file.links) {
+    file.links.splice(linkIndex, 1);
+    saveData();
+    renderTable();
+  }
+}
+
+function toggleKeyMode() {
+  const mode = document.querySelector('input[name="keyMode"]:checked').value;
+  const linkMode = document.getElementById('keyLinkMode');
+  const localMode = document.getElementById('keyLocalMode');
+  if (mode === 'link') {
+    linkMode.style.display = 'block';
+    localMode.style.display = 'none';
+  } else {
+    linkMode.style.display = 'none';
+    localMode.style.display = 'block';
+  }
+}
+
+function openKeyModal(id) {
+  currentEditingId = id;
+  const file = fileList.find(f => f.id === id);
+  if (file?.keyMode === 'local') {
+    document.querySelector('input[name="keyMode"][value="local"]').checked = true;
+    document.getElementById('keyVariableName').value = file.keyVariable || 'API_KEY';
+  } else {
+    document.querySelector('input[name="keyMode"][value="link"]').checked = true;
+    document.getElementById('keyUrlTemplate').value = file?.keyUrl || '';
+  }
+  toggleKeyMode();
+  document.getElementById('keyUrlExample').value = '';
+  document.getElementById('keyModal').style.display = 'block';
+  setTimeout(() => {
+    if (file?.keyMode === 'local') {
+      document.getElementById('keyVariableName').focus();
+    } else {
+      document.getElementById('keyUrlTemplate').focus();
+    }
+  }, 100);
+}
+
+function closeKeyModal() {
+  document.getElementById('keyModal').style.display = 'none';
+  currentEditingId = null;
+}
+
+function confirmAddKeyUrl() {
+  const mode = document.querySelector('input[name="keyMode"]:checked').value;
+  const file = fileList.find(f => f.id === currentEditingId);
+  if (!file) return;
+  if (mode === 'link') {
+    const keyUrl = document.getElementById('keyUrlTemplate').value.trim();
+    if (!keyUrl) {
+      if (confirm('链接为空，是否删除已有的密钥配置？')) {
+        file.keyMode = '';
+        file.keyUrl = '';
+        file.keyVariable = '';
+        saveData();
+        renderTable();
+        closeKeyModal();
+      }
+      return;
+    }
+    if (!keyUrl.startsWith('http://') && !keyUrl.startsWith('https://')) {
+      alert('请输入完整的URL（以http://或https://开头）');
+      return;
+    }
+    file.keyMode = 'link';
+    file.keyUrl = keyUrl;
+    file.keyVariable = '';
+  } else {
+    const keyVariable = document.getElementById('keyVariableName').value.trim() || 'API_KEY';
+    if (!file.fileContent) {
+      alert('本地密钥模式需要先上传.js文件！');
+      return;
+    }
+    file.keyMode = 'local';
+    file.keyUrl = '';
+    file.keyVariable = keyVariable;
+  }
+  saveData();
+  renderTable();
+  closeKeyModal();
+}
+
+function removeKeyUrl(fileId) {
+  const file = fileList.find(f => f.id === fileId);
+  if (file) {
+    file.keyMode = '';
+    file.keyUrl = '';
+    file.keyVariable = '';
+    saveData();
+    renderTable();
+  }
+}
+
+function openDirectUrlModal(id) {
+  currentEditingId = id;
+  const file = fileList.find(f => f.id === id);
+  document.getElementById('directUrlInput').value = file?.directUrl || '';
+  document.getElementById('directUrlModal').style.display = 'block';
+  setTimeout(() => {
+    document.getElementById('directUrlInput').focus();
+  }, 100);
+}
+
+function closeDirectUrlModal() {
+  document.getElementById('directUrlModal').style.display = 'none';
+  currentEditingId = null;
+}
+
+function confirmAddDirectUrl() {
+  const directUrl = document.getElementById('directUrlInput').value.trim();
+  if (!directUrl) {
+    if (confirm('链接为空，是否删除已有的在线链接？')) {
+      const file = fileList.find(f => f.id === currentEditingId);
+      if (file) {
+        file.directUrl = '';
+        saveData();
+        renderTable();
+      }
+      closeDirectUrlModal();
+    }
+    return;
+  }
+  if (!directUrl.startsWith('http://') && !directUrl.startsWith('https://')) {
+    alert('请输入完整的URL（以http://或https://开头）');
+    return;
+  }
+  const file = fileList.find(f => f.id === currentEditingId);
+  if (file) {
+    file.directUrl = directUrl;
+    saveData();
+    renderTable();
+  }
+  closeDirectUrlModal();
+}
+
+function removeDirectUrl(fileId) {
+  const file = fileList.find(f => f.id === fileId);
+  if (file) {
+    file.directUrl = '';
+    saveData();
+    renderTable();
+  }
+}
+
+function formatFileSize(bytes) {
+  if (!bytes || bytes === 0) return '';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return ' (' + Math.round(bytes / Math.pow(k, i) * 100) / 100 + sizes[i] + ')';
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  if (fileList.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无数据，点击上方"添加文件"按钮开始</td></tr>';
+    return;
+  }
+  let html = '';
+  let displayIndex = 1;
+  fileList.forEach((file, index) => {
+    const isFiltered = checkFilter(file);
+    if (!isFiltered) return;
+    const hasFile = file.fileContent ? true : false;
+    let linksHtml = '';
+    if (file.links && file.links.length > 0) {
+      linksHtml = '<div class="links-container">';
+      file.links.forEach((link, linkIndex) => {
+        linksHtml += '<a href="' + link.url + '" target="_blank" class="link-tag" title="' + link.url + '">';
+        linksHtml += '<span class="link-tag-text">🔗 ' + link.text + '</span>';
+        linksHtml += '<button class="link-tag-remove" onclick="event.preventDefault(); removeLink(' + file.id + ', ' + linkIndex + ')">×</button>';
+        linksHtml += '</a>';
+      });
+      linksHtml += '</div>';
+    }
+    let keyUrlHtml = '';
+    if (file.keyMode === 'link' && file.keyUrl) {
+      keyUrlHtml = '<div class="key-url-display" title="' + file.keyUrl + '">';
+      keyUrlHtml += '🔑 在线密钥: ' + file.keyUrl;
+      keyUrlHtml += '<span class="remove-key" onclick="removeKeyUrl(' + file.id + ')">×</span>';
+      keyUrlHtml += '</div>';
+    } else if (file.keyMode === 'local' && file.keyVariable) {
+      keyUrlHtml = '<div class="key-url-display" title="本地密钥导入模式">';
+      keyUrlHtml += '🔑 本地密钥: ' + file.keyVariable;
+      keyUrlHtml += '<span class="remove-key" onclick="removeKeyUrl(' + file.id + ')">×</span>';
+      keyUrlHtml += '</div>';
+    }
+    let directUrlHtml = '';
+    if (file.directUrl) {
+      directUrlHtml = '<div class="direct-url-display" title="' + file.directUrl + '">';
+      directUrlHtml += '🌐 在线链接: ' + file.directUrl;
+      directUrlHtml += '<span class="remove-key" onclick="removeDirectUrl(' + file.id + ')">×</span>';
+      directUrlHtml += '</div>';
+    }
+    html += '<tr>';
+    html += '<td><div class="sort-buttons">';
+    html += '<button class="sort-btn" onclick="moveUp(' + index + ')" ' + (index === 0 ? 'disabled' : '') + ' title="上移">▲</button>';
+    html += '<button class="sort-btn" onclick="moveDown(' + index + ')" ' + (index === fileList.length - 1 ? 'disabled' : '') + ' title="下移">▼</button>';
+    html += '</div></td>';
+    html += '<td style="text-align: center; font-weight: bold; color: #666;">' + displayIndex + '</td>';
+    html += '<td class="file-upload-cell">';
+    html += '<div class="file-name"><span class="file-icon">📜</span><div style="flex: 1;">';
+    html += '<input type="text" value="' + file.fileName + '" onchange="updateFileName(' + file.id + ', this.value)" placeholder="输入文件名或上传文件" style="border: ' + (file.fileName ? '1px solid #ddd' : '2px solid #ffc107') + ';">';
+    html += hasFile ? '<span class="file-status">✅ 已上传' + formatFileSize(file.fileSize) + '</span>' : '<span class="file-status no-file">⚠️ 未上传</span>';
+    html += '</div></div></td>';
+    html += '<td><select onchange="updateQuality(' + file.id + ', this.value)" style="width: 100%;">';
+    qualityOptions.forEach(q => {
+      html += '<option value="' + q + '" ' + (file.quality === q ? 'selected' : '') + '>' + q + '</option>';
+    });
+    html += '</select></td>';
+    html += '<td><div class="checkbox-group">';
+    sources.forEach(source => {
+      html += '<div class="source-checkbox">';
+      html += '<input type="checkbox" id="source-' + file.id + '-' + source + '" ' + (file.unsupportedSources.includes(source) ? 'checked' : '') + ' onchange="updateUnsupportedSources(' + file.id + ', \'' + source + '\', this.checked)">';
+      html += '<label for="source-' + file.id + '-' + source + '">' + sourceNames[source] + '</label>';
+      html += '</div>';
+    });
+    html += file.unsupportedSources.length === 0 ? '<span style="color: #28a745; font-size: 11px; font-weight: bold;">✓ 全支持</span>' : '';
+    html += '</div></td>';
+    html += '<td><div class="note-container">';
+    html += '<textarea class="note-text" onchange="updateNote(' + file.id + ', this.value)" placeholder="输入备注...">' + (file.note || '') + '</textarea>';
+    html += '<div>';
+    html += '<button class="add-link-btn" onclick="openLinkModal(' + file.id + ')">➕ 添加链接</button>';
+    html += '<button class="add-direct-btn" onclick="openDirectUrlModal(' + file.id + ')">🌐 在线链接</button>';
+    html += '<button class="add-key-btn" onclick="openKeyModal(' + file.id + ')">🔑 密钥配置</button>';
+    html += '</div>';
+    html += linksHtml + directUrlHtml + keyUrlHtml;
+    html += '</div></td>';
+    html += '<td>';
+    html += '<input type="file" id="file-' + file.id + '" class="file-input" accept=".js" onchange="uploadFile(' + file.id + ', event)">';
+    html += '<button class="upload-btn" onclick="document.getElementById(\'file-' + file.id + '\').click()">' + (hasFile ? '📤 重传' : '📁 上传') + '</button>';
+    html += hasFile ? '<button class="download-btn" onclick="downloadFile(' + file.id + ')">⬇️ 下载</button>' : '';
+    html += '<button class="delete-btn" onclick="deleteRow(' + file.id + ')">删除</button>';
+    html += '</td>';
+    html += '</tr>';
+    displayIndex++;
+  });
+  tbody.innerHTML = html;
+}
+
+function checkFilter(file) {
+  const searchBox = document.querySelector('.search-box');
+  if (searchBox && searchBox.value.trim()) {
+    const keyword = searchBox.value.toLowerCase();
+    if (!file.fileName.toLowerCase().includes(keyword) && !file.note.toLowerCase().includes(keyword)) {
+      return false;
+    }
+  }
+  const activeFilters = sources.filter(source => document.getElementById('filter-' + source)?.checked);
+  if (activeFilters.length > 0) {
+    const hasMatch = activeFilters.some(source => file.unsupportedSources.includes(source));
+    if (!hasMatch) return false;
+  }
+  return true;
+}
+
+function filterTable() {
+  renderTable();
+}
+
+function clearFilters() {
+  sources.forEach(source => {
+    const checkbox = document.getElementById('filter-' + source);
+    if (checkbox) checkbox.checked = false;
+  });
+  document.querySelector('.search-box').value = '';
+  filterTable();
+}
+
+function updateStats() {
+  const total = fileList.length;
+  const uploaded = fileList.filter(f => f.fileContent).length;
+  const flacCount = fileList.filter(f => f.quality === 'flac' || f.quality === 'flac24bit').length;
+  const fullSupport = fileList.filter(f => f.unsupportedSources.length === 0).length;
+  document.getElementById('totalFiles').textContent = total;
+  document.getElementById('uploadedCount').textContent = uploaded;
+  document.getElementById('flacCount').textContent = flacCount;
+  document.getElementById('fullSupportCount').textContent = fullSupport;
+}
+
+function clearAll() {
+  if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+    fileList = [];
+    saveData();
+    renderTable();
+  }
+}
+
+function exportToJSON() {
+  const dataStr = JSON.stringify(fileList, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '音源数据_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importFromJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (confirm('确定要导入数据吗？这将覆盖当前所有数据！')) {
+        fileList = imported;
+        saveData();
+        renderTable();
+        alert('导入成功！');
+      }
+    } catch (err) {
+      alert('导入失败：文件格式错误');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function exportToMarkdown() {
+  let md = '# 音源管理报告\n\n生成时间: ' + new Date().toLocaleString('zh-CN') + '\n\n总文件数: ' + fileList.length + '\n\n## 文件列表\n\n| 序号 | 文件名 | 音质 | 不支持源 | 备注 |\n|------|--------|------|----------|------|\n';
+  fileList.forEach((file, index) => {
+    const unsupported = file.unsupportedSources.length > 0 ? file.unsupportedSources.map(s => sourceNames[s]).join(', ') : '全支持';
+    md += '| ' + (index + 1) + ' | ' + (file.fileName || '(未命名)') + ' | ' + file.quality + ' | ' + unsupported + ' | ' + (file.note || '-') + ' |\n';
+  });
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '音源报告_' + new Date().toISOString().slice(0,10) + '.md';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportHTMLWithFiles() {
+  const filesDataJSON = JSON.stringify(fileList.map(f => ({
+    id: f.id,
+    fileName: f.fileName,
+    fileContent: f.fileContent,
+    quality: f.quality,
+    unsupportedSources: f.unsupportedSources,
+    note: f.note,
+    links: f.links,
+    keyMode: f.keyMode,
+    keyUrl: f.keyUrl,
+    keyVariable: f.keyVariable,
+    directUrl: f.directUrl,
+    author: f.author || '未知作者',
+    version: f.version || '1.0.0'
+  })));
+
+  // 客户端逻辑：这里的代码会被注入到生成的 HTML 中
+  const clientSideFunctions = {
+    adler32: function(data) {
+      var a = 1, b = 0, L = data.length, M = 65521;
+      for(var i=0; i<L; i++) {
+        a = (a + data[i]) % M;
+        b = (b + a) % M;
+      }
+      return ((b << 16) | a) >>> 0;
+    },
+    
+    parseMetadata: function(script) {
+       try {
+           const meta = {};
+           const lines = script.split('\n');
+           let inComment = false;
+           for (const line of lines) {
+               if (line.includes('/*!') || line.includes('/*')) inComment = true;
+               if (line.includes('*/')) inComment = false;
+               
+               if (inComment || line.trim().startsWith('//')) {
+                   const match = line.match(/@(\w+)\s+(.+)/);
+                   if (match) {
+                       meta[match[1].trim()] = match[2].trim();
+                   }
+               }
+           }
+           return meta;
+       } catch(e) { console.error(e); return {}; }
+    },
+
+    processFileContent: function(index, useKey) {
+      var file = window.filesData[index];
+      if (!file.fileContent) { alert("该文件未上传！"); return null; }
+      try {
+        var base64Data = file.fileContent.split(",")[1];
+        var binaryString = atob(base64Data);
+        var bytes = new Uint8Array(binaryString.length);
+        for (var i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        var decoder = new TextDecoder("utf-8");
+        var decodedData = decoder.decode(bytes);
+        
+        if (useKey) {
+            var keyInput = document.getElementById("localkey-" + index);
+            var key = keyInput ? keyInput.value.trim() : "";
+            if (!key) { alert("请输入密钥！"); if(keyInput) keyInput.focus(); return null; }
+            
+            var keyVariable = file.keyVariable || "API_KEY";
+            // 兼容单双引号
+            var regex1 = new RegExp("const\\s+" + keyVariable + "\\s*=\\s*\"\"", "g");
+            var regex2 = new RegExp("const\\s+" + keyVariable + "\\s*=\\s*\'\'", "g");
+            decodedData = decodedData.replace(regex1, "const " + keyVariable + " = \"" + key + "\"");
+            decodedData = decodedData.replace(regex2, "const " + keyVariable + " = \'" + key + "\'");
+            decodedData = decodedData.replace(/\(公益版\)/g, "").replace(/\(免费版\)/g, "").replace(/（公益版）/g, "").replace(/（免费版）/g, "");
+        }
+        return decodedData;
+      } catch (e) {
+        alert("处理文件失败：" + e.message);
+        return null;
+      }
+    },
+
+    downloadFile: function(index) {
+       var content = this.processFileContent(index, false);
+       if(!content) return;
+       var blob = new Blob([content], {type: "text/javascript;charset=utf-8"});
+       var link = document.createElement("a");
+       link.href = URL.createObjectURL(blob);
+       link.download = window.filesData[index].fileName || "download.js";
+       link.click();
+    },
+
+    downloadWithLocalKey: function(index) {
+       var content = this.processFileContent(index, true);
+       if(!content) return;
+       var blob = new Blob([content], {type: "text/javascript;charset=utf-8"});
+       var link = document.createElement("a");
+       link.href = URL.createObjectURL(blob);
+       link.download = window.filesData[index].fileName || "download.js";
+       link.click();
+    },
+    
+    downloadWithOnlineKey: function(index){
+        var file=window.filesData[index];
+        var keyInput=document.getElementById("key-"+index);
+        var key=keyInput.value.trim();
+        if(!key){alert("请输入密钥！");keyInput.focus();return;}
+        if(!file.keyUrl){alert("该文件没有配置密钥链接！");return;}
+        var downloadUrl=file.keyUrl+key;
+        var link=document.createElement("a");
+        link.href=downloadUrl;
+        link.download=file.fileName||"download.js";
+        link.click();
+        alert("开始下载，如果没有反应请检查密钥是否正确！");
+    },
+
+    downloadAllFiles: function(){
+        var validFiles=window.filesData.filter(function(f){return f.fileContent||f.directUrl;});
+        if(validFiles.length===0){alert("没有可下载的免费文件!");return;}
+        if(!confirm("将下载 "+validFiles.length+" 个文件，确定继续吗？")){return;}
+        validFiles.forEach(function(file,index){
+            setTimeout(function(){
+                if(file.directUrl){
+                    var link=document.createElement("a");
+                    link.href=file.directUrl;
+                    link.download=file.fileName||"file_"+index+".js";
+                    link.click();
+                }else if(file.fileContent){
+                    var content = window.filesData[index].fileContent; 
+                    var base64Data = content.split(",")[1];
+                    var binaryString = atob(base64Data);
+                    var bytes = new Uint8Array(binaryString.length);
+                    for (var i = 0; i < binaryString.length; i++) { bytes[i] = binaryString.charCodeAt(i); }
+                    var blob = new Blob([bytes], {type: "text/javascript;charset=utf-8"});
+                    var link=document.createElement("a");
+                    link.href=URL.createObjectURL(blob);
+                    link.download=file.fileName||"file_"+index+".js";
+                    link.click();
+                }
+            },index*500);
+        });
+        alert("开始下载 "+validFiles.length+" 个文件...");
+    },
+
+    // 核心修复逻辑
+    generateImportScript: async function(index, useKey) {
+      var scriptContent = this.processFileContent(index, useKey);
+      if (!scriptContent) return;
+
+      var file = window.filesData[index];
+      var statusBtn = event.target;
+      var originalText = statusBtn.innerText;
+      statusBtn.innerText = "⏳ 处理中...";
+      statusBtn.disabled = true;
+
+      try {
+          var metadata = this.parseMetadata(scriptContent);
+          
+          // 1. Zlib 压缩
+          const stream = new Blob([scriptContent]).stream();
+          const compressedStream = stream.pipeThrough(new CompressionStream('deflate'));
+          const response = await new Response(compressedStream).arrayBuffer();
+          const rawDeflate = new Uint8Array(response);
+          
+          const encoder = new TextEncoder();
+          const rawBytes = encoder.encode(scriptContent);
+          const checksum = this.adler32(rawBytes);
+          
+          const zlibPacket = new Uint8Array(2 + rawDeflate.length + 4);
+          zlibPacket[0] = 0x78; zlibPacket[1] = 0x9C;
+          zlibPacket.set(rawDeflate, 2);
+          zlibPacket[zlibPacket.length - 4] = (checksum >>> 24) & 0xFF;
+          zlibPacket[zlibPacket.length - 3] = (checksum >>> 16) & 0xFF;
+          zlibPacket[zlibPacket.length - 2] = (checksum >>> 8) & 0xFF;
+          zlibPacket[zlibPacket.length - 1] = checksum & 0xFF;
+          
+          var binary = "";
+          for (var i = 0; i < zlibPacket.byteLength; i++) { binary += String.fromCharCode(zlibPacket[i]); }
+          var compressedBase64 = "gz_" + btoa(binary);
+
+          // 2. 构建 JSON 数据
+          var apiName = metadata.name || (file.fileName || "unknown").replace(/\.js$/i,'');
+          var apiVersion = metadata.version || file.version || "1.0.0";
+          var apiAuthor = metadata.author || file.author || "User";
+          var apiDesc = metadata.description || file.note || "Imported source";
+          var apiId = "user_api_" + Math.random().toString(36).substring(2, 5) + "_" + Date.now();
+
+          var userApiObj = {
+              "id": apiId,
+              "name": apiName,
+              "description": apiDesc,
+              "version": apiVersion,
+              "author": apiAuthor,
+              "homepage": "",
+              "allowShowUpdateAlert": true,
+              "script": compressedBase64
+          };
+          
+          var jsonStr = JSON.stringify(userApiObj);
+          var jsonBase64 = btoa(unescape(encodeURIComponent(jsonStr)));
+
+          // 3. 构建 BAT 脚本内容
+          var randId = Math.floor(Math.random() * 100000);
+          var b64FileName = "lx_payload_" + randId + ".txt";
+          var psFileName = "lx_importer_" + randId + ".ps1";
+          
+          var chunks = [];
+          var chunkSize = 70; 
+          for (var i = 0; i < jsonBase64.length; i += chunkSize) {
+            chunks.push(jsonBase64.substring(i, i + chunkSize));
+          }
+
+          // --- PowerShell 脚本 (修复文件并插入) ---
+          var psCode = [
+            '$ErrorActionPreference = "Stop"',
+            'try {',
+            '    $targetDir = "$env:APPDATA\\lx-music-desktop\\LxDatas"',
+            '    $targetFile = "$targetDir\\user_api.json"',
+            '    $tempB64 = "$env:TEMP\\' + b64FileName + '"',
+            '',
+            '    # Read Base64',
+            '    if (-not (Test-Path $tempB64)) { throw "Data file lost." }',
+            '    $b64 = Get-Content $tempB64 | Out-String',
+            '    $b64 = $b64 -replace "[\\r\\n\\s]", ""',
+            '    $jsonBytes = [System.Convert]::FromBase64String($b64)',
+            '    $jsonStr = [System.Text.Encoding]::UTF8.GetString($jsonBytes)',
+            '',
+            '    # Create dir',
+            '    if (-not (Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir | Out-Null }',
+            '',
+            '    Write-Host "Processing..." -ForegroundColor Cyan',
+            '',
+            '    if (-not (Test-Path $targetFile)) {',
+            '        Write-Host "Creating new file..." -ForegroundColor Cyan',
+            '        $finalJson = "{`"userApis`": [" + $jsonStr + "]}"',
+            '        [System.IO.File]::WriteAllText($targetFile, $finalJson, [System.Text.UTF8Encoding]::new($false))',
+            '    } else {',
+            '        # Robust File Read and Repair',
+            '        $raw = [System.IO.File]::ReadAllText($targetFile)',
+            '        ',
+            '        # Find valid JSON boundaries',
+            '        $start = $raw.IndexOf("{")',
+            '        $end = $raw.LastIndexOf("}")',
+            '        ',
+            '        if ($start -ge 0 -and $end -gt $start) {',
+            '            $raw = $raw.Substring($start, $end - $start + 1)',
+            '        } else {',
+            '             # File corrupted/empty -> Reset',
+            '             Write-Host "File corrupted, resetting..." -ForegroundColor Yellow',
+            '             $raw = "{`"userApis`":[]}"',
+            '        }',
+            '',
+            '        # Insert Logic',
+            '        $lastBracket = $raw.LastIndexOf("]")',
+            '        if ($lastBracket -gt 0) {',
+            '             $prevChar = $raw.Substring($lastBracket-1, 1)',
+            '             $prefix = ","',
+            '             if ($prevChar -eq "[") { $prefix = "" }',
+            '             ',
+            '             $newContent = $raw.Insert($lastBracket, $prefix + $jsonStr)',
+            '             # Force UTF8 No BOM',
+            '             [System.IO.File]::WriteAllText($targetFile, $newContent, [System.Text.UTF8Encoding]::new($false))',
+            '             Write-Host "Success! Source added." -ForegroundColor Green',
+            '        } else {',
+            '             throw "Invalid JSON structure found."',
+            '        }',
+            '    }',
+            '} catch {',
+            '    Write-Host "Error: $_" -ForegroundColor Red',
+            '    exit 1',
+            '}'
+          ].join('\r\n');
+
+          var bat = '@echo off\r\n';
+          bat += 'setlocal\r\n';
+          bat += 'title LX Music Source Importer (Repair Mode)\r\n';
+          bat += 'echo Initializing...\r\n';
+          
+          bat += 'set "B64_FILE=%TEMP%\\' + b64FileName + '"\r\n';
+          bat += 'type nul > "%B64_FILE%"\r\n';
+          for(var i=0; i<chunks.length; i++) {
+             bat += 'echo ' + chunks[i] + '>> "%B64_FILE%"\r\n';
+          }
+          
+          var psCodeBase64 = btoa(unescape(encodeURIComponent(psCode)));
+          var psChunks = [];
+          for (var k = 0; k < psCodeBase64.length; k += 70) {
+            psChunks.push(psCodeBase64.substring(k, k + 70));
+          }
+          
+          bat += 'set "PS_B64=%TEMP%\\ps_' + randId + '.b64"\r\n';
+          bat += 'type nul > "%PS_B64%"\r\n';
+          for(var m=0; m<psChunks.length; m++) {
+             bat += 'echo ' + psChunks[m] + '>> "%PS_B64%"\r\n';
+          }
+          
+          bat += 'certutil -decode "%PS_B64%" "%TEMP%\\' + psFileName + '" >nul\r\n';
+          
+          bat += 'echo Running installation script...\r\n';
+          bat += 'powershell -NoProfile -ExecutionPolicy Bypass -File "%TEMP%\\' + psFileName + '"\r\n';
+          
+          bat += 'if %errorlevel% neq 0 ( color 4f & echo. & echo [ERROR] Installation Failed! & pause ) else ( \r\n';
+          bat += '  del "%B64_FILE%"\r\n';
+          bat += '  del "%PS_B64%"\r\n';
+          bat += '  del "%TEMP%\\' + psFileName + '"\r\n';
+          bat += '  echo. & echo [SUCCESS] Installation Complete! Please restart LX Music. & timeout /t 5 >nul \r\n';
+          bat += ')\r\n';
+
+          var blob = new Blob([bat], { type: "text/plain;charset=us-ascii" });
+          var link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = "一键导入_" + (metadata.name || file.fileName || "music").replace(/\.js$/,'').replace(/[\\/:*?"<>|]/g,'_') + ".bat";
+          link.click();
+          
+      } catch (e) {
+          alert("生成脚本失败: " + e.message);
+          console.error(e);
+      } finally {
+          statusBtn.innerText = originalText;
+          statusBtn.disabled = false;
+      }
+    }
+  };
+
+  const reportHTML = [];
+  reportHTML.push('<!DOCTYPE html>');
+  reportHTML.push('<html><head><meta charset="UTF-8"><title>音源管理报告</title>');
+  reportHTML.push('<style>');
+  reportHTML.push('body{font-family:Microsoft YaHei,Arial,sans-serif;max-width:1400px;margin:20px auto;padding:20px;background:#f5f5f5}');
+  reportHTML.push('h1{color:#333;border-bottom:3px solid #667eea;padding-bottom:10px}');
+  reportHTML.push('.info-box{background:#e3f2fd;padding:15px;border-radius:8px;margin:20px 0}');
+  reportHTML.push('table{width:100%;border-collapse:collapse;margin:20px 0;background:white;box-shadow:0 2px 8px rgba(0,0,0,0.1)}');
+  reportHTML.push('th{background:#667eea;color:white;padding:12px;text-align:left}td{padding:10px;border-bottom:1px solid #ddd;vertical-align:top}tr:hover{background:#f8f9fa}');
+  reportHTML.push('.btn{padding:6px 12px;border:none;border-radius:4px;cursor:pointer;font-size:12px;text-decoration:none;display:inline-block;margin:2px;color:white;transition:opacity 0.2s}');
+  reportHTML.push('.btn:hover{opacity:0.9}.btn:disabled{background:#ccc!important;cursor:not-allowed}');
+  reportHTML.push('.btn-green{background:#28a745}.btn-blue{background:#17a2b8}.btn-yellow{background:#ffc107;color:#333}');
+  reportHTML.push('.no-file{color:#999;font-style:italic}');
+  reportHTML.push('.quality{padding:4px 10px;border-radius:12px;font-size:12px;font-weight:bold;display:inline-block}');
+  reportHTML.push('.q-flac{background:#007bff;color:white}.q-320k{background:#28a745;color:white}.q-128k{background:#ffc107;color:#333}');
+  reportHTML.push('.unsupported{color:#dc3545;font-weight:bold}.supported{color:#28a745;font-weight:bold}');
+  reportHTML.push('.link-tag{display:inline-block;margin:3px;padding:4px 10px;background:#667eea;color:white;border-radius:15px;font-size:11px;text-decoration:none}');
+  reportHTML.push('.key-box{margin-top:10px;padding:10px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px}');
+  reportHTML.push('.input-group{display:flex;gap:5px;margin-top:5px}.input-group input{flex:1;padding:5px;border:1px solid #ccc;border-radius:4px}');
+  reportHTML.push('</style></head><body>');
+  
+  reportHTML.push('<h1>🎵 音源管理报告</h1>');
+  reportHTML.push('<div class="info-box">');
+  reportHTML.push('<p><strong>生成时间:</strong> ' + new Date().toLocaleString('zh-CN') + '</p>');
+  reportHTML.push('<p><strong>总文件数:</strong> ' + fileList.length + '</p>');
+  reportHTML.push('<p><strong>说明:</strong> 点击【一键导入脚本】下载 .bat 文件，双击即可将音源安装到 LX Music。</p>');
+  reportHTML.push('</div>');
+  
+  reportHTML.push('<button class="btn btn-green" style="font-size:14px;padding:10px 20px" onclick="downloadAllFiles()">📦 打包下载所有免费文件</button>');
+  
+  reportHTML.push('<table><thead><tr><th>序号</th><th>文件名</th><th>音质</th><th>备注 & 链接</th><th>下载操作</th></tr></thead><tbody>');
+  
+  fileList.forEach((file, index) => {
+    let qClass = file.quality.includes('flac') ? 'q-flac' : file.quality.includes('320') ? 'q-320k' : 'q-128k';
+    let unsupported = file.unsupportedSources.length > 0 ? 
+      '<span class="unsupported">不支持: ' + file.unsupportedSources.map(s => sourceNames[s]).join(',') + '</span>' : 
+      '<span class="supported">全支持</span>';
+      
+    let actions = '';
+    
+    // 1. 在线直链
+    if (file.directUrl) {
+      actions += `<a href="${file.directUrl}" class="btn btn-green" download>⬇️ 在线下载</a><br>`;
+    }
+    
+    // 2. 本地文件 (免费)
+    if (file.fileContent) {
+      actions += `<div style="margin:5px 0">
+        <button class="btn btn-green" onclick="downloadFile(${index})">⬇️ 本地下载</button>
+        <button class="btn btn-blue" onclick="generateImportScript(${index}, false)">🚀 一键导入脚本</button>
+      </div>`;
+    }
+    
+    // 3. 在线密钥
+    if (file.keyMode === 'link' && file.keyUrl) {
+      actions += `<div class="key-box">
+        <label>🔑 在线密钥:</label>
+        <div class="input-group">
+          <input type="text" id="key-${index}" placeholder="输入密钥">
+          <button class="btn btn-yellow" onclick="downloadWithOnlineKey(${index})">下载</button>
+        </div>
+      </div>`;
+    }
+    
+    // 4. 本地密钥 (需注入)
+    if (file.keyMode === 'local' && file.keyVariable && file.fileContent) {
+      actions += `<div class="key-box">
+        <label>🔑 本地密钥导入:</label>
+        <div class="input-group">
+          <input type="text" id="localkey-${index}" placeholder="输入密钥">
+          <button class="btn btn-yellow" onclick="downloadWithLocalKey(${index})">下载JS</button>
+        </div>
+        <div style="margin-top:5px">
+          <button class="btn btn-blue" style="width:100%" onclick="generateImportScript(${index}, true)">🚀 下载一键导入(含密钥)</button>
+        </div>
+      </div>`;
+    }
+    
+    if (!actions) actions = '<span class="no-file">无下载方式</span>';
+    
+    let links = (file.note || '') + '<br>';
+    if (file.links) {
+        file.links.forEach(l => links += `<a href="${l.url}" target="_blank" class="link-tag">🔗 ${l.text}</a> `);
+    }
+
+    reportHTML.push(`
+      <tr>
+        <td>${index + 1}</td>
+        <td>${file.fileName || '(未命名)'}</td>
+        <td><span class="quality ${qClass}">${file.quality}</span><br><br>${unsupported}</td>
+        <td>${links}</td>
+        <td>${actions}</td>
+      </tr>
+    `);
+  });
+  
+  reportHTML.push('</tbody></table>');
+  
+  // 注入 JS 代码
+  reportHTML.push('<script>');
+  reportHTML.push('window.filesData = ' + filesDataJSON + ';');
+  
+  // 注入函数
+  for (const [name, func] of Object.entries(clientSideFunctions)) {
+      reportHTML.push(`window.${name} = ${func.toString()};`);
+  }
+  
+  reportHTML.push('<\/script></body></html>');
+  
+  const htmlBlob = new Blob([reportHTML.join('')], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(htmlBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '音源完整报告_' + new Date().toISOString().slice(0,10) + '.html';
+  a.click();
+  URL.revokeObjectURL(url);
+  alert('导出成功！\n\n强力修复版：\n已修正语法错误，并增加了针对破损文件的自动修复功能。');
+}
+
+function downloadAllFiles() {
+  const validFiles = fileList.filter(f => f.fileContent);
+  if (validFiles.length === 0) {
+    alert('没有已上传的文件！');
+    return;
+  }
+  if (!confirm('将下载 ' + validFiles.length + ' 个文件，确定继续吗？')) {
+    return;
+  }
+  validFiles.forEach((file, index) => {
+    setTimeout(() => {
+      const link = document.createElement('a');
+      link.href = file.fileContent;
+      link.download = file.fileName || 'file_' + index + '.js';
+      link.click();
+    }, index * 500);
+  });
+  alert('开始下载 ' + validFiles.length + ' 个文件...');
+}
+
+window.onload = function() {
+  loadData();
+  if (fileList.length === 0) {
+    fileList = [{
+      id: Date.now(),
+      fileName: 'example.js',
+      quality: '320k',
+      unsupportedSources: [],
+      note: '这是一个示例文件',
+      links: [],
+      keyMode: '',
+      keyUrl: '',
+      keyVariable: '',
+      directUrl: '',
+      fileContent: null,
+      fileSize: 0,
+      addedTime: new Date().toLocaleString('zh-CN'),
+      author: '未知作者',
+      version: '1.0.0'
+    }];
+    saveData();
+    renderTable();
+  }
+  const keyUrlTemplate = document.getElementById('keyUrlTemplate');
+  if (keyUrlTemplate) {
+    keyUrlTemplate.addEventListener('input', function() {
+      const template = this.value.trim();
+      const exampleInput = document.getElementById('keyUrlExample');
+      if (template && exampleInput) {
+        exampleInput.value = template + '123-456-789-abcd-efgh';
+      } else if (exampleInput) {
+        exampleInput.value = '';
+      }
+    });
+  }
+  window.onclick = function(event) {
+    const linkModal = document.getElementById('linkModal');
+    const keyModal = document.getElementById('keyModal');
+    const directUrlModal = document.getElementById('directUrlModal');
+    if (event.target === linkModal) {
+      closeLinkModal();
+    }
+    if (event.target === keyModal) {
+      closeKeyModal();
+    }
+    if (event.target === directUrlModal) {
+      closeDirectUrlModal();
+    }
+  };
+};
+</script>
+</body>
+</html>

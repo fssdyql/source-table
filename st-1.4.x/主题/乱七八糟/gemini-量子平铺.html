@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}} - 量子平铺</title>
+  <style>
+    /* 样式部分 */
+    :root {
+      --primary-color: #3f51b5; /* 靛青色 */
+      --secondary-color: #ff9800; /* 琥珀色高亮 */
+      --bg-color: #f4f6f9;
+      --text-color: #2c3e50;
+      --tile-bg: #ffffff;
+      --drawer-bg: #e8eaf6; /* 抽屉背景色 */
+      --border-color: #e0e0e0;
+      --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --radius-sm: 8px;
+    }
+    .dark {
+      --primary-color: #7986cb;
+      --secondary-color: #ffb74d;
+      --bg-color: #1a1a2e;
+      --text-color: #ecf0f1;
+      --tile-bg: #2c3e50;
+      --drawer-bg: #34495e;
+      --border-color: #3b506b;
+    }
+
+    /* 基础样式 */
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.4s;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* 头部与导航 */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--primary-color);
+    }
+    .tab-navigation {
+      display: flex;
+      gap: 10px;
+    }
+    .tab-btn {
+      padding: 10px 15px;
+      border: 1px solid var(--border-color);
+      background: var(--tile-bg);
+      color: var(--text-color);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      background-color: var(--primary-color);
+      color: white;
+      box-shadow: 0 0 8px rgba(63, 81, 181, 0.4);
+    }
+
+    /* === 核心：平铺布局 (Tiles Grid) === */
+    .tiles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .tile-group-header {
+      grid-column: 1 / -1; /* 跨越所有列 */
+      margin-top: 30px;
+      margin-bottom: 10px;
+      padding-left: 10px;
+    }
+    .tile-group-header h2 {
+      margin: 0;
+      font-size: 24px;
+      color: var(--primary-color);
+      border-left: 4px solid var(--primary-color);
+      padding-left: 10px;
+    }
+
+    /* 插件平铺 (Tile) */
+    .plugin-tile {
+      background: var(--tile-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s;
+      position: relative;
+    }
+    .plugin-tile:hover {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 15px rgba(63, 81, 181, 0.3);
+      transform: translateY(-2px);
+    }
+
+    /* 平铺头部 (始终可见) */
+    .tile-header {
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--tile-bg);
+      z-index: 10;
+    }
+    .tile-header h3 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--text-color);
+    }
+
+    /* 核心属性标记 */
+    .attr-badge {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background-color: var(--secondary-color);
+      color: var(--tile-bg);
+      font-weight: 500;
+      margin-left: 10px;
+    }
+    .quality-badge { background-color: #4caf50; } /* 绿色 */
+
+    /* === 信息抽屉 (Information Drawer) === */
+    .info-drawer {
+      padding: 0 15px;
+      background: var(--drawer-bg);
+      max-height: 0; /* 默认隐藏 */
+      overflow: hidden;
+      transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out;
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* 展开状态 */
+    .plugin-tile.open .info-drawer {
+      max-height: 300px; /* 足够容纳内容 */
+      padding: 15px;
+    }
+    
+    .drawer-note {
+        font-size: 14px;
+        margin-bottom: 15px;
+        line-height: 1.5;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.2s;
+      font-size: 13px;
+    }
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    .btn-secondary {
+      background-color: var(--border-color);
+      color: var(--text-color);
+    }
+
+  </style>
+</head>
+<body class="light">
+  <div class="container">
+    <div class="header-bar">
+      <h1>{{TITLE}} - 量子平铺</h1>
+      <div class="header-controls">
+        <div class="tab-navigation" id="tabNav">
+          </div>
+        <button class="btn btn-secondary" onclick="darkModeManager.toggle()" style="margin-top: 10px;">切换主题</button>
+      </div>
+    </div>
+    
+    <input type="search" id="searchInput" class="tab-btn" placeholder="🔍 搜索文件名、音质或备注..." style="width: 100%; max-width: 400px; margin-bottom: 20px;">
+
+    <main id="contentArea">
+      <p id="loadingMessage" style="text-align: center;">正在加载数据...</p>
+    </main>
+  </div>
+  
+  <script>
+    // === JavaScript 核心逻辑 ===
+    
+    let appData = { items: [], config: {}, customTabs: [] };
+    let appState = { currentTab: 'LX' };
+
+    // 1. 数据解析和工具函数
+    function initializeData() {
+      const dataString = '{{DATA}}';
+      try {
+        appData = JSON.parse(dataString);
+      } catch (e) {
+        console.error('数据解析失败:', e);
+        appData = { items: [], config: {}, customTabs: [] };
+      }
+    }
+    function formatFileSize(bytes) {
+      if (bytes === 0 || !bytes) return 'N/A';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    function getAvailableTabs() {
+      const tabs = ['LX'];
+      if (appData.config.showMF) tabs.push('Music Free');
+      if (appData.config.showLY) tabs.push('澜音');
+      if (appData.customTabs && appData.customTabs.length) { tabs.push(...appData.customTabs); }
+      return [...new Set(tabs)];
+    }
+    
+    // 2. 核心分组逻辑：按 Quality 和 Key Status 分组
+    function groupByAttributes(items) {
+      const groups = {};
+      items.forEach(item => {
+        // 独特性：将 Key 配置信息作为高优先级分组条件
+        const keyStatus = item.tab === 'LX' && item.keyConfig && (item.keyConfig.enableUrl || item.keyConfig.enableVar) 
+          ? '🔑 KEY 配置需求' : '';
+        const quality = item.quality || '📁 未标记音质';
+        
+        const groupKey = keyStatus || quality;
+        
+        if (!groups[groupKey]) {
+          groups[groupKey] = [];
+        }
+        groups[groupKey].push(item);
+      });
+      
+      // 排序：将 Key 配置和高质量的放在前面
+      return Object.keys(groups)
+        .sort((a, b) => {
+          if (a.includes('KEY') && !b.includes('KEY')) return -1;
+          if (b.includes('KEY') && !a.includes('KEY')) return 1;
+          if (a.includes('Lossless') || a.includes('Flac')) return -1;
+          if (b.includes('Lossless') || b.includes('Flac')) return 1;
+          return a.localeCompare(b);
+        })
+        .map(key => ({
+          name: key,
+          items: groups[key]
+        }));
+    }
+    
+    // 3. 渲染单个插件平铺
+    function renderPluginTile(item) {
+      const fileSize = formatFileSize(item.file?.size);
+      const version = item.ver || 'N/A';
+      const itemId = item.id;
+      
+      // 头部徽章
+      const qualityBadge = item.quality ? `<span class="attr-badge quality-badge">${item.quality}</span>` : '';
+      const versionBadge = `<span class="attr-badge">${version}</span>`;
+      
+      let buttonsHtml = '';
+      
+      // 动作按钮
+      if (item.dlLink) {
+        buttonsHtml += `<a href="${item.dlLink}" class="btn btn-primary" download="${item.name}">直链下载</a>`;
+      } else if (item.file) {
+        buttonsHtml += `<button class="btn btn-primary" onclick="downloadFile(${itemId})">下载文件 (${fileSize})</button>`;
+      }
+      if (item.tab === 'LX' && item.keyConfig && item.keyConfig.enableUrl) {
+         buttonsHtml += `<button class="btn btn-secondary" onclick="importWithKeyOnline(${itemId})">在线 Key</button>`;
+      }
+      if (item.tab === 'LX' && item.keyConfig && item.keyConfig.enableVar) {
+         buttonsHtml += `<button class="btn btn-secondary" onclick="generateFileWithKey(${itemId})">本地 Key 替换</button>`;
+      }
+      (item.links || []).forEach(link => {
+        buttonsHtml += `<a href="${link.url}" target="_blank" class="btn btn-secondary">🔗 ${link.text}</a>`;
+      });
+      
+      return `
+        <div class="plugin-tile" onclick="toggleDrawer(this)">
+            <div class="tile-header">
+                <h3>${item.name}</h3>
+                <div>${qualityBadge} ${versionBadge}</div>
+            </div>
+            
+            <div class="info-drawer">
+                <p class="drawer-note">${item.note || '暂无详细备注信息。'}</p>
+                <div class="action-buttons">
+                    ${buttonsHtml}
+                </div>
+            </div>
+        </div>
+      `;
+    }
+
+    // 4. 核心渲染函数
+    function renderContent(query = '') {
+      const contentArea = document.getElementById('contentArea');
+      const allItemsInTab = appData.items.filter(item => (item.tab || 'LX') === appState.currentTab);
+      const filteredItems = filterAndSearchItems(allItemsInTab, query);
+      const groupedData = groupByAttributes(filteredItems);
+      
+      let html = '';
+      
+      if (groupedData.length === 0) {
+        html = `<p style="text-align: center; padding: 50px;">当前标签页或搜索结果下没有插件。</p>`;
+      } else {
+        groupedData.forEach(group => {
+          html += `
+            <div class="tile-group-header">
+              <h2>${group.name} (${group.items.length})</h2>
+            </div>
+            <div class="tiles-grid">
+              ${group.items.map(item => renderPluginTile(item)).join('')}
+            </div>
+          `;
+        });
+      }
+      
+      contentArea.innerHTML = html;
+    }
+    
+    // 5. 交互实现：信息抽屉 (保证流畅)
+    function toggleDrawer(element) {
+        // 关闭其他已打开的抽屉
+        document.querySelectorAll('.plugin-tile.open').forEach(item => {
+            if (item !== element) {
+                item.classList.remove('open');
+            }
+        });
+        // 切换当前抽屉
+        element.classList.toggle('open');
+    }
+
+    // 6. 标签页切换逻辑
+    function renderTabs() {
+      const tabNav = document.getElementById('tabNav');
+      tabNav.innerHTML = '';
+      const tabs = getAvailableTabs();
+      if (!tabs.includes(appState.currentTab) && tabs.length > 0) {
+        appState.currentTab = tabs[0];
+      }
+      tabs.forEach(tab => {
+        const button = document.createElement('button');
+        button.className = 'tab-btn' + (tab === appState.currentTab ? ' active' : '');
+        button.textContent = tab;
+        button.onclick = () => switchTab(tab);
+        tabNav.appendChild(button);
+      });
+    }
+
+    function switchTab(newTab) {
+      appState.currentTab = newTab;
+      document.getElementById('searchInput').value = '';
+      renderTabs();
+      renderContent();
+    }
+    
+    // 7. 搜索、下载和 Key 相关的工具函数
+    function filterAndSearchItems(items, query) {
+      if (!query) return items;
+      const keywords = query.toLowerCase().split(' ').filter(k => k.length > 0);
+      return items.filter(item => {
+        const searchableText = [item.name, item.note, item.ver, item.quality, item.tab].join(' ').toLowerCase();
+        return keywords.every(keyword => searchableText.includes(keyword));
+      });
+    }
+    
+    function downloadFile(itemId) {
+      const item = appData.items.find(x => x.id === itemId);
+      if (!item || !item.file || !item.file.content) { alert('文件数据缺失，无法下载。'); return; }
+      const a = document.createElement('a');
+      a.href = item.file.content; 
+      a.download = item.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      // 可选：关闭抽屉
+      document.querySelector(`[data-id="${itemId}"]`)?.closest('.plugin-tile')?.classList.remove('open');
+    }
+    
+    function importWithKeyOnline(itemId) {
+      const item = appData.items.find(x => x.id === itemId);
+      if (!item?.keyConfig?.enableUrl) return;
+      const key = prompt(`请输入Key以导入 ${item.name}:`, '');
+      if (key && item.keyConfig.url) {
+        alert(`已模拟在线 Key 导入。Key: ${key}`);
+      }
+    }
+    function generateFileWithKey(itemId) {
+      const item = appData.items.find(x => x.id === itemId);
+      if (!item?.keyConfig?.enableVar) return;
+      const key = prompt(`请输入Key（将替换变量 ${item.keyConfig.var}）:`, '');
+      if (key) {
+        alert(`已获取Key。需要进行 Base64 解码和正则替换插件内容才能下载新文件。`);
+      }
+    }
+    
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => { clearTimeout(timeout); func(...args); };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    // 8. 暗色模式管理器
+    class DarkModeManager {
+      init() {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedMode = localStorage.getItem('darkMode');
+        this.isDark = savedMode !== null ? savedMode === 'dark' : prefersDark;
+        this.apply();
+      }
+      toggle() {
+        this.isDark = !this.isDark;
+        this.apply();
+        localStorage.setItem('darkMode', this.isDark ? 'dark' : 'light');
+      }
+      apply() {
+        document.body.className = this.isDark ? 'dark' : 'light';
+      }
+    }
+    window.darkModeManager = new DarkModeManager();
+
+    // 9. 启动应用
+    window.addEventListener('DOMContentLoaded', () => {
+      initializeData();
+      renderTabs();
+      renderContent();
+      
+      document.getElementById('searchInput').addEventListener('input', debounce(function(e) {
+        renderContent(e.target.value);
+      }, 300));
+      
+      document.getElementById('loadingMessage').style.display = 'none';
+    });
+    
+    // 挂载到全局
+    window.toggleDrawer = toggleDrawer;
+    window.downloadFile = downloadFile;
+    window.importWithKeyOnline = importWithKeyOnline;
+    window.generateFileWithKey = generateFileWithKey;
+    
+  </script>
+</body>
+</html>

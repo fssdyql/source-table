@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TITLE}}</title>
+<style>
+    /* --- CASSETTE FUTURISM DESIGN SYSTEM --- */
+    :root {
+        --bg-cream: #f2eee3;       /* 米色底 */
+        --warm-grey: #2d2d2d;      /* 暖灰 (文字/边框) */
+        --burnt-orange: #d94e1f;   /* 焦糖色 */
+        --mustard: #eeb92e;        /* 芥末黄 */
+        --grid-color: rgba(45, 45, 45, 0.1);
+    }
+
+    body {
+        background-color: var(--bg-cream);
+        /* 模拟复古网格纸背景 */
+        background-image: 
+            linear-gradient(var(--grid-color) 1px, transparent 1px),
+            linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+        background-size: 20px 20px;
+        color: var(--warm-grey);
+        font-family: "Courier New", Courier, monospace; /* 打字机字体 */
+        margin: 0;
+        padding: 20px;
+        line-height: 1.4;
+    }
+
+    /* 布局容器 - 模拟手册页面 */
+    .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        border: 3px solid var(--warm-grey);
+        background: var(--bg-cream);
+        box-shadow: 10px 10px 0px var(--warm-grey); /* 硬边阴影 */
+        padding: 20px;
+        position: relative;
+    }
+
+    /* 装饰性条纹头 */
+    .header-stripe {
+        height: 15px;
+        background: repeating-linear-gradient(
+            45deg,
+            var(--burnt-orange),
+            var(--burnt-orange) 10px,
+            var(--mustard) 10px,
+            var(--mustard) 20px
+        );
+        border-bottom: 3px solid var(--warm-grey);
+        margin: -20px -20px 20px -20px;
+    }
+
+    header {
+        text-align: left;
+        border-bottom: 3px solid var(--warm-grey);
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+
+    h1 {
+        font-family: "Arial Black", "Helvetica Neue", sans-serif; /* 粗壮无衬线 */
+        font-size: 2.5rem;
+        text-transform: uppercase;
+        margin: 0;
+        letter-spacing: -1px;
+        line-height: 1;
+        color: var(--warm-grey);
+        text-shadow: 3px 3px 0px var(--mustard); /* 复古标题阴影 */
+    }
+
+    .meta-data {
+        font-size: 0.8rem;
+        font-weight: bold;
+        background: var(--warm-grey);
+        color: var(--bg-cream);
+        padding: 4px 8px;
+        margin-top: 10px;
+    }
+
+    /* 标签页控制台 */
+    .tabs-nav {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+        border-bottom: 1px dashed var(--warm-grey);
+        padding-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .tab-btn {
+        background: transparent;
+        border: 2px solid var(--warm-grey);
+        padding: 8px 16px;
+        font-family: "Arial Black", sans-serif;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.1s;
+        box-shadow: 4px 4px 0px var(--warm-grey); /* 按钮硬阴影 */
+        position: relative;
+        top: 0;
+        left: 0;
+    }
+
+    .tab-btn:hover {
+        top: -1px;
+        left: -1px;
+        box-shadow: 5px 5px 0px var(--burnt-orange);
+    }
+
+    .tab-btn.active {
+        background: var(--mustard);
+        top: 2px;
+        left: 2px;
+        box-shadow: 2px 2px 0px var(--warm-grey); /* 按下效果 */
+    }
+
+    /* 内容网格 */
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 25px;
+    }
+
+    /* 卡片 - 模拟磁带盒或模块 */
+    .card {
+        border: 2px solid var(--warm-grey);
+        background: #fff;
+        padding: 15px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        /* 缺角效果 */
+        clip-path: polygon(
+            0 0, 
+            100% 0, 
+            100% calc(100% - 15px), 
+            calc(100% - 15px) 100%, 
+            0 100%
+        );
+    }
+
+    /* 卡片内的装饰性线条 */
+    .card::before {
+        content: "";
+        display: block;
+        width: 100%;
+        height: 4px;
+        background: var(--warm-grey);
+        margin-bottom: 15px;
+    }
+
+    .card h3 {
+        font-family: "Arial Black", sans-serif;
+        text-transform: uppercase;
+        margin: 0 0 5px 0;
+        font-size: 1.1rem;
+    }
+
+    .badge {
+        font-size: 0.7rem;
+        border: 1px solid var(--warm-grey);
+        padding: 2px 6px;
+        display: inline-block;
+        margin-bottom: 15px;
+        background: var(--bg-cream);
+    }
+
+    .card-footer {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+
+    /* 操作按钮 */
+    .btn {
+        flex: 1;
+        border: none;
+        background: var(--burnt-orange);
+        color: #fff;
+        font-family: "Courier New", monospace;
+        font-weight: bold;
+        padding: 10px 0;
+        cursor: pointer;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+    }
+    
+    .btn:hover {
+        opacity: 0.9;
+    }
+
+    .btn.secondary {
+        background: var(--warm-grey);
+    }
+
+    /* 状态指示灯 */
+    .status-light {
+        width: 10px;
+        height: 10px;
+        background: var(--mustard);
+        border: 1px solid var(--warm-grey);
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-stripe"></div>
+    
+    <header>
+        <div>
+            <h1>{{TITLE}}</h1>
+            <div style="font-size: 0.8rem; letter-spacing: 2px; margin-top:5px;">// SYSTEM_MANUAL_V.1.0 //</div>
+        </div>
+        <div class="meta-data">
+            LOG_DATE: {{DATE}}
+        </div>
+    </header>
+
+    <div style="margin-bottom: 10px; font-size: 0.8rem;">SELECT MODULE:</div>
+    <div id="tab-container" class="tabs-nav"></div>
+
+    <div id="content-container" class="grid"></div>
+</div>
+
+<script>
+    // ==========================================
+    //       CORE LOGIC (OMNI-SYSTEM OS)
+    // ==========================================
+
+    const RAW_DATA = '{{DATA}}';
+    let data = { config: {}, items: [], customTabs: [] };
+
+    // 模拟数据 (开发模式)
+    if (RAW_DATA.indexOf('{{') === 0) {
+        console.log("INITIATING MOCK SEQUENCE...");
+        data = {
+            config: { showMF: true, showLY: true },
+            customTabs: ['RETRO_WAVE'],
+            items: [
+                { id: 1, tab: 'LX', name: 'Alien_OST_Source', file: { content: 'data:text/plain;base64,e30=' } },
+                { id: 2, tab: 'LX', name: 'Blade_Runner_Script', file: { content: 'data:text/javascript;base64,Y29uc3Qga2V5PSJ4eHg3NyI7' }, keyConfig: { enableVar: true, var: 'const key' } },
+                { id: 3, tab: 'Music Free', name: 'Synth_Plugin_v2', dlLink: 'https://example.com' },
+                { id: 4, tab: 'RETRO_WAVE', name: 'Commodore_Emulator', file: { content: '#' } }
+            ]
+        };
+    } else {
+        try { data = JSON.parse(RAW_DATA); } catch(e) { document.body.innerHTML = 'DATA CORRUPTION DETECTED'; }
+    }
+
+    // 标签初始化
+    const tabs = ['LX', 
+        ...(data.config.showMF ? ['Music Free'] : []),
+        ...(data.config.showLY ? ['澜音'] : []),
+        ...(data.customTabs || [])
+    ];
+    let activeTab = tabs[0] || 'LX';
+
+    // 渲染主函数
+    function render() {
+        // A. 渲染标签按钮
+        const tabHTML = tabs.map(t => 
+            `<button class="tab-btn ${t === activeTab ? 'active' : ''}" onclick="switchTab('${t}')">${t}</button>`
+        ).join('');
+        document.getElementById('tab-container').innerHTML = tabHTML;
+
+        // B. 渲染内容
+        const filteredItems = data.items.filter(item => item.tab === activeTab);
+        
+        if (filteredItems.length === 0) {
+            document.getElementById('content-container').innerHTML = 
+                `<div style="grid-column:1/-1; border:2px dashed var(--warm-grey); padding:40px; text-align:center;">// NO_DATA_FOUND //</div>`;
+            return;
+        }
+
+        document.getElementById('content-container').innerHTML = filteredItems.map(item => {
+            let btnLabel = "LOAD FILE";
+            let btnAction = `downloadBase64(${item.id})`;
+            let extraClass = "";
+
+            // 逻辑判断：决定按钮行为
+            if (item.keyConfig?.enableUrl) {
+                btnLabel = "INPUT KEY";
+                btnAction = `handleKey(${item.id})`;
+                extraClass = "secondary"; // 灰色按钮
+            } else if (item.keyConfig?.enableVar) {
+                btnLabel = "PATCH & LOAD";
+                btnAction = `handleKey(${item.id})`;
+                extraClass = "secondary";
+            } else if (item.dlLink) {
+                btnLabel = "OPEN LINK";
+                btnAction = `downloadDirect(${item.id})`;
+            }
+
+            return `
+            <div class="card">
+                <div>
+                    <div class="badge">ID: ${padId(item.id)}</div>
+                    <h3><span class="status-light"></span>${item.name}</h3>
+                </div>
+                <div class="card-footer">
+                    <button class="btn ${extraClass}" onclick="${btnAction}">[ ${btnLabel} ]</button>
+                </div>
+            </div>
+            `;
+        }).join('');
+    }
+
+    // ID 补零函数 (美学)
+    function padId(n) { return n.toString().padStart(4, '0'); }
+
+    // 交互逻辑
+    window.switchTab = (tab) => { activeTab = tab; render(); };
+
+    // --- 三种下载逻辑实现 ---
+
+    window.downloadBase64 = (id) => {
+        const item = data.items.find(x => x.id == id);
+        if (item?.file) {
+            createAndClickLink(item.file.content, item.name);
+        }
+    };
+
+    window.downloadDirect = (id) => {
+        const item = data.items.find(x => x.id == id);
+        if (item?.dlLink) window.open(item.dlLink, '_blank');
+    };
+
+    window.handleKey = (id) => {
+        const item = data.items.find(x => x.id == id);
+        if (!item) return;
+
+        if (item.keyConfig?.enableUrl) {
+            // 在线导入
+            const key = prompt(`// INPUT SEQUENCE REQUIRED //\n请输入 Key 用于 [${item.name}]:`);
+            if (key) window.open(item.keyConfig.url + key, '_blank');
+        } else if (item.keyConfig?.enableVar && item.file) {
+            // 本地替换
+            const key = prompt(`// VARIABLE PATCHING //\n请输入 Key 替换变量 [${item.keyConfig.var}]:`);
+            if (key) {
+                try {
+                    // 解码 -> 替换 -> 生成
+                    const raw = decodeURIComponent(escape(window.atob(item.file.content.split(',')[1] || item.file.content)));
+                    const patched = raw.replace(
+                        new RegExp(`${item.keyConfig.var}\\s*=\\s*['"][^'"]*['"]`), 
+                        `${item.keyConfig.var} = "${key}"`
+                    );
+                    const blob = new Blob([patched], {type: 'text/javascript'});
+                    createAndClickLink(URL.createObjectURL(blob), item.name);
+                } catch(e) { alert('ERROR: DECODING FAILED'); }
+            }
+        }
+    };
+
+    function createAndClickLink(href, name) {
+        const a = document.createElement('a');
+        a.href = href;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    // 系统启动
+    render();
+</script>
+</body>
+</html>

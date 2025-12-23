@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TITLE}}</title>
+<style>
+    /* 瑞典现代卡片主题 - Swedish Modern Card Theme */
+    :root {
+        --bg: #ffffff;
+        --fg: #000000;
+        --accent: #e62e00; /* 瑞典红 */
+        --accent-light: #ffefe6;
+        --gray-100: #f8f8f8;
+        --gray-200: #f0f0f0;
+        --gray-300: #e0e0e0;
+        --gray-500: #888888;
+        --gray-700: #444444;
+        --border: 1px solid var(--gray-200);
+        --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+        --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+        --shadow-lg: 0 8px 32px rgba(0,0,0,0.16);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+        background: linear-gradient(135deg, #f8f8f8 0%, #f0f0f0 100%);
+        color: var(--fg);
+        margin: 0;
+        padding: 40px 20px;
+        line-height: 1.5;
+        min-height: 100vh;
+    }
+
+    /* 容器 */
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    /* 头部 - 更精致的标题 */
+    header {
+        text-align: center;
+        padding: 40px 0 60px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    header::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 200%;
+        height: 200%;
+        background: 
+            radial-gradient(circle at 30% 30%, rgba(230, 46, 0, 0.05) 0%, transparent 50%),
+            radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.03) 0%, transparent 50%);
+        z-index: -1;
+    }
+    
+    h1 {
+        font-size: 3.5rem;
+        font-weight: 900;
+        margin: 0 0 12px;
+        letter-spacing: -0.5px;
+        position: relative;
+        display: inline-block;
+    }
+    
+    h1::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 4px;
+        background: var(--accent);
+    }
+
+    .subtitle {
+        font-size: 1.1rem;
+        color: var(--gray-700);
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .date-badge {
+        font-family: "SF Mono", "Roboto Mono", monospace;
+        font-weight: 600;
+        background: var(--fg);
+        color: var(--bg);
+        padding: 8px 16px;
+        font-size: 14px;
+        border-radius: 50px;
+        display: inline-block;
+        margin-top: 20px;
+        letter-spacing: 1px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* 标签栏 - 胶囊样式 */
+    .tabs {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 60px;
+        flex-wrap: wrap;
+        padding: 0 20px;
+    }
+
+    .tab {
+        padding: 12px 28px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid transparent;
+        border-radius: 50px;
+        color: var(--gray-700);
+        background: var(--gray-100);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tab:hover {
+        color: var(--accent);
+        background: var(--accent-light);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .tab.active {
+        color: var(--bg);
+        background: var(--accent);
+        border-color: var(--accent);
+        box-shadow: var(--shadow-md);
+    }
+
+    .tab.active:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    /* 卡片容器 - 网格布局 */
+    .cards-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 30px;
+        padding: 0 20px;
+    }
+
+    @media (min-width: 1400px) {
+        .cards-container {
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        }
+    }
+
+    /* 单个卡片 */
+    .card {
+        background: var(--bg);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        border: var(--border);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--accent);
+    }
+
+    /* 卡片头部 - 颜色条 */
+    .card-header {
+        background: linear-gradient(135deg, var(--fg) 0%, var(--gray-700) 100%);
+        padding: 24px 28px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card-header::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--accent) 0%, transparent 70%);
+        opacity: 0.3;
+    }
+
+    .file-name {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--bg);
+        margin: 0 0 12px;
+        line-height: 1.3;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* 标签行 */
+    .tags-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .tag {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 6px 12px;
+        border-radius: 50px;
+        letter-spacing: 0.5px;
+    }
+    
+    .tag.ver {
+        background: var(--bg);
+        color: var(--fg);
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    .tag.quality {
+        background: rgba(230, 46, 0, 0.9);
+        color: white;
+    }
+
+    .tag.quality:hover {
+        background: var(--accent);
+    }
+
+    /* 卡片主体 */
+    .card-body {
+        padding: 28px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .note-text {
+        font-size: 15px;
+        color: var(--gray-700);
+        line-height: 1.6;
+        margin-bottom: 24px;
+        flex: 1;
+        font-weight: 400;
+    }
+
+    /* 链接行 */
+    .links-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 8px;
+        margin-bottom: 24px;
+    }
+    
+    .link-a {
+        text-decoration: none;
+        color: var(--gray-700);
+        font-size: 13px;
+        font-weight: 500;
+        padding: 8px 16px;
+        background: var(--gray-100);
+        border-radius: 50px;
+        transition: all 0.3s;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .link-a:hover {
+        color: var(--accent);
+        background: var(--accent-light);
+        border-color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .link-a::before {
+        content: '↗';
+        font-weight: 800;
+        font-size: 12px;
+    }
+
+    /* 按钮区域 */
+    .card-actions {
+        margin-top: auto;
+        border-top: 1px solid var(--gray-200);
+        padding-top: 24px;
+    }
+
+    .btn-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px 20px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        cursor: pointer;
+        border: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: var(--radius-sm);
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+    }
+
+    .btn::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.6s;
+    }
+
+    .btn:hover::after {
+        left: 100%;
+    }
+
+    /* 主要下载按钮 */
+    .btn-dl {
+        background: var(--accent);
+        color: white;
+    }
+    
+    .btn-dl:hover {
+        background: var(--fg);
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(230, 46, 0, 0.3);
+    }
+
+    /* 直链按钮 */
+    .btn-direct {
+        background: var(--fg);
+        color: white;
+    }
+    
+    .btn-direct:hover {
+        background: var(--accent);
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Key 区域 */
+    .key-area {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px dashed var(--gray-300);
+    }
+    
+    .key-input-group {
+        display: flex;
+        margin-bottom: 12px;
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        transition: all 0.3s;
+    }
+    
+    .key-input-group:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(230, 46, 0, 0.1);
+    }
+    
+    .key-in {
+        flex: 1;
+        border: none;
+        padding: 14px 16px;
+        font-family: inherit;
+        font-size: 14px;
+        outline: none;
+        background: var(--gray-100);
+        color: var(--fg);
+    }
+    
+    .key-go {
+        background: var(--fg);
+        color: white;
+        border: none;
+        padding: 0 20px;
+        cursor: pointer;
+        font-weight: 800;
+        font-size: 14px;
+        transition: background 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 60px;
+    }
+    
+    .key-go:hover {
+        background: var(--accent);
+    }
+
+    /* 空状态 */
+    .empty-state {
+        padding: 120px 40px;
+        text-align: center;
+        grid-column: 1 / -1;
+    }
+
+    .empty-icon {
+        font-size: 64px;
+        margin-bottom: 24px;
+        opacity: 0.3;
+    }
+
+    .empty-text {
+        font-size: 20px;
+        color: var(--gray-500);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    /* 页脚 */
+    .footer {
+        text-align: center;
+        margin-top: 80px;
+        padding: 40px 0;
+        color: var(--gray-500);
+        font-size: 14px;
+        border-top: 1px solid var(--gray-200);
+    }
+
+    /* 加载动画 */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+        animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    /* 延迟动画 */
+    .card:nth-child(1) { animation-delay: 0.1s; }
+    .card:nth-child(2) { animation-delay: 0.2s; }
+    .card:nth-child(3) { animation-delay: 0.3s; }
+    .card:nth-child(4) { animation-delay: 0.4s; }
+    .card:nth-child(5) { animation-delay: 0.5s; }
+    .card:nth-child(6) { animation-delay: 0.6s; }
+
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+        body { padding: 20px 16px; }
+        
+        h1 { 
+            font-size: 2.5rem;
+        }
+        
+        header {
+            padding: 30px 0 40px;
+        }
+        
+        .cards-container {
+            grid-template-columns: 1fr;
+            gap: 24px;
+            padding: 0;
+        }
+        
+        .btn-group {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 480px) {
+        h1 { 
+            font-size: 2rem;
+        }
+        
+        .card-header,
+        .card-body {
+            padding: 20px;
+        }
+        
+        .tabs {
+            gap: 6px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            font-size: 13px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>{{TITLE}}</h1>
+        <p class="subtitle">插件集合</p>
+        <div class="date-badge">{{DATE}}</div>
+    </header>
+
+    <div class="tabs" id="tabContainer"></div>
+    <div class="cards-container" id="listContainer"></div>
+    
+    <div class="footer">
+        <div>© Plugin Index {{DATE.slice(0,4)}} • 瑞典现代主题</div>
+    </div>
+</div>
+
+<script>
+    // 注入数据
+    const DB = {{DATA}};
+    let currentTab = 'LX';
+
+    // 初始化
+    function init() {
+        renderTabs();
+    }
+
+    function renderTabs() {
+        let tabs = ['LX'];
+        if(DB.config.showMF) tabs.push('Music Free');
+        if(DB.config.showLY) tabs.push('澜音');
+        tabs = tabs.concat(DB.customTabs || []);
+
+        // 确保当前Tab有效
+        if(!tabs.includes(currentTab)) currentTab = 'LX';
+
+        const html = tabs.map(t => {
+            const isActive = t === currentTab ? 'active' : '';
+            return `<div class="tab ${isActive}" onclick="switchTab('${t}')">${t}</div>`;
+        }).join('');
+        
+        document.getElementById('tabContainer').innerHTML = html;
+        renderList();
+    }
+
+    function switchTab(t) {
+        currentTab = t;
+        renderTabs();
+    }
+
+    function renderList() {
+        const list = DB.items.filter(i => (i.tab || 'LX') === currentTab);
+        const container = document.getElementById('listContainer');
+
+        if(list.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📂</div>
+                    <div class="empty-text">No Items Found</div>
+                    <p style="color: var(--gray-500); margin-top: 12px; font-weight: 400;">
+                        当前标签页没有插件数据
+                    </p>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = list.map(item => {
+            // 标签生成
+            let tags = '';
+            if(item.ver) tags += `<span class="tag ver">v${item.ver}</span>`;
+            if(item.quality) tags += `<span class="tag quality">${item.quality}</span>`;
+
+            // 链接生成
+            let links = (item.links || []).map(l => 
+                `<a href="${l.url}" target="_blank" class="link-a">${l.text}</a>`
+            ).join('');
+
+            // 按钮生成
+            let actions = '';
+            
+            // 1. 直链
+            if(item.dlLink) {
+                actions += `<a href="${item.dlLink}" target="_blank" class="btn btn-direct">直链下载</a>`;
+            }
+            
+            // 2. 文件下载
+            if(item.file && item.file.content) {
+                actions += `<button class="btn btn-dl" onclick="dlFile(${item.id})">下载插件</button>`;
+            }
+
+            // Key 逻辑 (仅LX)
+            let keyArea = '';
+            if(item.file && item.file.content && currentTab === 'LX' && item.keyConfig) {
+                const k = item.keyConfig;
+                keyArea += '<div class="key-area">';
+                if(k.enableUrl && k.url) {
+                    keyArea += `
+                    <div class="key-input-group">
+                        <input id="ku_${item.id}" class="key-in" placeholder="输入Key在线导入...">
+                        <button class="key-go" onclick="keyUrl(${item.id})">→</button>
+                    </div>`;
+                }
+                if(k.enableVar && k.var) {
+                    keyArea += `
+                    <div class="key-input-group">
+                        <input id="kv_${item.id}" class="key-in" placeholder="输入Key生成文件...">
+                        <button class="key-go" onclick="keyVar(${item.id})">↓</button>
+                    </div>`;
+                }
+                keyArea += '</div>';
+            }
+
+            return `
+            <div class="card">
+                <div class="card-header">
+                    <div class="file-name">${item.name || '未命名插件'}</div>
+                    <div class="tags-row">${tags}</div>
+                </div>
+                <div class="card-body">
+                    <div class="note-text">${item.note || '暂无描述信息'}</div>
+                    ${links ? `<div class="links-row">${links}</div>` : ''}
+                    <div class="card-actions">
+                        <div class="btn-group">
+                            ${actions}
+                        </div>
+                        ${keyArea}
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // --- 功能函数 ---
+    window.dlFile = (id) => {
+        const i = DB.items.find(x => x.id == id);
+        if(i) save(i.file.content, i.name);
+    };
+
+    window.keyUrl = (id) => {
+        const i = DB.items.find(x => x.id == id);
+        const val = document.getElementById('ku_' + id).value;
+        if(val && i.keyConfig) window.open(i.keyConfig.url + val);
+    };
+
+    window.keyVar = (id) => {
+        const i = DB.items.find(x => x.id == id);
+        const val = document.getElementById('kv_' + id).value;
+        if(!val) return alert('请输入Key');
+        
+        try {
+            const raw = atob(i.file.content.split(',')[1]);
+            const u8 = new Uint8Array(raw.length);
+            for(let n=0; n<raw.length; n++) u8[n] = raw.charCodeAt(n);
+            let txt = new TextDecoder().decode(u8);
+            
+            const vName = i.keyConfig.var;
+            // 简单的正则替换
+            const re = new RegExp('((?:const|var|let)\\s+' + vName + '\\s*[:=]\\s*)[\\\'"][\\\'"]', 'g');
+            
+            if(re.test(txt)){
+                txt = txt.replace(re, '$1"' + val + '"');
+                const blob = new Blob([txt], {type: 'text/javascript'});
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = i.name;
+                a.click();
+            } else {
+                alert('变量未找到: ' + vName);
+            }
+        } catch(e) { console.error(e); alert('生成文件失败'); }
+    };
+
+    function save(u, n) {
+        const a = document.createElement('a');
+        a.href = u; a.download = n; a.click();
+    }
+
+    init();
+</script>
+</body>
+</html>

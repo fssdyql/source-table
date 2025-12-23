@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>插件列表管理器 v1.3.0-fix3</title>
+  <style>
+    /* --- 基础样式 --- */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #f0f2f5; padding: 20px; color: #333; min-height: 100vh; }
+    .container { max-width: 1600px; margin: 0 auto; background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+    
+    /* 头部 */
+    .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; }
+    h1 { font-size: 24px; color: #2c3e50; margin-bottom: 5px; }
+    .version-tag { font-size: 12px; background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px; vertical-align: middle; margin-left: 8px; border: 1px solid #bbf7d0; }
+    .subtitle { font-size: 12px; color: #999; }
+
+    /* 标签页 */
+    .tabs-wrapper { display: flex; align-items: center; border-bottom: 2px solid #e9ecef; margin-bottom: 15px; gap: 5px; user-select: none; }
+    .tab-btn { padding: 10px 25px; border: none; background: transparent; cursor: pointer; font-size: 14px; font-weight: 500; color: #666; border-radius: 8px 8px 0 0; transition: all 0.2s; position: relative; }
+    .tab-btn:hover { background: #f8f9fa; color: #333; }
+    .tab-btn.active { background: #fff; color: #667eea; font-weight: bold; border: 1px solid #e9ecef; border-bottom: 2px solid #fff; margin-bottom: -2px; z-index: 1; }
+    .tab-add-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px dashed #ccc; background: transparent; cursor: pointer; color: #999; font-size: 18px; margin-left: 5px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .tab-add-btn:hover { border-color: #667eea; color: #667eea; background: #f0f4ff; }
+    .tab-close { font-size: 10px; margin-left: 8px; opacity: 0.5; border-radius: 50%; padding: 0 4px; }
+    .tab-close:hover { background: #ffcccc; color: #cc0000; opacity: 1; }
+
+    /* 工具栏 */
+    .toolbar { display: flex; gap: 10px; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+    .search-box { padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; width: 220px; }
+    .spacer { flex: 1; }
+    
+    .lx-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; background: #e3f2fd; padding: 6px 12px; border-radius: 4px; border: 1px solid #bbdefb; color: #0d47a1; margin-left: 10px; }
+    .lx-toggle input { cursor: pointer; width: 16px; height: 16px; }
+
+    /* 按钮 */
+    .btn { padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-size: 13px; color: white; transition: opacity 0.2s; display: inline-flex; align-items: center; gap: 5px; user-select: none; }
+    .btn:hover { opacity: 0.9; }
+    .btn:active { transform: translateY(1px); }
+    .btn-green { background: #28a745; }
+    .btn-blue { background: #667eea; }
+    .btn-info { background: #17a2b8; }
+    .btn-gray { background: #6c757d; }
+    .btn-red { background: #dc3545; }
+    
+    .btn-xs { padding: 4px 8px; font-size: 12px; border-radius: 3px; border: none; cursor: pointer; color: white; margin-right: 2px; margin-bottom: 2px; display: inline-block; }
+    .btn-cfg { background: #f0ad4e; color: white; }
+    .btn-link { background: #5bc0de; color: white; }
+    .btn-del { background: #d9534f; }
+    .btn-up { background: #5a6268; }
+    .btn-reset { background: #6c757d; color: white; margin-left: 2px; font-family: monospace; }
+    .btn-direct { background: #20c997; color: white; }
+
+    /* 表格 */
+    .table-container { overflow-x: auto; border: 1px solid #eee; border-radius: 8px; background: white; min-height: 200px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f8f9fa; padding: 12px 10px; text-align: left; font-weight: 600; color: #444; border-bottom: 2px solid #eee; white-space: nowrap; }
+    td { padding: 10px; border-bottom: 1px solid #f1f1f1; vertical-align: top; }
+    tr:hover { background: #fafafa; }
+    
+    input[type="text"], select { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; transition: border 0.2s; }
+    input[type="text"]:focus, select:focus { border-color: #667eea; outline: none; }
+
+    /* 状态与标签 */
+    .status-ok { background: #d4edda; color: #155724; padding: 2px 6px; border-radius: 3px; font-size: 11px; display: inline-block; border: 1px solid #c3e6cb; }
+    .status-no { background: #f8d7da; color: #721c24; padding: 2px 6px; border-radius: 3px; font-size: 11px; display: inline-block; border: 1px solid #f5c6cb; }
+    
+    .tag-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+    .tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #eef2ff; color: #5a67d8; border: 1px solid #dbeafe; display: flex; align-items: center; gap: 4px; }
+    .tag-key { background: #fff3cd; color: #856404; border-color: #ffeeba; }
+    .tag-direct { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+    .tag-remove { cursor: pointer; font-weight: bold; opacity: 0.6; }
+    .tag-remove:hover { opacity: 1; color: #dc3545; }
+
+    /* 弹窗 */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+    .modal-content { background: white; width: 450px; margin: 80px auto; padding: 20px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: popIn 0.2s; max-height: 85vh; overflow-y: auto; }
+    @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .modal-header { font-weight: bold; font-size: 16px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 13px; }
+    
+    .check-label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; background: #f8f9fa; padding: 8px; border-radius: 5px; border: 1px solid #eee; margin-bottom: 8px; }
+    .check-label:hover { background: #e9ecef; }
+    .check-label input { width: 16px; height: 16px; margin: 0; }
+    .config-area { margin-left: 24px; padding: 10px; background: #fff; border-left: 3px solid #ccc; display: none; margin-bottom: 10px; }
+    .config-area.active { display: block; }
+    .config-area.blue { border-left-color: #667eea; }
+    .config-area.yellow { border-left-color: #f0ad4e; }
+
+    .empty-state { padding: 40px; text-align: center; color: #aaa; font-style: italic; }
+    .error-row { color: red; padding: 10px; background: #fff0f0; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>插件列表管理器 <span class="version-tag">v1.3.0-fix3</span></h1>
+    <p class="subtitle">更新时间: <span id="updateTime">-</span></p>
+  </div>
+
+  <div class="tabs-wrapper" id="tabsContainer"></div>
+
+  <div class="toolbar">
+    <button class="btn btn-green" onclick="safeAction(addNewRow)">➕ 添加文件</button>
+    <button class="btn btn-blue" onclick="exportData('json')">💾 备份数据</button>
+    <button class="btn btn-info" onclick="exportData('html')">📤 导出列表</button>
+    <button class="btn btn-red" onclick="safeAction(clearCurrentTab)">🗑️ 清空当前页</button>
+    
+    <div class="lx-toggle" id="lxScriptToggle" style="display:none">
+        <input type="checkbox" id="enableScript" onchange="saveData();">
+        <label for="enableScript">启用一键导入脚本 (仅LX)</label>
+    </div>
+
+    <div class="spacer"></div>
+    <input type="file" id="importInput" style="display:none" onchange="importData(this)">
+    <button class="btn btn-gray" onclick="document.getElementById('importInput').click()">📂 导入旧版/备份</button>
+    <input type="text" class="search-box" placeholder="🔍 搜索文件名..." oninput="renderTable()">
+  </div>
+
+  <div class="table-container">
+    <table id="mainTable">
+      <thead>
+        <tr>
+          <th width="60">排序</th>
+          <th width="300">文件名 & 状态</th>
+          <th width="150">音质/版本</th>
+          <th width="350">备注 & 配置</th>
+          <th width="200">操作</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="tabModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">添加新标签页 <span style="cursor:pointer" onclick="closeModal('tabModal')">×</span></div>
+    <div class="form-group">
+        <label>快速选择：</label>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <button class="btn btn-info btn-xs" onclick="quickAddTab('Music Free')">Music Free</button>
+            <button class="btn btn-info btn-xs" onclick="quickAddTab('澜音')">澜音</button>
+        </div>
+        <label>或 自定义名称：</label>
+        <input type="text" id="newTabName" placeholder="输入名称...">
+    </div>
+    <div style="text-align:right"><button class="btn btn-blue" onclick="confirmAddTab()">确定</button></div>
+  </div>
+</div>
+
+<div id="linkModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">添加链接 <span style="cursor:pointer" onclick="closeModal('linkModal')">×</span></div>
+    <div class="form-group"><label>显示文字：</label><input type="text" id="linkText" placeholder="如: 官网"></div>
+    <div class="form-group"><label>跳转地址：</label><input type="text" id="linkUrl" placeholder="https://..."></div>
+    <div style="text-align:right"><button class="btn btn-blue" onclick="confirmAddLink()">添加</button></div>
+  </div>
+</div>
+
+<div id="directModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">配置在线下载链接 <span style="cursor:pointer" onclick="closeModal('directModal')">×</span></div>
+    <div class="form-group">
+        <label>🔗 在线文件地址：</label>
+        <input type="text" id="directUrl" placeholder="例如: https://cdn.example.com/script.js">
+        <small style="color:#666">设置后将在列表显示“在线下载”按钮</small>
+    </div>
+    <div style="text-align:right"><button class="btn btn-blue" onclick="confirmDirectUrl()">保存</button></div>
+  </div>
+</div>
+
+<div id="keyModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">配置 Key 模式 (LX专属) <span style="cursor:pointer" onclick="closeModal('keyModal')">×</span></div>
+    <label class="check-label"><input type="checkbox" id="chkOnlineKey" onchange="toggleKeyUI()"> 🌐 启用在线 Key 模式</label>
+    <div id="areaOnlineKey" class="config-area yellow">
+        <div class="form-group"><label>链接模板：</label><input type="text" id="keyUrl" placeholder="https://api.com?key="></div>
+    </div>
+    <label class="check-label"><input type="checkbox" id="chkLocalKey" onchange="toggleKeyUI()"> 📂 启用本地 Key 模式</label>
+    <div id="areaLocalKey" class="config-area blue">
+        <div class="form-group"><label>变量名：</label><input type="text" id="keyVar" placeholder="默认: API_KEY"></div>
+    </div>
+    <div style="text-align:right; margin-top:20px;">
+        <button class="btn btn-gray" onclick="closeModal('keyModal')">取消</button>
+        <button class="btn btn-blue" onclick="confirmKeyConfig()">保存配置</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- 核心逻辑 ---
+
+let app = {
+    tabs: ['LX'],
+    currentTab: 'LX',
+    files: [],
+    lxScriptEnabled: true
+};
+
+const QUALITY_OPTIONS = ['128k', '320k', 'flac', 'flac24bit', 'master', 'sky', 'dolby'];
+let currentEditId = null;
+
+// 安全执行
+function safeAction(fn, ...args) {
+    try { fn(...args); } catch (e) { console.error("Action Failed:", e); alert("错误: " + e.message); }
+}
+
+window.onload = function() {
+    loadData();
+    renderTabs();
+    renderTable();
+};
+
+function loadData() {
+    try {
+        const raw = localStorage.getItem('plugin_mgr_v130_fix3');
+        if (raw) {
+            const data = JSON.parse(raw);
+            if (Array.isArray(data)) app.files = data.map(f => sanitizeFile(f));
+            else { app = data; if(!app.files) app.files = []; app.files = app.files.map(f => sanitizeFile(f)); }
+        }
+    } catch(e) { console.error(e); }
+    
+    if(!app.tabs || app.tabs.length === 0) app.tabs = ['LX'];
+    if(!app.tabs.includes('LX')) app.tabs.unshift('LX');
+    if(!app.tabs.includes(app.currentTab)) app.currentTab = 'LX';
+    
+    const chk = document.getElementById('enableScript');
+    if(chk) chk.checked = app.lxScriptEnabled;
+    updateTime();
+}
+
+function sanitizeFile(f) {
+    return {
+        id: f.id || Date.now() + Math.floor(Math.random()*1000),
+        tab: f.tab || 'LX',
+        fileName: f.fileName || '',
+        quality: f.quality || '',
+        note: f.note || '',
+        links: Array.isArray(f.links) ? f.links : [], 
+        fileContent: f.fileContent || null,
+        fileSize: f.fileSize || 0,
+        directUrl: f.directUrl || '',
+        keyUrl: f.keyUrl || '',
+        keyVariable: f.keyVariable || ''
+    };
+}
+
+function saveData() {
+    try {
+        app.lxScriptEnabled = document.getElementById('enableScript').checked;
+        localStorage.setItem('plugin_mgr_v130_fix3', JSON.stringify(app));
+        updateTime();
+    } catch (e) {
+        if (e.name === 'QuotaExceededError') alert("⚠️ 存储空间已满，无法保存！请清理旧数据。");
+    }
+}
+
+function updateTime() { document.getElementById('updateTime').innerText = new Date().toLocaleString('zh-CN'); }
+
+// --- 渲染逻辑 ---
+
+function renderTabs() {
+    const container = document.getElementById('tabsContainer');
+    container.innerHTML = '';
+    app.tabs.forEach(tab => {
+        const btn = document.createElement('button');
+        btn.className = `tab-btn ${tab === app.currentTab ? 'active' : ''}`;
+        let label = tab === 'LX' ? 'LX Music' : tab;
+        btn.innerHTML = `<span>${label}</span>${tab !== 'LX' ? `<span class="tab-close" onclick="deleteTab('${tab}', event)">✕</span>` : ''}`;
+        btn.onclick = (e) => { if(e.target.className !== 'tab-close') switchTab(tab); };
+        container.appendChild(btn);
+    });
+    const addBtn = document.createElement('button');
+    addBtn.className = 'tab-add-btn';
+    addBtn.innerHTML = '+';
+    addBtn.onclick = () => openModal('tabModal');
+    container.appendChild(addBtn);
+    const toggle = document.getElementById('lxScriptToggle');
+    if(toggle) toggle.style.display = (app.currentTab === 'LX') ? 'flex' : 'none';
+}
+
+function switchTab(tab) { app.currentTab = tab; renderTabs(); renderTable(); }
+
+function renderTable() {
+    const tbody = document.getElementById('tableBody');
+    if(!tbody) return;
+    try {
+        const keyword = document.querySelector('.search-box').value.toLowerCase();
+        const list = app.files.filter(f => {
+            const fTab = f.tab || 'LX';
+            return fTab === app.currentTab && (!keyword || (f.fileName||'').toLowerCase().includes(keyword));
+        });
+
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="empty-state">当前列表为空，请点击上方“添加文件”</td></tr>`;
+            return;
+        }
+
+        const isLX = app.currentTab === 'LX';
+        const isMF = app.currentTab === 'Music Free';
+        const acceptTypes = isMF ? ".js,.json" : ".js";
+
+        tbody.innerHTML = list.map((f, index) => {
+            // 音质
+            let qualityInputHtml = '';
+            if (isLX || app.currentTab === '澜音') {
+                const isCustom = f.quality === '自定义' || (f.quality && !QUALITY_OPTIONS.includes(f.quality));
+                if (!isCustom) {
+                    qualityInputHtml = `
+                    <select onchange="safeAction(handleQualityChange, ${f.id}, this.value)">
+                        <option value="">请选择...</option>
+                        ${QUALITY_OPTIONS.map(opt => `<option value="${opt}" ${f.quality===opt?'selected':''}>${opt}</option>`).join('')}
+                        <option value="CUSTOM_ENTRY">✎ 自定义...</option>
+                    </select>`;
+                } else {
+                    qualityInputHtml = `
+                    <div style="display:flex; gap:2px;">
+                        <input type="text" value="${f.quality==='自定义'?'':f.quality}" onblur="safeAction(updateFile, ${f.id}, 'quality', this.value)" placeholder="输入音质">
+                        <button class="btn-xs btn-reset" onclick="safeAction(updateFile, ${f.id}, 'quality', '')" title="重置">↺</button>
+                    </div>`;
+                }
+            } else {
+                qualityInputHtml = `<input type="text" value="${f.quality||''}" onchange="safeAction(updateFile, ${f.id}, 'quality', this.value)" placeholder="版本/音质">`;
+            }
+
+            // 标签
+            const sizeStr = f.fileContent ? formatSize(f.fileSize) : '';
+            let tagsHtml = (f.links||[]).map((l, i) => 
+                `<span class="tag"><a href="${l.url}" target="_blank" style="color:inherit;text-decoration:none">${l.text}</a><span class="tag-remove" onclick="safeAction(removeLink, ${f.id}, ${i})">×</span></span>`
+            ).join('');
+            
+            if (f.directUrl) tagsHtml += `<span class="tag tag-direct" title="${f.directUrl}">在线源 <span class="tag-remove" onclick="safeAction(updateFile, ${f.id}, 'directUrl', '')">×</span></span>`;
+            if (isLX && f.keyUrl) tagsHtml += `<span class="tag tag-key">在线Key <span class="tag-remove" onclick="safeAction(updateFile, ${f.id}, 'keyUrl', '')">×</span></span>`;
+            if (isLX && f.keyVariable) tagsHtml += `<span class="tag tag-key">本地Key <span class="tag-remove" onclick="safeAction(updateFile, ${f.id}, 'keyVariable', '')">×</span></span>`;
+
+            // 按钮
+            let configBtns = `
+                <button class="btn-xs btn-link" onclick="openLinkModal(${f.id})">+ 链接</button>
+                <button class="btn-xs btn-direct" onclick="openDirectModal(${f.id})">🌐 直连</button>
+            `;
+            if (isLX) configBtns += ` <button class="btn-xs btn-cfg" onclick="openKeyModal(${f.id})">⚙️ Key</button>`;
+
+            return `
+                <tr>
+                    <td>
+                       <button class="btn-xs btn-gray" onclick="safeAction(moveRow, ${f.id}, -1)">↑</button>
+                       <button class="btn-xs btn-gray" onclick="safeAction(moveRow, ${f.id}, 1)">↓</button>
+                    </td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
+                            <span style="font-size:16px">📄</span>
+                            <input type="text" value="${f.fileName}" onchange="safeAction(updateFile, ${f.id}, 'fileName', this.value)" placeholder="文件名" style="font-weight:bold;width:200px">
+                        </div>
+                        ${f.fileContent ? `<span class="status-ok">✅ 已上传 ${sizeStr}</span>` : `<span class="status-no">⚠️ 未上传</span>`}
+                    </td>
+                    <td>${qualityInputHtml}</td>
+                    <td>
+                        <input type="text" value="${f.note||''}" onchange="safeAction(updateFile, ${f.id}, 'note', this.value)" placeholder="备注信息...">
+                        <div class="tag-container">${configBtns} ${tagsHtml}</div>
+                    </td>
+                    <td>
+                        <input type="file" id="file-${f.id}" style="display:none" accept="${acceptTypes}" onchange="uploadFile(${f.id}, this)">
+                        <button class="btn-xs btn-up" onclick="document.getElementById('file-${f.id}').click()">${f.fileContent ? '🔄 重传' : '📤 上传'}</button>
+                        ${f.fileContent ? `<button class="btn-xs btn-green" onclick="downloadFile(${f.id})">⬇️ 下载</button>` : ''}
+                        <button class="btn-xs btn-del" onclick="safeAction(deleteRow, ${f.id})">删除</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    } catch (e) { tbody.innerHTML = `<tr><td colspan="5" class="error-row">渲染错误: ${e.message}</td></tr>`; }
+}
+
+// --- 数据操作 ---
+
+function addNewRow() { app.files.push(sanitizeFile({ tab: app.currentTab })); saveData(); renderTable(); }
+function updateFile(id, key, val) { const f = app.files.find(x => x.id === id); if(f) { f[key] = val; saveData(); renderTable(); } }
+function handleQualityChange(id, val) { const f = app.files.find(x => x.id === id); if(f) { f.quality = val === 'CUSTOM_ENTRY' ? "自定义" : val; saveData(); renderTable(); } }
+function uploadFile(id, input) {
+    const file = input.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e => { const f = app.files.find(x => x.id === id); if(f) { f.fileContent = e.target.result; f.fileName = f.fileName || file.name; f.fileSize = file.size; saveData(); renderTable(); } };
+    reader.readAsDataURL(file); input.value = '';
+}
+function downloadFile(id) { const f = app.files.find(x => x.id === id); if(f && f.fileContent) { const a = document.createElement('a'); a.href = f.fileContent; a.download = f.fileName; a.click(); } }
+function deleteRow(id) { if(confirm('删除?')) { app.files = app.files.filter(x => x.id !== id); saveData(); renderTable(); } }
+function moveRow(id, dir) { const idx = app.files.findIndex(x => x.id === id); if (idx < 0) return; const target = idx + dir; if (target >= 0 && target < app.files.length) { [app.files[idx], app.files[target]] = [app.files[target], app.files[idx]]; saveData(); renderTable(); } }
+
+// --- 导入导出 ---
+function importData(input) {
+    const f = input.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = e => {
+        try {
+            const json = JSON.parse(e.target.result);
+            let imported = Array.isArray(json) ? json.map(i=>({...i, tab:'LX'})) : (json.files || []);
+            const clean = imported.map(f => sanitizeFile(f));
+            if (confirm(`解析到 ${clean.length} 个文件。\n确定覆盖(OK)还是追加(Cancel)?`)) app.files = clean;
+            else app.files = app.files.concat(clean);
+            saveData(); renderTable(); alert('导入完成');
+        } catch(err) { alert('导入失败: ' + err.message); }
+    };
+    r.readAsText(f); input.value = '';
+}
+function exportData(type) {
+    if(type === 'json') {
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(app, null, 2)], {type: 'application/json'})); a.download = `备份_v1.3.0_fix3.json`; a.click();
+    } else { exportHtmlReport(); }
+}
+
+// --- 弹窗逻辑 ---
+function openModal(id) { document.getElementById(id).style.display = 'block'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; currentEditId = null; }
+function quickAddTab(n) { document.getElementById('newTabName').value = n; confirmAddTab(); }
+function confirmAddTab() { const name = document.getElementById('newTabName').value.trim(); if(name && !app.tabs.includes(name)) { app.tabs.push(name); switchTab(name); closeModal('tabModal'); } }
+function deleteTab(t, e) { e.stopPropagation(); if(confirm('删?')) { app.files = app.files.filter(f=>f.tab!==t); app.tabs=app.tabs.filter(x=>x!==t); if(app.currentTab===t) app.currentTab='LX'; saveData(); renderTabs(); renderTable(); } }
+function clearCurrentTab() { if(confirm('清空?')) { app.files = app.files.filter(f=>(f.tab||'LX')!==app.currentTab); saveData(); renderTable(); } }
+function openLinkModal(id) { currentEditId = id; document.getElementById('linkText').value=''; document.getElementById('linkUrl').value=''; openModal('linkModal'); }
+function confirmAddLink() { const f=app.files.find(x=>x.id===currentEditId), t=document.getElementById('linkText').value, u=document.getElementById('linkUrl').value; if(f&&t&&u) { f.links.push({text:t,url:u}); saveData(); renderTable(); } closeModal('linkModal'); }
+function removeLink(fid, idx) { const f=app.files.find(x=>x.id===fid); if(f){f.links.splice(idx,1);saveData();renderTable();} }
+function openDirectModal(id) { currentEditId=id; document.getElementById('directUrl').value=app.files.find(x=>x.id===id)?.directUrl||''; openModal('directModal'); }
+function confirmDirectUrl() { const f=app.files.find(x=>x.id===currentEditId); if(f){f.directUrl=document.getElementById('directUrl').value.trim();saveData();renderTable();} closeModal('directModal'); }
+function openKeyModal(id) { currentEditId = id; const f = app.files.find(x => x.id === id); document.getElementById('chkOnlineKey').checked = !!f.keyUrl; document.getElementById('keyUrl').value = f.keyUrl || ''; document.getElementById('chkLocalKey').checked = !!f.keyVariable; document.getElementById('keyVar').value = f.keyVariable || 'API_KEY'; toggleKeyUI(); openModal('keyModal'); }
+function toggleKeyUI() { const on = document.getElementById('chkOnlineKey').checked; const loc = document.getElementById('chkLocalKey').checked; document.getElementById('areaOnlineKey').style.display = on ? 'block' : 'none'; document.getElementById('areaLocalKey').style.display = loc ? 'block' : 'none'; }
+function confirmKeyConfig() { const f = app.files.find(x => x.id === currentEditId); if(f) { f.keyUrl = document.getElementById('chkOnlineKey').checked ? document.getElementById('keyUrl').value.trim() : ''; f.keyVariable = document.getElementById('chkLocalKey').checked ? document.getElementById('keyVar').value.trim() : ''; saveData(); renderTable(); } closeModal('keyModal'); }
+function formatSize(b) { if(!b)return''; const i=Math.floor(Math.log(b)/Math.log(1024)); return (b/Math.pow(1024,i)).toFixed(1)+['B','KB','MB'][i]; }
+
+// --- HTML 导出逻辑 ---
+function getClientLogic() {
+    function clientLogic() {
+        const INFO_LIMITS = { name: 24, description: 36, author: 56, homepage: 1024, version: 36 };
+        function truncateText(text, limit) { if (!text) return ""; return text.length > limit ? text.substring(0, limit) + "..." : text; }
+        
+        // 核心：处理文件内容（解码 + Key替换）
+        function processContent(index, key) {
+             const file = window.DATA.files[index];
+             if(!file.fileContent) throw "无文件内容";
+             let binary = atob(file.fileContent.split(',')[1]);
+             let bytes = new Uint8Array(binary.length);
+             for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+             let txt = new TextDecoder("utf-8").decode(bytes);
+             
+             if(key) {
+                 const v = file.keyVariable || 'API_KEY';
+                 const reg = new RegExp('const\\s+' + v + '\\s*=\\s*[\\\'\\"][\\\'\\"]');
+                 if(reg.test(txt)) txt = txt.replace(reg, 'const ' + v + ' = "' + key + '"');
+                 else { txt = txt.replace(v + '=""', v + '="' + key + '"'); txt = txt.replace(v + "=''", v + "='" + key + "'"); }
+             }
+             return txt;
+        }
+
+        // 下载单纯的 JS 文件 (包含 Key)
+        window.DL_JS = function(index) {
+            try {
+                const file = window.DATA.files[index];
+                let key = null;
+                if(file.keyVariable) {
+                    key = document.getElementById('k2-'+index).value;
+                    if(!key) { alert("请先输入本地 Key！"); return; }
+                }
+                const txt = processContent(index, key);
+                const blob = new Blob([txt], {type: "text/javascript;charset=utf-8"});
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = file.fileName;
+                a.click();
+            } catch(e) { alert("下载失败: " + e); }
+        };
+
+        // 生成一键导入脚本 (恢复了 1.2.0 的复杂逻辑)
+        window.DL_IMPORT = async function(index) {
+            const btn = event.target;
+            const orgTxt = btn.innerText;
+            btn.innerText = "生成中..."; btn.disabled = true;
+            try {
+                const file = window.DATA.files[index];
+                let key = null;
+                if(file.keyVariable) {
+                    key = document.getElementById('k2-'+index).value;
+                    if(!key) throw "请输入 Key";
+                }
+                const scriptContent = processContent(index, key);
+                
+                // 压缩
+                const stream = new Blob([new TextEncoder().encode(scriptContent)]).stream();
+                const compressedStream = stream.pipeThrough(new CompressionStream('deflate'));
+                const response = await new Response(compressedStream).arrayBuffer();
+                const compressedBytes = new Uint8Array(response);
+                let binary = "";
+                for (let i = 0; i < compressedBytes.byteLength; i++) binary += String.fromCharCode(compressedBytes[i]);
+                const compressedBase64 = "gz_" + btoa(binary);
+
+                // 构造元数据
+                const apiId = "user_api_" + Math.random().toString().substring(2, 5) + "_" + Date.now();
+                const userApiObj = {
+                    "id": apiId,
+                    "name": truncateText(file.fileName.replace(/\.js$/i,''), INFO_LIMITS.name),
+                    "description": truncateText(file.note || "Imported source", INFO_LIMITS.description),
+                    "script": compressedBase64,
+                    "allowShowUpdateAlert": true
+                };
+                const jsonBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(userApiObj))));
+
+                // 构造 PowerShell 脚本 (写入 APPDATA)
+                const randId = Math.floor(Math.random() * 100000);
+                const b64File = "lx_payload_" + randId + ".txt";
+                const psFile = "lx_importer_" + randId + ".ps1";
+                const chunks = []; 
+                for(let i=0; i<jsonBase64.length; i+=70) chunks.push(jsonBase64.substring(i, i+70));
+
+                let psCode = '$ErrorActionPreference = "Stop"\r\n' +
+                'try {\r\n' +
+                '    $targetDir = "$env:APPDATA\\lx-music-desktop\\LxDatas"\r\n' +
+                '    $targetFile = "$targetDir\\user_api.json"\r\n' +
+                '    $tempB64 = "$env:TEMP\\' + b64File + '"\r\n' +
+                '    if (-not (Test-Path $tempB64)) { throw "Data lost." }\r\n' +
+                '    $b64 = Get-Content $tempB64 | Out-String; $b64 = $b64 -replace "[\\r\\n\\s]", ""\r\n' +
+                '    $jsonBytes = [System.Convert]::FromBase64String($b64)\r\n' +
+                '    $jsonStr = [System.Text.Encoding]::UTF8.GetString($jsonBytes)\r\n' +
+                '    if (-not (Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir | Out-Null }\r\n' +
+                '    if (-not (Test-Path $targetFile)) { \r\n' +
+                '        [System.IO.File]::WriteAllText($targetFile, "{`"userApis`": [" + $jsonStr + "]}", [System.Text.UTF8Encoding]::new($false)) \r\n' +
+                '    } else { \r\n' +
+                '        $raw = [System.IO.File]::ReadAllText($targetFile)\r\n' +
+                '        $end = $raw.LastIndexOf("}")\r\n' +
+                '        if($end -gt 0) { \r\n' +
+                '           $lastBracket = $raw.LastIndexOf("]"); $prefix = ","; if($raw[$lastBracket-1] -eq "["){$prefix=""}\r\n' +
+                '           $newContent = $raw.Insert($lastBracket, $prefix + $jsonStr)\r\n' +
+                '           [System.IO.File]::WriteAllText($targetFile, $newContent, [System.Text.UTF8Encoding]::new($false))\r\n' +
+                '        }\r\n' +
+                '    }\r\n' +
+                '} catch { Write-Host "Error: $_" -F Red; exit 1 }';
+
+                // 构造 BAT
+                let bat = '@echo off\r\nsetlocal\r\necho Initializing...\r\n';
+                bat += 'set "B64=%TEMP%\\' + b64File + '"\r\ntype nul > "%B64%"\r\n';
+                chunks.forEach(c => bat += 'echo ' + c + '>> "%B64%"\r\n');
+                
+                // PS 编码
+                const psB64 = btoa(unescape(encodeURIComponent(psCode)));
+                bat += 'set "PS=%TEMP%\\ps_' + randId + '.b64"\r\ntype nul > "%PS%"\r\n';
+                for(let i=0; i<psB64.length; i+=70) bat += 'echo ' + psB64.substring(i, i+70) + '>> "%PS%"\r\n';
+                
+                bat += 'certutil -decode "%PS%" "%TEMP%\\' + psFile + '" >nul\r\n';
+                bat += 'powershell -NoProfile -ExecutionPolicy Bypass -File "%TEMP%\\' + psFile + '"\r\n';
+                bat += 'if %errorlevel% neq 0 ( color 4f & echo Error! & pause ) else ( echo Success! Restart LX Music. & timeout /t 3 >nul )\r\n';
+                bat += 'del "%B64%" & del "%PS%" & del "%TEMP%\\' + psFile + '"\r\n';
+
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(new Blob([bat], {type: "text/plain;charset=us-ascii"}));
+                a.download = "一键导入_" + file.fileName.replace(/\.js$/,'') + ".bat";
+                a.click();
+            } catch(e) { alert("生成失败: " + e); } finally { btn.innerText = orgTxt; btn.disabled = false; }
+        };
+        
+        window.JUMP_KEY = function(i){const f=window.DATA.files[i],k=document.getElementById('k1-'+i).value;if(k)window.open(f.keyUrl+k)};
+        window.DL_RAW = function(i){const f=window.DATA.files[i];const b=atob(f.fileContent.split(',')[1]),a=new Uint8Array(b.length);for(let j=0;j<b.length;j++)a[j]=b.charCodeAt(j);const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([a],{type:'text/javascript'}));l.download=f.fileName;l.click()};
+    }
+    const s = clientLogic.toString();
+    return s.substring(s.indexOf('{')+1, s.lastIndexOf('}'));
+}
+
+function exportHtmlReport() {
+    const exportObj = { tabs: app.tabs, files: app.files, lxScriptEnabled: app.lxScriptEnabled };
+    let curTab = app.currentTab;
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>列表 (v1.3.0-fix3)</title><style>
+    body{font-family:'Microsoft YaHei';background:#f9f9f9;padding:20px;max-width:1200px;margin:0 auto}
+    table{width:100%;border-collapse:collapse;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,0.05)}
+    th{background:#f5f5f5;padding:10px;text-align:left}td{padding:10px;border-bottom:1px solid #eee}
+    .btn{padding:5px 10px;color:#fff;border-radius:3px;cursor:pointer;border:none;margin:2px;text-decoration:none;display:inline-block;font-size:12px}
+    .bg-g{background:#28a745}.bg-b{background:#667eea}.bg-y{background:#f0ad4e}.bg-t{background:#20c997}.bg-p{background:#6f42c1}
+    .tab-bar{display:flex;margin-bottom:20px;border-bottom:1px solid #ddd}.tab{padding:10px 20px;border:none;background:none;cursor:pointer}
+    .tab.active{border:1px solid #ddd;border-bottom:2px solid #fff;background:#fff;font-weight:bold}
+    .tag{background:#eef2ff;color:#5a67d8;padding:2px 6px;border-radius:4px;font-size:11px;margin-right:4px;text-decoration:none}
+    .key-box{margin-top:5px;background:#fffbe6;padding:5px;display:flex;gap:5px;border:1px solid #ffe58f;align-items:center}
+    .key-in{border:1px solid #ddd;padding:3px;flex:1}</style></head><body>
+    <h2>插件列表</h2><div class="tab-bar" id="tb"></div><div id="ct"></div>
+    <script>
+    window.DATA=${JSON.stringify(exportObj)}; let c=DATA.tabs[0];
+    function I(){document.getElementById('tb').innerHTML=DATA.tabs.map(t=>'<button class="tab '+(t==c?'active':'')+'" onclick="S(\\''+t+'\\')">'+(t=='LX'?'LX Music':t)+'</button>').join('');R()}
+    function S(t){c=t;I()}
+    function R(){
+        const l=DATA.files.filter(f=>(f.tab||'LX')==c), el=document.getElementById('ct'), isLX=(c=='LX'), en=isLX&&DATA.lxScriptEnabled;
+        if(!l.length){el.innerHTML='无文件';return}
+        el.innerHTML='<table><thead><tr><th>文件名</th><th>版本</th><th>备注</th><th>操作</th></tr></thead><tbody>'+l.map((f,i)=>{
+            let bs = '';
+            // 直连
+            if(f.directUrl) bs+='<a href="'+f.directUrl+'" class="btn bg-t" download>🌐 在线下载</a> ';
+            // 普通文件
+            if(f.fileContent && !f.keyVariable){
+                bs+='<button class="btn bg-g" onclick="DL_RAW('+i+')">⬇️ 本地下载</button> ';
+                if(en) bs+='<button class="btn bg-b" onclick="DL_IMPORT('+i+')">🚀 一键导入</button>';
+            }
+            // Key 逻辑
+            if(isLX && f.fileContent){
+                if(f.keyUrl) bs+='<div class="key-box"><span style="font-size:10px">在线Key</span><input id="k1-'+i+'" class="key-in" placeholder="Key"><button class="btn bg-y" onclick="JUMP_KEY('+i+')">跳转</button></div>';
+                if(f.keyVariable){
+                    // 修复的核心：无论开关如何，只要有本地Key变量，就显示“下载JS(含Key)”按钮
+                    bs+='<div class="key-box"><span style="font-size:10px">本地Key</span><input id="k2-'+i+'" class="key-in" placeholder="输入Key">';
+                    bs+='<button class="btn bg-p" title="仅下载替换了Key的JS文件" onclick="DL_JS('+i+')">下载JS</button>';
+                    // 只有开启了一键导入，才显示一键导入按钮
+                    if(en) bs+='<button class="btn bg-b" title="生成自动安装脚本" onclick="DL_IMPORT('+i+')">一键导入</button>';
+                    bs+='</div>';
+                }
+            }
+            return '<tr><td><b>'+f.fileName+'</b></td><td>'+f.quality+'</td><td>'+f.note+'<br>'+(f.links||[]).map(k=>'<a href="'+k.url+'" class="tag" target="_blank">🔗 '+k.text+'</a>').join('')+'</td><td>'+bs+'</td></tr>';
+        }).join('')+'</tbody></table>';
+    }
+    ${getClientLogic()}
+    I();
+    <\/script></body></html>`;
+    const b = new Blob([html], {type:'text/html'});
+    const a = document.createElement('a'); a.href=URL.createObjectURL(b); a.download='列表.html'; a.click();
+}
+</script>
+</body>
+</html>

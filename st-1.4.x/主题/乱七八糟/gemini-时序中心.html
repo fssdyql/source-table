@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}} - 时序中心</title>
+  <style>
+    /* === 基础变量与暗色模式 === */
+    :root {
+      --primary-color: #f97316; /* 鲜艳的橙色作为主色 */
+      --secondary-color: #9ca3af;
+      --bg-color: #fefcfb;
+      --text-color: #1f2937;
+      --card-bg: #ffffff;
+      --border-color: #e5e7eb;
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      --spacing-md: 20px;
+      --radius-full: 9999px;
+    }
+    .dark {
+      --primary-color: #fb923c;
+      --bg-color: #1a1a1a;
+      --text-color: #e5e7eb;
+      --card-bg: #292929;
+      --border-color: #4b5563;
+    }
+
+    /* === 基础布局 === */
+    body {
+      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.4s, color 0.4s;
+      margin: 0;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--spacing-md);
+    }
+
+    /* === 头部与搜索 === */
+    .app-header {
+      text-align: center;
+      padding: 10px 0 20px 0;
+    }
+    .search-bar {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px 15px;
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-full);
+      background: var(--card-bg);
+      color: var(--text-color);
+      margin-bottom: var(--spacing-md);
+      transition: border-color 0.3s;
+    }
+    .search-bar:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    /* === 标签页：中心辐射式导航 (The Radial Hub) === */
+    .radial-hub {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 40px;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      border: 1px solid var(--border-color);
+      background: var(--card-bg);
+      color: var(--text-color);
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+    .tab-btn:hover {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 8px rgba(249, 115, 22, 0.3);
+    }
+    .tab-btn.active {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+      transform: scale(1.05);
+      font-weight: 700;
+    }
+
+    /* === 内容区：垂直时间线 (Vertical Timeline) === */
+    .timeline-wrapper {
+      position: relative;
+      max-width: 800px; /* 居中时间线 */
+      margin: 0 auto;
+      padding: 0 10px; /* 防止内容贴边 */
+    }
+
+    /* 时间线主线 */
+    .timeline-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%; /* 居中 */
+      width: 2px;
+      background-color: var(--border-color);
+      margin-left: -1px;
+    }
+
+    /* 时间线分组头部 */
+    .timeline-group-header {
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .timeline-group-header h2 {
+      display: inline-block;
+      padding: 8px 15px;
+      background-color: var(--primary-color);
+      color: white;
+      border-radius: 4px;
+      margin: 0;
+      font-size: 18px;
+      z-index: 10;
+      position: relative;
+    }
+
+    /* 插件节点 */
+    .timeline-item {
+      position: relative;
+      width: 50%;
+      padding: 10px 0;
+      margin-bottom: 30px;
+      cursor: pointer;
+    }
+    .timeline-item:nth-child(even) {
+      left: 50%; /* 右侧节点 */
+      padding-left: 50px;
+    }
+    .timeline-item:nth-child(odd) {
+      left: 0; /* 左侧节点 */
+      padding-right: 50px;
+      text-align: right;
+    }
+
+    /* 时间线标记点 */
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: var(--radius-full);
+      background: var(--primary-color);
+      border: 3px solid var(--bg-color);
+      top: 25px;
+      z-index: 10;
+      transition: all 0.3s;
+    }
+    .timeline-item:nth-child(even)::before {
+      left: -8px; /* 调整到线上 */
+    }
+    .timeline-item:nth-child(odd)::before {
+      right: -8px; /* 调整到线上 */
+    }
+    .timeline-item.open::before {
+      background: var(--card-bg);
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 4px var(--primary-color); /* 展开时的光环效果 */
+    }
+
+    /* 插件卡片 */
+    .item-content {
+      background: var(--card-bg);
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s;
+    }
+    .item-content h3 {
+      margin: 0 0 5px 0;
+      font-size: 16px;
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+    .item-metadata {
+      font-size: 12px;
+      color: var(--secondary-color);
+    }
+
+    /* 展开的详情 */
+    .item-details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out;
+      padding-top: 0;
+      border-top: 1px solid transparent;
+      margin-top: 0;
+    }
+    .timeline-item.open .item-details {
+      max-height: 300px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border-color);
+      margin-top: 10px;
+    }
+    .item-note {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.2s;
+      font-size: 13px;
+    }
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    .btn-secondary {
+      background-color: var(--border-color);
+      color: var(--text-color);
+    }
+
+    /* 响应式调整：单列时间线 */
+    @media (max-width: 768px) {
+      .timeline-wrapper::before {
+        left: 20px; /* 将主线移到左侧 */
+      }
+      .timeline-item {
+        width: 100%;
+        left: 0 !important;
+        padding: 10px 0 10px 50px !important; /* 调整所有节点到右侧 */
+        text-align: left !important;
+      }
+      .timeline-item::before {
+        left: 17px !important; /* 调整标记点到主线上 */
+      }
+      .timeline-group-header h2 {
+        text-align: left;
+        display: block;
+        margin-left: 50px;
+        padding-left: 0;
+      }
+    }
+  </style>
+</head>
+<body class="light">
+  <div class="container">
+    <header class="app-header">
+      <button class="btn btn-secondary" onclick="darkModeManager.toggle()" style="float: right; margin-top: 10px;">切换主题</button>
+      <h1>{{TITLE}}</h1>
+      <p class="meta-info">导出时间：{{DATE}}</p>
+      <input type="search" id="searchInput" class="search-bar" placeholder="🔍 搜索文件名、音质或备注...">
+    </header>
+
+    <nav class="radial-hub" id="tabNav">
+      </nav>
+
+    <main class="timeline-wrapper" id="contentArea">
+      <p style="text-align: center;" id="loadingMessage">正在加载数据...</p>
+    </main>
+  </div>
+
+  <script>
+    // === JavaScript 核心逻辑 ===
+
+    let appData = { items: [], config: {}, customTabs: [] };
+    let appState = { currentTab: 'LX' };
+
+    // 1. 数据解析和工具函数
+    function initializeData() {
+      const dataString = '{{DATA}}';
+      try {
+        appData = JSON.parse(dataString);
+      } catch (e) {
+        console.error('数据解析失败:', e);
+        appData = { items: [], config: {}, customTabs: [] };
+      }
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0 || !bytes) return 'N/A';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // 2. 分组逻辑：按 Quality 分组
+    function groupByQuality(items) {
+      const groups = {};
+      items.forEach(item => {
+        const groupKey = item.quality || '📁 通用或未标记';
+        if (!groups[groupKey]) {
+          groups[groupKey] = [];
+        }
+        groups[groupKey].push(item);
+      });
+      // 将键转换为数组并进行排序 (例如，将包含 'Lossless' 或 'Flac' 的组排在前面)
+      return Object.keys(groups)
+        .sort((a, b) => {
+          if (a.includes('Lossless') || a.includes('Flac')) return -1;
+          if (b.includes('Lossless') || b.includes('Flac')) return 1;
+          return a.localeCompare(b);
+        })
+        .map(key => ({
+          name: key,
+          items: groups[key]
+        }));
+    }
+    
+    // 3. 渲染核心函数
+    function getAvailableTabs() {
+      const tabs = ['LX'];
+      if (appData.config.showMF) tabs.push('Music Free');
+      if (appData.config.showLY) tabs.push('澜音');
+      if (appData.customTabs && appData.customTabs.length) {
+        tabs.push(...appData.customTabs);
+      }
+      return [...new Set(tabs)];
+    }
+
+    function renderTabs() {
+      const tabNav = document.getElementById('tabNav');
+      tabNav.innerHTML = '';
+      const tabs = getAvailableTabs();
+      if (!tabs.includes(appState.currentTab) && tabs.length > 0) {
+        appState.currentTab = tabs[0];
+      }
+      tabs.forEach(tab => {
+        const button = document.createElement('button');
+        button.className = 'tab-btn' + (tab === appState.currentTab ? ' active' : '');
+        button.textContent = tab;
+        button.onclick = () => switchTab(tab);
+        tabNav.appendChild(button);
+      });
+    }
+
+    function switchTab(tabName) {
+      appState.currentTab = tabName;
+      document.getElementById('searchInput').value = '';
+      renderTabs();
+      renderContent();
+    }
+    
+    function renderPluginItem(item) {
+      const fileSize = formatFileSize(item.file?.size);
+      const version = item.ver || 'N/A';
+      const itemId = item.id;
+      
+      let buttonsHtml = '';
+      // 下载按钮
+      if (item.dlLink) {
+        buttonsHtml += `<a href="${item.dlLink}" class="btn btn-primary" download="${item.name}">直链下载</a>`;
+      } else if (item.file) {
+        buttonsHtml += `<button class="btn btn-primary" onclick="downloadFile(${itemId})">下载文件 (${fileSize})</button>`;
+      }
+      
+      // Key 配置按钮
+      if (item.tab === 'LX' && item.keyConfig && (item.keyConfig.enableUrl || item.keyConfig.enableVar)) {
+        if (item.keyConfig.enableUrl) {
+           buttonsHtml += `<button class="btn btn-secondary" onclick="importWithKeyOnline(${itemId})">在线 Key</button>`;
+        }
+        if (item.keyConfig.enableVar) {
+           buttonsHtml += `<button class="btn btn-secondary" onclick="generateFileWithKey(${itemId})">本地 Key 替换</button>`;
+        }
+      }
+      // 外部链接
+      (item.links || []).forEach(link => {
+        buttonsHtml += `<a href="${link.url}" target="_blank" class="btn btn-secondary">🔗 ${link.text}</a>`;
+      });
+      
+      return `
+        <div class="timeline-item" onclick="toggleDetails(this)">
+            <div class="item-content">
+                <h3>${item.name}</h3>
+                <div class="item-metadata">
+                    版本: ${version} | 大小: ${fileSize}
+                </div>
+            </div>
+            
+            <div class="item-details">
+                <p class="item-note">${item.note || '暂无详细备注信息。'}</p>
+                <div class="action-buttons">
+                    ${buttonsHtml}
+                </div>
+            </div>
+        </div>
+      `;
+    }
+
+    function renderContent(query = '') {
+      const contentArea = document.getElementById('contentArea');
+      const allItemsInTab = appData.items.filter(item => (item.tab || 'LX') === appState.currentTab);
+      const filteredItems = filterAndSearchItems(allItemsInTab, query);
+      const groupedData = groupByQuality(filteredItems);
+      
+      let html = '';
+      
+      if (groupedData.length === 0) {
+        html = `<p style="text-align: center; padding: 50px;">当前标签页或搜索结果下没有插件。</p>`;
+      } else {
+        groupedData.forEach(group => {
+          html += `
+            <div class="timeline-group-header">
+              <h2>${group.name}</h2>
+            </div>
+            ${group.items.map(item => renderPluginItem(item)).join('')}
+          `;
+        });
+      }
+      
+      contentArea.innerHTML = html;
+    }
+    
+    // 4. 交互实现：折叠/展开
+    function toggleDetails(element) {
+        if (event.target.closest('.action-buttons')) {
+            return;
+        }
+        element.classList.toggle('open');
+        // 确保只有一个节点是展开的
+        document.querySelectorAll('.timeline-item.open').forEach(item => {
+            if (item !== element) {
+                item.classList.remove('open');
+            }
+        });
+    }
+
+    // 5. 搜索、下载和 Key 相关的工具函数 (沿用文档中的实现框架)
+    function filterAndSearchItems(items, query) {
+      if (!query) return items;
+      const keywords = query.toLowerCase().split(' ').filter(k => k.length > 0);
+      return items.filter(item => {
+        const searchableText = [item.name, item.note, item.ver, item.quality, item.tab].join(' ').toLowerCase();
+        return keywords.every(keyword => searchableText.includes(keyword));
+      });
+    }
+    
+    function downloadFile(itemId) {
+      const item = appData.items.find(x => x.id === itemId);
+      if (!item || !item.file || !item.file.content) {
+        alert('文件数据缺失，无法下载。');
+        return;
+      }
+      const a = document.createElement('a');
+      a.href = item.file.content; 
+      a.download = item.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+    
+    function importWithKeyOnline(itemId) {
+      const item = appData.items.find(x => x.id === itemId);
+      if (!item?.keyConfig?.enableUrl) return;
+      const key = prompt(`请输入Key以导入 ${item.name}:`, '');
+      if (key && item.keyConfig.url) {
+        // 实际应用中：window.open(item.keyConfig.url + encodeURIComponent(key), '_blank');
+        alert(`已模拟在线 Key 导入。Key: ${key}`);
+      }
+    }
+    function generateFileWithKey(itemId) {
+      const item = appData.items.find(x => x.id === itemId);
+      if (!item?.keyConfig?.enableVar) return;
+      const key = prompt(`请输入Key（将替换变量 ${item.keyConfig.var}）:`, '');
+      if (key) {
+        // 实际应用中：需要进行 Base64 解码和正则替换，此处仅做占位和提示
+        alert(`已获取Key。需要使用 Base64 解码和正则替换插件内容才能下载新文件。`);
+      }
+    }
+    
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => { clearTimeout(timeout); func(...args); };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    // 6. 暗色模式管理器
+    class DarkModeManager {
+      init() {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedMode = localStorage.getItem('darkMode');
+        this.isDark = savedMode !== null ? savedMode === 'dark' : prefersDark;
+        this.apply();
+      }
+      toggle() {
+        this.isDark = !this.isDark;
+        this.apply();
+        localStorage.setItem('darkMode', this.isDark ? 'dark' : 'light');
+      }
+      apply() {
+        document.documentElement.className = this.isDark ? 'dark' : 'light';
+        document.body.className = this.isDark ? 'dark' : 'light';
+      }
+    }
+    window.darkModeManager = new DarkModeManager();
+
+    // 7. 启动应用
+    window.addEventListener('DOMContentLoaded', () => {
+      initializeData();
+      renderTabs();
+      renderContent();
+      
+      document.getElementById('searchInput').addEventListener('input', debounce(function(e) {
+        renderContent(e.target.value);
+      }, 300));
+      
+      document.getElementById('loadingMessage').style.display = 'none';
+    });
+    
+    // 挂载到全局
+    window.toggleDetails = toggleDetails;
+    window.downloadFile = downloadFile;
+    window.importWithKeyOnline = importWithKeyOnline;
+    window.generateFileWithKey = generateFileWithKey;
+    
+  </script>
+</body>
+</html>

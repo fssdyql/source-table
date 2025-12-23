@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TITLE}}</title>
+<style>
+    /* 瑞典极简红黑风格 - Swedish Modern Red/Black */
+    :root {
+        --bg: #ffffff;
+        --fg: #000000;
+        --accent: #e62e00; /* 瑞典红 */
+        --gray: #f2f2f2;
+        --line: 2px solid #000;
+    }
+
+    body {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        margin: 0;
+        padding: 40px;
+        line-height: 1.4;
+    }
+
+    /* 容器 */
+    .container {
+        max-width: 960px;
+        margin: 0 auto;
+    }
+
+    /* 头部 */
+    header {
+        border-bottom: 6px solid var(--fg);
+        padding-bottom: 20px;
+        margin-bottom: 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+    
+    h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: -1px;
+        text-transform: uppercase;
+        line-height: 1;
+    }
+
+    .date-badge {
+        font-family: monospace;
+        font-weight: bold;
+        background: var(--fg);
+        color: var(--bg);
+        padding: 4px 8px;
+        font-size: 14px;
+    }
+
+    /* 标签栏 - 类似印刷品的目录 */
+    .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        margin-bottom: 40px;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .tab {
+        padding: 12px 24px;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: 0.2s;
+        border: 1px solid transparent;
+        border-bottom: none;
+        opacity: 0.4;
+    }
+
+    .tab:hover {
+        opacity: 1;
+        color: var(--accent);
+    }
+
+    .tab.active {
+        opacity: 1;
+        color: var(--bg);
+        background: var(--accent);
+        border: 1px solid var(--accent);
+    }
+
+    /* 列表项 - 网格化布局 */
+    .list-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0;
+        border-top: var(--line);
+    }
+
+    .item-row {
+        display: grid;
+        grid-template-columns: 3fr 2fr 180px;
+        gap: 20px;
+        padding: 24px 0;
+        border-bottom: 1px solid #e0e0e0;
+        align-items: start;
+        transition: background 0.2s;
+    }
+    
+    .item-row:hover {
+        background: #fffcfc; /* 极淡的红色背景 */
+    }
+
+    /* 手机适配 */
+    @media (max-width: 768px) {
+        body { padding: 20px; }
+        h1 { font-size: 2rem; }
+        .item-row { grid-template-columns: 1fr; gap: 12px; }
+    }
+
+    /* 内容样式 */
+    .name-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .file-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--fg);
+    }
+
+    .tags-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .tag {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 2px 6px;
+        border: 1px solid var(--fg);
+    }
+    
+    .tag.ver { background: var(--fg); color: var(--bg); }
+    .tag.quality { border-color: var(--accent); color: var(--accent); }
+
+    .note-text {
+        font-size: 14px;
+        color: #666;
+    }
+    
+    .links-row {
+        margin-top: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .link-a {
+        text-decoration: none;
+        color: var(--fg);
+        font-size: 12px;
+        border-bottom: 1px solid #ccc;
+    }
+    .link-a:hover { border-bottom-color: var(--accent); color: var(--accent); }
+
+    /* 按钮组 */
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .btn {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 10px 0;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        border: none;
+        transition: 0.2s;
+    }
+
+    /* 主要下载按钮：红色实心 */
+    .btn-dl {
+        background: var(--accent);
+        color: white;
+    }
+    .btn-dl:hover {
+        background: #000;
+        color: #fff;
+    }
+
+    /* 直链按钮：黑色实心 */
+    .btn-direct {
+        background: var(--fg);
+        color: var(--bg);
+    }
+    .btn-direct:hover {
+        opacity: 0.8;
+    }
+
+    /* Key 输入框区域 */
+    .key-area {
+        margin-top: 8px;
+        border-top: 1px dotted #ccc;
+        padding-top: 8px;
+    }
+    .key-input-group {
+        display: flex;
+        margin-bottom: 4px;
+        border: 1px solid var(--fg);
+    }
+    .key-in {
+        flex: 1;
+        border: none;
+        padding: 4px 8px;
+        font-family: inherit;
+        font-size: 12px;
+        outline: none;
+    }
+    .key-go {
+        background: var(--fg);
+        color: #fff;
+        border: none;
+        padding: 0 8px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .key-go:hover { background: var(--accent); }
+
+    .empty { padding: 80px; text-align: center; color: #ccc; font-weight: bold; font-size: 24px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Plugin Index</h1>
+        <div class="date-badge">{{DATE}}</div>
+    </header>
+
+    <div class="tabs" id="tabContainer"></div>
+    <div class="list-grid" id="listContainer"></div>
+</div>
+
+<script>
+    // 注入数据
+    const DB = {{DATA}};
+    let currentTab = 'LX';
+
+    // 初始化
+    function init() {
+        renderTabs();
+    }
+
+    function renderTabs() {
+        let tabs = ['LX'];
+        if(DB.config.showMF) tabs.push('Music Free');
+        if(DB.config.showLY) tabs.push('澜音');
+        tabs = tabs.concat(DB.customTabs || []);
+
+        // 确保当前Tab有效
+        if(!tabs.includes(currentTab)) currentTab = 'LX';
+
+        const html = tabs.map(t => {
+            const isActive = t === currentTab ? 'active' : '';
+            return `<div class="tab ${isActive}" onclick="switchTab('${t}')">${t}</div>`;
+        }).join('');
+        
+        document.getElementById('tabContainer').innerHTML = html;
+        renderList();
+    }
+
+    function switchTab(t) {
+        currentTab = t;
+        renderTabs();
+    }
+
+    function renderList() {
+        const list = DB.items.filter(i => (i.tab || 'LX') === currentTab);
+        const container = document.getElementById('listContainer');
+
+        if(list.length === 0) {
+            container.innerHTML = '<div class="empty">No Items</div>';
+            return;
+        }
+
+        container.innerHTML = list.map(item => {
+            // 标签生成
+            let tags = '';
+            if(item.ver) tags += `<span class="tag ver">v${item.ver}</span>`;
+            if(item.quality) tags += `<span class="tag quality">${item.quality}</span>`;
+
+            // 链接生成
+            let links = (item.links || []).map(l => 
+                `<a href="${l.url}" target="_blank" class="link-a">↗ ${l.text}</a>`
+            ).join('');
+
+            // 按钮生成
+            let actions = '';
+            
+            // 1. 直链
+            if(item.dlLink) {
+                actions += `<a href="${item.dlLink}" target="_blank" class="btn btn-direct">Direct Link</a>`;
+            }
+            
+            // 2. 文件下载
+            if(item.file && item.file.content) {
+                actions += `<button class="btn btn-dl" onclick="dlFile(${item.id})">Download</button>`;
+                
+                // Key 逻辑 (仅LX)
+                if(currentTab === 'LX' && item.keyConfig) {
+                    const k = item.keyConfig;
+                    actions += '<div class="key-area">';
+                    if(k.enableUrl && k.url) {
+                        actions += `
+                        <div class="key-input-group">
+                            <input id="ku_${item.id}" class="key-in" placeholder="Key (Online)...">
+                            <button class="key-go" onclick="keyUrl(${item.id})">→</button>
+                        </div>`;
+                    }
+                    if(k.enableVar && k.var) {
+                        actions += `
+                        <div class="key-input-group">
+                            <input id="kv_${item.id}" class="key-in" placeholder="Key (Inject)...">
+                            <button class="key-go" onclick="keyVar(${item.id})">↓</button>
+                        </div>`;
+                    }
+                    actions += '</div>';
+                }
+            }
+
+            return `
+            <div class="item-row">
+                <div class="name-group">
+                    <div class="file-name">${item.name}</div>
+                    <div class="tags-row">${tags}</div>
+                </div>
+                <div class="desc-group">
+                    <div class="note-text">${item.note || ''}</div>
+                    <div class="links-row">${links}</div>
+                </div>
+                <div class="btn-group">
+                    ${actions}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // --- 功能函数 ---
+    window.dlFile = (id) => {
+        const i = DB.items.find(x => x.id == id);
+        if(i) save(i.file.content, i.name);
+    };
+
+    window.keyUrl = (id) => {
+        const i = DB.items.find(x => x.id == id);
+        const val = document.getElementById('ku_' + id).value;
+        if(val && i.keyConfig) window.open(i.keyConfig.url + val);
+    };
+
+    window.keyVar = (id) => {
+        const i = DB.items.find(x => x.id == id);
+        const val = document.getElementById('kv_' + id).value;
+        if(!val) return alert('Please enter a key');
+        
+        try {
+            const raw = atob(i.file.content.split(',')[1]);
+            const u8 = new Uint8Array(raw.length);
+            for(let n=0; n<raw.length; n++) u8[n] = raw.charCodeAt(n);
+            let txt = new TextDecoder().decode(u8);
+            
+            const vName = i.keyConfig.var;
+            // 简单的正则替换
+            const re = new RegExp('((?:const|var|let)\\s+' + vName + '\\s*[:=]\\s*)[\\\'"][\\\'"]', 'g');
+            
+            if(re.test(txt)){
+                txt = txt.replace(re, '$1"' + val + '"');
+                const blob = new Blob([txt], {type: 'text/javascript'});
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = i.name;
+                a.click();
+            } else {
+                alert('Variable not found: ' + vName);
+            }
+        } catch(e) { console.error(e); alert('Error generating file'); }
+    };
+
+    function save(u, n) {
+        const a = document.createElement('a');
+        a.href = u; a.download = n; a.click();
+    }
+
+    init();
+</script>
+</body>
+</html>

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}} - 结构化瀑布流</title>
+  <style>
+    /* === 颜色和基础变量 === */
+    :root {
+      --primary-color: #0d9488; /* Teal 颜色作为主色调 */
+      --secondary-color: #4b5563;
+      --bg-color: #f9fafb;
+      --text-color: #1f2937;
+      --card-bg: #ffffff;
+      --border-color: #e5e7eb;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+      --spacing-md: 16px;
+      --spacing-lg: 32px;
+      --radius-sm: 6px;
+      --radius-lg: 12px;
+    }
+    .dark {
+      --primary-color: #2dd4bf;
+      --bg-color: #111827;
+      --text-color: #f3f4f6;
+      --card-bg: #1f2937;
+      --border-color: #374151;
+    }
+
+    /* === 基础布局 === */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+      padding: var(--spacing-lg) 0;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 var(--spacing-md);
+    }
+    
+    /* === 垂直分组看板 (Structural Flow) === */
+    .group-container {
+      margin-top: var(--spacing-lg);
+    }
+    .group-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: var(--spacing-md);
+      color: var(--primary-color);
+    }
+    .group-header h2 {
+      font-size: 20px;
+      margin: 0;
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 4px;
+    }
+    .group-count {
+      margin-left: 10px;
+      font-size: 14px;
+      padding: 2px 8px;
+      background: var(--primary-color);
+      color: white;
+      border-radius: var(--radius-sm);
+    }
+    
+    /* === 插件卡片 (The Flow Item) === */
+    .plugin-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      margin-bottom: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+    }
+
+    /* 微光效果 */
+    .plugin-item:hover {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 10px 0 rgba(13, 148, 136, 0.4); /* 微弱的 Primary Color 阴影 */
+    }
+
+    /* 卡片头部（始终可见） */
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px var(--spacing-md);
+    }
+    .item-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      flex-grow: 1;
+    }
+    
+    /* 信息胶囊 */
+    .info-pills {
+      display: flex;
+      gap: 8px;
+    }
+    .pill {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 16px;
+      color: white;
+      font-weight: 500;
+    }
+    .pill-ver { background-color: #10b981; } /* 绿色 */
+    .pill-size { background-color: #3b82f6; } /* 蓝色 */
+
+    /* 详情区域（可折叠） */
+    .item-details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+      padding: 0 var(--spacing-md);
+    }
+    /* 展开状态 */
+    .plugin-item.open .item-details {
+      max-height: 500px; /* 足够大的值 */
+      padding: 12px var(--spacing-md) var(--spacing-md) var(--spacing-md);
+      border-top: 1px dashed var(--border-color);
+    }
+    
+    .item-note {
+        margin-bottom: 10px;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .btn {
+        padding: 8px 12px;
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.2s;
+        font-size: 13px;
+    }
+    .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    .btn-secondary {
+        background-color: var(--border-color);
+        color: var(--text-color);
+    }
+    
+  </style>
+</head>
+<body class="light">
+  <div class="container">
+    <header class="app-header">
+      <h1>{{TITLE}}</h1>
+      <p class="meta-info">导出时间：{{DATE}}</p>
+      <button class="btn btn-secondary" onclick="darkModeManager.toggle()" style="float: right;">切换主题</button>
+    </header>
+    
+    <input type="search" id="searchInput" class="btn-secondary" placeholder="搜索插件..." style="width: 100%; padding: 10px; margin-bottom: 20px;">
+
+    <div id="contentArea">
+      <p style="text-align: center;" id="loadingMessage">正在加载数据...</p>
+    </div>
+  </div>
+  
+  <script>
+    // === JavaScript 核心逻辑 ===
+
+    let appData = { items: [], config: {}, customTabs: [] };
+    
+    // 1. 数据解析和工具函数
+    function initializeData() {
+      const dataString = '{{DATA}}';
+      try {
+        appData = JSON.parse(dataString);
+      } catch (e) {
+        console.error('数据解析失败:', e);
+        appData = { items: [], config: {}, customTabs: [] };
+      }
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0 || !bytes) return 'N/A';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // 2. 分组逻辑：按 Quality 分组
+    function groupByQuality(items) {
+      const groups = {};
+      
+      items.forEach(item => {
+        // 独特性：将 LX 标签页的 Key 配置信息也作为分组依据
+        const keyStatus = item.tab === 'LX' && item.keyConfig && (item.keyConfig.enableUrl || item.keyConfig.enableVar) 
+          ? '🔑 KEY 配置' : '';
+          
+        const quality = item.quality || '📁 未知音质';
+        
+        // 最终分组名：Quality + KeyStatus
+        const groupKey = keyStatus ? `${keyStatus} / ${quality}` : quality;
+        
+        if (!groups[groupKey]) {
+          groups[groupKey] = {
+            name: groupKey,
+            items: [],
+            count: 0
+          };
+        }
+        groups[groupKey].items.push(item);
+        groups[groupKey].count++;
+      });
+      
+      // 转换为数组并按数量排序
+      return Object.values(groups).sort((a, b) => b.count - a.count);
+    }
+    
+    // 3. 渲染单个插件项 (核心：可折叠)
+    function renderPluginItem(item) {
+      const fileSize = formatFileSize(item.file?.size);
+      const version = item.ver || '1.0.0';
+      const itemId = item.id;
+
+      // 链接、Key 配置和下载按钮
+      let buttonsHtml = '';
+      
+      // 下载按钮
+      if (item.dlLink) {
+        buttonsHtml += `<a href="${item.dlLink}" class="btn btn-primary" download="${item.name}">直链下载</a>`;
+      } else if (item.file) {
+        buttonsHtml += `<button class="btn btn-primary" onclick="downloadFile(${itemId})">下载文件</button>`;
+      }
+      
+      // Key 配置按钮
+      if (item.tab === 'LX' && item.keyConfig) {
+        if (item.keyConfig.enableUrl) {
+           buttonsHtml += `<button class="btn btn-secondary" onclick="importWithKeyOnline(${itemId})">在线 Key</button>`;
+        }
+        if (item.keyConfig.enableVar) {
+           buttonsHtml += `<button class="btn btn-secondary" onclick="generateFileWithKey(${itemId})">本地 Key 替换</button>`;
+        }
+      }
+      
+      // 外部链接
+      (item.links || []).forEach(link => {
+        buttonsHtml += `<a href="${link.url}" target="_blank" class="btn btn-secondary">${link.text}</a>`;
+      });
+      
+      return `
+        <div class="plugin-item" onclick="toggleDetails(this)">
+            <div class="item-header">
+                <h3>${item.name}</h3>
+                <div class="info-pills">
+                    <span class="pill pill-ver">Ver: ${version}</span>
+                    <span class="pill pill-size">Size: ${fileSize}</span>
+                </div>
+            </div>
+            
+            <div class="item-details">
+                <p class="item-note">${item.note || '暂无详细备注。'}</p>
+                <div class="action-buttons">
+                    ${buttonsHtml}
+                </div>
+            </div>
+        </div>
+      `;
+    }
+
+    // 4. 核心渲染函数
+    function renderContent(query = '') {
+      const contentArea = document.getElementById('contentArea');
+      // 使用 LX 标签页作为默认展示（可扩展为切换标签页）
+      const initialItems = appData.items.filter(item => (item.tab || 'LX') === 'LX');
+      const filteredItems = filterAndSearchItems(initialItems, query);
+      const groupedData = groupByQuality(filteredItems);
+      
+      let html = '';
+      
+      if (groupedData.length === 0) {
+        html = `<p style="text-align: center; padding: 50px;">当前没有插件符合条件。</p>`;
+      } else {
+        groupedData.forEach(group => {
+          html += `
+            <div class="group-container">
+              <div class="group-header">
+                <h2>${group.name}</h2>
+                <span class="group-count">${group.count}</span>
+              </div>
+              <div class="group-items">
+                ${group.items.map(item => renderPluginItem(item)).join('')}
+              </div>
+            </div>
+          `;
+        });
+      }
+      
+      contentArea.innerHTML = html;
+    }
+
+    // 5. 交互实现：折叠/展开
+    function toggleDetails(element) {
+        // 防止点击内部按钮时触发折叠
+        if (event.target.closest('.action-buttons')) {
+            return;
+        }
+        element.classList.toggle('open');
+        // 优化：点击后将其他已展开的折叠起来
+        document.querySelectorAll('.plugin-item.open').forEach(item => {
+            if (item !== element) {
+                item.classList.remove('open');
+            }
+        });
+    }
+
+    // 6. 搜索、下载和 Key 相关的工具函数（使用文档中的实现）
+    
+    function filterAndSearchItems(items, query) {
+      if (!query) return items;
+      const keywords = query.toLowerCase().split(' ').filter(k => k.length > 0);
+      return items.filter(item => {
+        const searchableText = [item.name, item.note, item.ver, item.quality].join(' ').toLowerCase();
+        return keywords.every(keyword => searchableText.includes(keyword));
+      });
+    }
+    
+    function downloadFile(itemId) { /* ... implementation from doc ... */ }
+    function importWithKeyOnline(itemId) { /* ... implementation from doc ... */ }
+    function generateFileWithKey(itemId) { /* ... implementation from doc ... */ }
+    function debounce(func, wait) { /* ... implementation from doc ... */ }
+    
+    // 7. 暗色模式管理器 (简化版)
+    class DarkModeManager {
+      init() {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedMode = localStorage.getItem('darkMode');
+        this.isDark = savedMode !== null ? savedMode === 'dark' : prefersDark;
+        this.apply();
+      }
+      toggle() {
+        this.isDark = !this.isDark;
+        this.apply();
+        localStorage.setItem('darkMode', this.isDark ? 'dark' : 'light');
+      }
+      apply() {
+        document.documentElement.className = this.isDark ? 'dark' : 'light';
+      }
+    }
+    window.darkModeManager = new DarkModeManager();
+
+    // 8. 启动应用
+    window.addEventListener('DOMContentLoaded', () => {
+      initializeData();
+      renderContent();
+      
+      document.getElementById('searchInput').addEventListener('input', debounce(function(e) {
+        renderContent(e.target.value);
+      }, 300));
+      
+      document.getElementById('loadingMessage').style.display = 'none';
+    });
+    
+    // 挂载到全局，以便 HTML 中的 onclick 调用
+    window.toggleDetails = toggleDetails;
+    window.downloadFile = downloadFile;
+    window.importWithKeyOnline = importWithKeyOnline;
+    window.generateFileWithKey = generateFileWithKey;
+    
+  </script>
+</body>
+</html>

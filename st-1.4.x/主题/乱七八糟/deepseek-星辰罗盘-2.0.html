@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="galaxy-theme">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}} - 插件星系</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ===== 优化版宇宙主题变量 ===== */
+        :root {
+            /* 主色调 - 降低饱和度，提高可读性 */
+            --cosmic-primary: #5a4fcf;
+            --cosmic-secondary: #2aa8d0;
+            --cosmic-tertiary: #d45a9c;
+            --cosmic-quaternary: #7b68ee;
+            
+            /* 背景色 - 降低对比度 */
+            --starfield-bg: linear-gradient(135deg, 
+                #0f1525 0%, 
+                #0a0e1a 50%, 
+                #050811 100%);
+            --nebula-overlay: radial-gradient(circle at 30% 20%, 
+                rgba(90, 79, 207, 0.08) 0%, 
+                transparent 50%);
+            
+            /* 字体系统 */
+            --font-cosmic: 'Segoe UI', 'PingFang SC', -apple-system, sans-serif;
+            --font-stardust: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-size-base: 14px;
+            --font-size-title: 18px;
+            --font-size-large: 22px;
+            
+            /* 辉光效果 - 减弱 */
+            --glow-primary: 0 0 12px rgba(90, 79, 207, 0.4);
+            --glow-secondary: 0 0 8px rgba(42, 168, 208, 0.3);
+            --glow-tertiary: 0 0 6px rgba(212, 90, 156, 0.3);
+            
+            /* 过渡效果 - 更快 */
+            --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* 布局变量 */
+            --sidebar-width: 280px;
+            --content-max-width: 1400px;
+        }
+
+        /* ===== 基础重置与优化 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-stardust);
+            font-size: var(--font-size-base);
+            background: var(--starfield-bg);
+            color: #e8f4ff;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--nebula-overlay);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* ===== 优化布局结构 ===== */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            max-width: var(--content-max-width);
+            margin: 0 auto;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* ===== 左侧导航栏 ===== */
+        .nav-sidebar {
+            width: var(--sidebar-width);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: sticky;
+            top: 20px;
+            align-self: flex-start;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        /* ===== 主内容区 ===== */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* ===== 星系视图容器 ===== */
+        .galaxy-view {
+            flex: 1;
+            background: rgba(15, 21, 37, 0.6);
+            border: 1px solid rgba(90, 79, 207, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        /* ===== 卡片组件 - 优化版 ===== */
+        .cosmic-card {
+            background: linear-gradient(145deg, 
+                rgba(20, 25, 45, 0.9) 0%, 
+                rgba(15, 20, 35, 0.9) 100%);
+            border: 1px solid rgba(90, 79, 207, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all var(--transition-normal);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .cosmic-card:hover {
+            border-color: rgba(90, 79, 207, 0.4);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), var(--glow-primary);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(90, 79, 207, 0.1);
+        }
+
+        .card-title {
+            font-size: var(--font-size-title);
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i {
+            color: var(--cosmic-secondary);
+        }
+
+        /* ===== 标题区域 ===== */
+        .page-header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .galaxy-title {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(45deg, 
+                var(--cosmic-secondary), 
+                var(--cosmic-primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .export-date {
+            color: #8bb8ff;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* ===== 星群导航 ===== */
+        .constellation-nav {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-star {
+            padding: 12px 16px;
+            background: rgba(20, 25, 45, 0.7);
+            border: 1px solid rgba(90, 79, 207, 0.2);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-align: center;
+        }
+
+        .nav-star:hover {
+            background: rgba(90, 79, 207, 0.15);
+            border-color: rgba(90, 79, 207, 0.4);
+        }
+
+        .nav-star.active {
+            background: rgba(90, 79, 207, 0.2);
+            border-color: var(--cosmic-primary);
+            box-shadow: var(--glow-primary);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            color: var(--cosmic-secondary);
+            margin-bottom: 6px;
+        }
+
+        .nav-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #ffffff;
+            margin-bottom: 2px;
+        }
+
+        .nav-count {
+            font-size: 11px;
+            color: #8bb8ff;
+            background: rgba(42, 168, 208, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        /* ===== 搜索栏 ===== */
+        .cosmic-search {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 20px 14px 50px;
+            background: rgba(20, 25, 45, 0.7);
+            border: 1px solid rgba(90, 79, 207, 0.2);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 15px;
+            transition: all var(--transition-fast);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--cosmic-primary);
+            box-shadow: var(--glow-primary);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--cosmic-secondary);
+            font-size: 16px;
+        }
+
+        /* ===== 星体网格 ===== */
+        .stellar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .stellar-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== 星体卡片 ===== */
+        .stellar-card {
+            background: linear-gradient(145deg, 
+                rgba(25, 30, 50, 0.8) 0%, 
+                rgba(20, 25, 40, 0.8) 100%);
+            border: 1px solid rgba(90, 79, 207, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all var(--transition-normal);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stellar-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, 
+                var(--cosmic-primary), 
+                var(--cosmic-secondary));
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+
+        .stellar-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(90, 79, 207, 0.4);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), var(--glow-primary);
+        }
+
+        .stellar-card:hover::before {
+            opacity: 1;
+        }
+
+        .stellar-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .stellar-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, 
+                var(--cosmic-primary) 0%, 
+                var(--cosmic-quaternary) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 20px;
+            color: white;
+        }
+
+        .stellar-info {
+            flex: 1;
+        }
+
+        .stellar-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .stellar-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .meta-tag {
+            padding: 3px 10px;
+            background: rgba(42, 168, 208, 0.1);
+            border: 1px solid rgba(42, 168, 208, 0.2);
+            border-radius: 12px;
+            font-size: 11px;
+            color: var(--cosmic-secondary);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .meta-tag.quality {
+            background: rgba(212, 90, 156, 0.1);
+            border-color: rgba(212, 90, 156, 0.2);
+            color: var(--cosmic-tertiary);
+        }
+
+        .stellar-description {
+            color: #b3cde5;
+            font-size: 13px;
+            margin-bottom: 16px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .stellar-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid rgba(90, 79, 207, 0.1);
+        }
+
+        .stellar-size {
+            font-size: 12px;
+            color: #8bb8ff;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stellar-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ===== 按钮组件 ===== */
+        .cosmic-btn {
+            padding: 8px 16px;
+            background: rgba(90, 79, 207, 0.2);
+            border: 1px solid rgba(90, 79, 207, 0.3);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .cosmic-btn:hover {
+            background: rgba(90, 79, 207, 0.4);
+            border-color: var(--cosmic-primary);
+            transform: translateY(-1px);
+        }
+
+        .cosmic-btn.small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .cosmic-btn.primary {
+            background: linear-gradient(135deg, 
+                var(--cosmic-primary) 0%, 
+                var(--cosmic-quaternary) 100%);
+            border: none;
+        }
+
+        .cosmic-btn.secondary {
+            background: rgba(42, 168, 208, 0.2);
+            border-color: rgba(42, 168, 208, 0.3);
+        }
+
+        .cosmic-btn.secondary:hover {
+            background: rgba(42, 168, 208, 0.4);
+            border-color: var(--cosmic-secondary);
+        }
+
+        /* ===== 筛选面板 ===== */
+        .filter-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-select {
+            padding: 10px 12px;
+            background: rgba(20, 25, 45, 0.7);
+            border: 1px solid rgba(90, 79, 207, 0.2);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 14px;
+            transition: all var(--transition-fast);
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--cosmic-primary);
+        }
+
+        .filter-option {
+            background: #0f1525;
+            color: #ffffff;
+        }
+
+        /* ===== 统计信息 ===== */
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: rgba(20, 25, 45, 0.6);
+            border: 1px solid rgba(90, 79, 207, 0.1);
+            border-radius: 10px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--cosmic-secondary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #8bb8ff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== 详情模态框 ===== */
+        .stellar-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 8, 17, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-normal);
+            backdrop-filter: blur(5px);
+        }
+
+        .stellar-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            background: linear-gradient(145deg, 
+                rgba(20, 25, 45, 0.95) 0%, 
+                rgba(15, 20, 35, 0.95) 100%);
+            border: 1px solid rgba(90, 79, 207, 0.3);
+            border-radius: 16px;
+            overflow: hidden;
+            transform: translateY(20px);
+            transition: transform var(--transition-normal);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .stellar-modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            border-bottom: 1px solid rgba(90, 79, 207, 0.2);
+            background: rgba(25, 30, 50, 0.5);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close-modal {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(90, 79, 207, 0.2);
+            border: 1px solid rgba(90, 79, 207, 0.3);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            background: rgba(90, 79, 207, 0.4);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(90vh - 140px);
+        }
+
+        .modal-section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--cosmic-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .detail-item {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #8bb8ff;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: #ffffff;
+            padding: 8px 12px;
+            background: rgba(20, 25, 45, 0.6);
+            border-radius: 8px;
+            border: 1px solid rgba(90, 79, 207, 0.1);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .star-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: rgba(20, 25, 45, 0.6);
+            border: 1px solid rgba(42, 168, 208, 0.2);
+            border-radius: 8px;
+            color: #ffffff;
+            text-decoration: none;
+            transition: all var(--transition-fast);
+        }
+
+        .star-link:hover {
+            background: rgba(42, 168, 208, 0.1);
+            border-color: rgba(42, 168, 208, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* ===== 加载状态 ===== */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--cosmic-secondary);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(90, 79, 207, 0.2);
+            border-top-color: var(--cosmic-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== 空状态 ===== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8bb8ff;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            color: rgba(90, 79, 207, 0.3);
+            margin-bottom: 16px;
+        }
+
+        .empty-text {
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        /* ===== 响应式调整 ===== */
+        @media (max-width: 1024px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .nav-sidebar {
+                width: 100%;
+                position: static;
+                max-height: none;
+            }
+            
+            .constellation-nav {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 10px;
+                gap: 10px;
+            }
+            
+            .stellar-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .detail-row {
+                flex-direction: column;
+            }
+            
+            .detail-item {
+                min-width: 100%;
+            }
+        }
+
+        /* ===== 实用类 ===== */
+        .hidden {
+            display: none !important;
+        }
+
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gap-1 { gap: 4px; }
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+        .gap-4 { gap: 16px; }
+
+        .mb-1 { margin-bottom: 4px; }
+        .mb-2 { margin-bottom: 8px; }
+        .mb-3 { margin-bottom: 12px; }
+        .mb-4 { margin-bottom: 16px; }
+
+        .text-center { text-align: center; }
+        .text-muted { color: #8bb8ff; }
+        .text-primary { color: var(--cosmic-primary); }
+        .text-secondary { color: var(--cosmic-secondary); }
+    </style>
+</head>
+<body>
+    <!-- 应用容器 -->
+    <div class="app-container">
+        <!-- 左侧导航栏 -->
+        <aside class="nav-sidebar">
+            <!-- 标题 -->
+            <div class="cosmic-card">
+                <h1 class="galaxy-title">{{TITLE}}</h1>
+                <div class="export-date">星图生成时间：{{DATE}}</div>
+            </div>
+            
+            <!-- 筛选面板 -->
+            <div class="cosmic-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-filter"></i>
+                        <span>星体筛选</span>
+                    </div>
+                </div>
+                <div class="filter-panel">
+                    <div class="filter-group">
+                        <label class="filter-label">
+                            <i class="fas fa-music"></i>
+                            音质类型
+                        </label>
+                        <select id="quality-filter" class="filter-select">
+                            <option value="">所有音质</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">
+                            <i class="fas fa-weight-hanging"></i>
+                            文件大小
+                        </label>
+                        <select id="size-filter" class="filter-select">
+                            <option value="">所有大小</option>
+                            <option value="small">小型 (&lt;100KB)</option>
+                            <option value="medium">中型 (100KB-1MB)</option>
+                            <option value="large">大型 (&gt;1MB)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">
+                            <i class="fas fa-link"></i>
+                            相关链接
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <label class="filter-label" style="flex: 1;">
+                                <input type="checkbox" id="has-links-filter">
+                                <span>仅显示有链接</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button class="cosmic-btn w-full" id="reset-filters">
+                        <i class="fas fa-redo"></i>
+                        重置筛选
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 统计信息 -->
+            <div class="cosmic-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>星系统计</span>
+                    </div>
+                </div>
+                <div class="stats-panel" id="stats-panel">
+                    <!-- 统计信息动态生成 -->
+                </div>
+            </div>
+        </aside>
+        
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 搜索栏 -->
+            <div class="cosmic-search">
+                <i class="fas fa-search search-icon"></i>
+                <input type="search" 
+                       id="search-input" 
+                       class="search-input" 
+                       placeholder="搜索插件名称、描述、音质...">
+            </div>
+            
+            <!-- 星群导航 -->
+            <div class="constellation-nav" id="constellation-nav">
+                <!-- 导航项动态生成 -->
+            </div>
+            
+            <!-- 星系视图 -->
+            <div class="galaxy-view">
+                <!-- 星体网格 -->
+                <div class="stellar-grid" id="stellar-grid">
+                    <!-- 星体卡片动态生成 -->
+                </div>
+                
+                <!-- 空状态 -->
+                <div class="empty-state hidden" id="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="empty-text">未找到符合条件的星体</div>
+                    <div class="text-muted mb-3">请尝试调整筛选条件或搜索关键词</div>
+                    <button class="cosmic-btn" id="reset-all">
+                        <i class="fas fa-redo"></i>
+                        重置所有筛选
+                    </button>
+                </div>
+                
+                <!-- 加载状态 -->
+                <div class="loading-state hidden" id="loading-state">
+                    <div class="loading-spinner"></div>
+                    <div>加载星体数据...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- 详情模态框 -->
+    <div class="stellar-modal" id="stellar-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-star"></i>
+                    <span id="modal-plugin-name">插件详情</span>
+                </div>
+                <button class="close-modal" id="close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- 详情内容动态生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 脚本 -->
+    <script>
+        // 应用状态
+        const cosmicState = {
+            data: null,
+            plugins: [],
+            currentTab: 'all',
+            currentPlugin: null,
+            filters: {
+                quality: '',
+                size: '',
+                hasLinks: false
+            },
+            searchQuery: ''
+        };
+
+        // 音质颜色映射
+        const qualityColors = {
+            'flac': '#2aa8d0',
+            '320k': '#7b68ee',
+            '192k': '#d45a9c',
+            '128k': '#4cc9f0',
+            '未知': '#5a4fcf'
+        };
+
+        // 音质图标映射
+        const qualityIcons = {
+            'flac': 'fas fa-wave-square',
+            '320k': 'fas fa-volume-up',
+            '192k': 'fas fa-volume-down',
+            '128k': 'fas fa-volume-off',
+            '未知': 'fas fa-question'
+        };
+
+        // 标签页信息映射
+        const tabInfo = {
+            'all': { name: '全部星体', icon: 'fas fa-globe-americas', color: '#5a4fcf' },
+            'LX': { name: 'LX 星群', icon: 'fas fa-star', color: '#2aa8d0' },
+            'Music Free': { name: 'Music Free', icon: 'fas fa-music', color: '#d45a9c' },
+            '澜音': { name: '澜音星群', icon: 'fas fa-water', color: '#7b68ee' }
+        };
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            initEventListeners();
+        });
+
+        // 加载数据
+        function loadData() {
+            try {
+                cosmicState.data = parseData({{DATA}});
+                cosmicState.plugins = cosmicState.data.items || [];
+                
+                // 初始化筛选器
+                initFilters();
+                
+                // 初始化导航
+                initNavigation();
+                
+                // 初始化统计信息
+                initStats();
+                
+                // 渲染星体网格
+                renderStellarGrid();
+                
+                // 隐藏加载状态
+                document.getElementById('loading-state').classList.add('hidden');
+                
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                showNotification('数据加载失败，请检查数据格式', 'error');
+            }
+        }
+
+        // 解析数据
+        function parseData(rawData) {
+            try {
+                let data;
+                if (typeof rawData === 'string') {
+                    data = JSON.parse(rawData);
+                } else {
+                    data = rawData;
+                }
+                
+                // 验证和增强数据
+                const validatedData = {
+                    config: data.config || { showMF: false, showLY: false },
+                    customTabs: data.customTabs || [],
+                    items: (data.items || []).map(item => ({
+                        id: item.id || Date.now() + Math.random(),
+                        tab: item.tab || 'LX',
+                        name: item.name || '未命名插件.js',
+                        ver: item.ver || '1.0.0',
+                        quality: item.quality || '未知',
+                        note: item.note || '暂无描述',
+                        file: item.file || null,
+                        links: item.links || [],
+                        dlLink: item.dlLink || '',
+                        keyConfig: item.keyConfig || null
+                    }))
+                };
+                
+                return validatedData;
+            } catch (error) {
+                console.error('数据解析失败:', error);
+                return {
+                    config: { showMF: false, showLY: false },
+                    customTabs: [],
+                    items: []
+                };
+            }
+        }
+
+        // 初始化事件监听器
+        function initEventListeners() {
+            // 搜索框
+            const searchInput = document.getElementById('search-input');
+            let searchTimeout;
+            
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    cosmicState.searchQuery = e.target.value.trim();
+                    renderStellarGrid();
+                }, 300);
+            });
+            
+            // 重置所有按钮
+            document.getElementById('reset-all').addEventListener('click', () => {
+                resetAllFilters();
+            });
+            
+            // 关闭模态框
+            document.getElementById('close-modal').addEventListener('click', () => {
+                document.getElementById('stellar-modal').classList.remove('active');
+            });
+            
+            // ESC键关闭模态框
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    document.getElementById('stellar-modal').classList.remove('active');
+                }
+            });
+            
+            // 点击模态框背景关闭
+            document.getElementById('stellar-modal').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    document.getElementById('stellar-modal').classList.remove('active');
+                }
+            });
+        }
+
+        // 初始化筛选器
+        function initFilters() {
+            const qualityFilter = document.getElementById('quality-filter');
+            const sizeFilter = document.getElementById('size-filter');
+            const hasLinksFilter = document.getElementById('has-links-filter');
+            const resetBtn = document.getElementById('reset-filters');
+            
+            // 填充音质选项
+            const qualities = [...new Set(cosmicState.plugins.map(p => p.quality).filter(Boolean))];
+            qualities.sort();
+            qualities.forEach(quality => {
+                const option = document.createElement('option');
+                option.value = quality;
+                option.textContent = quality;
+                qualityFilter.appendChild(option);
+            });
+            
+            // 筛选器事件
+            qualityFilter.addEventListener('change', (e) => {
+                cosmicState.filters.quality = e.target.value;
+                renderStellarGrid();
+            });
+            
+            sizeFilter.addEventListener('change', (e) => {
+                cosmicState.filters.size = e.target.value;
+                renderStellarGrid();
+            });
+            
+            hasLinksFilter.addEventListener('change', (e) => {
+                cosmicState.filters.hasLinks = e.target.checked;
+                renderStellarGrid();
+            });
+            
+            resetBtn.addEventListener('click', resetFilters);
+        }
+
+        // 重置筛选器
+        function resetFilters() {
+            document.getElementById('quality-filter').value = '';
+            document.getElementById('size-filter').value = '';
+            document.getElementById('has-links-filter').checked = false;
+            cosmicState.filters = { quality: '', size: '', hasLinks: false };
+            renderStellarGrid();
+        }
+
+        // 重置所有筛选
+        function resetAllFilters() {
+            resetFilters();
+            document.getElementById('search-input').value = '';
+            cosmicState.searchQuery = '';
+            
+            // 重置导航到全部
+            cosmicState.currentTab = 'all';
+            document.querySelectorAll('.nav-star').forEach(star => {
+                star.classList.remove('active');
+            });
+            document.querySelector('.nav-star[data-tab="all"]').classList.add('active');
+            
+            renderStellarGrid();
+        }
+
+        // 初始化导航
+        function initNavigation() {
+            const navContainer = document.getElementById('constellation-nav');
+            const { config, customTabs } = cosmicState.data;
+            
+            // 构建导航项
+            const navItems = [
+                { tab: 'all', count: cosmicState.plugins.length }
+            ];
+            
+            // 计算各标签页数量
+            const tabCounts = {};
+            cosmicState.plugins.forEach(plugin => {
+                const tab = plugin.tab || 'LX';
+                tabCounts[tab] = (tabCounts[tab] || 0) + 1;
+            });
+            
+            // 添加基础标签页
+            const baseTabs = ['LX'];
+            if (config.showMF) baseTabs.push('Music Free');
+            if (config.showLY) baseTabs.push('澜音');
+            
+            baseTabs.forEach(tab => {
+                if (tabCounts[tab]) {
+                    navItems.push({ tab, count: tabCounts[tab] });
+                }
+            });
+            
+            // 添加自定义标签页
+            customTabs.forEach(tab => {
+                if (tabCounts[tab]) {
+                    navItems.push({ tab, count: tabCounts[tab] });
+                }
+            });
+            
+            // 渲染导航
+            navContainer.innerHTML = navItems.map(item => {
+                const info = tabInfo[item.tab] || { 
+                    name: item.tab, 
+                    icon: tabInfo.default?.icon || 'fas fa-asterisk',
+                    color: '#5a4fcf'
+                };
+                
+                return `
+                    <div class="nav-star ${item.tab === 'all' ? 'active' : ''}" 
+                         data-tab="${item.tab}">
+                        <i class="${info.icon} nav-icon"></i>
+                        <div class="nav-label">${info.name}</div>
+                        <div class="nav-count">${item.count}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // 导航点击事件
+            navContainer.addEventListener('click', (e) => {
+                const navStar = e.target.closest('.nav-star');
+                if (navStar) {
+                    const tab = navStar.dataset.tab;
+                    
+                    // 更新活跃状态
+                    document.querySelectorAll('.nav-star').forEach(star => {
+                        star.classList.remove('active');
+                    });
+                    navStar.classList.add('active');
+                    
+                    // 更新当前标签页
+                    cosmicState.currentTab = tab;
+                    renderStellarGrid();
+                }
+            });
+        }
+
+        // 初始化统计信息
+        function initStats() {
+            const statsPanel = document.getElementById('stats-panel');
+            const { items } = cosmicState.data;
+            
+            // 计算统计信息
+            const totalSize = items.reduce((sum, item) => sum + (item.file?.size || 0), 0);
+            const totalPlugins = items.length;
+            const hasKeyConfig = items.filter(item => item.keyConfig).length;
+            const hasLinks = items.filter(item => item.links && item.links.length > 0).length;
+            
+            // 渲染统计信息
+            statsPanel.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-value">${totalPlugins}</div>
+                    <div class="stat-label">插件总数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${formatFileSize(totalSize)}</div>
+                    <div class="stat-label">总大小</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${hasKeyConfig}</div>
+                    <div class="stat-label">可配置</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${hasLinks}</div>
+                    <div class="stat-label">有链接</div>
+                </div>
+            `;
+        }
+
+        // 渲染星体网格
+        function renderStellarGrid() {
+            const grid = document.getElementById('stellar-grid');
+            const emptyState = document.getElementById('empty-state');
+            
+            // 获取过滤后的插件
+            const filteredPlugins = getFilteredPlugins();
+            
+            // 更新导航计数
+            updateNavCounts();
+            
+            // 显示空状态或渲染网格
+            if (filteredPlugins.length === 0) {
+                grid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                grid.classList.remove('hidden');
+                
+                // 渲染星体卡片
+                grid.innerHTML = filteredPlugins.map(plugin => createStellarCard(plugin)).join('');
+                
+                // 添加卡片点击事件
+                document.querySelectorAll('.stellar-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const pluginId = card.dataset.id;
+                        const plugin = cosmicState.plugins.find(p => p.id == pluginId);
+                        if (plugin) {
+                            showPluginDetails(plugin);
+                        }
+                    });
+                });
+            }
+        }
+
+        // 获取过滤后的插件
+        function getFilteredPlugins() {
+            let plugins = cosmicState.plugins;
+            
+            // 按标签页筛选
+            if (cosmicState.currentTab !== 'all') {
+                plugins = plugins.filter(p => p.tab === cosmicState.currentTab);
+            }
+            
+            // 按搜索关键词筛选
+            if (cosmicState.searchQuery) {
+                const query = cosmicState.searchQuery.toLowerCase();
+                plugins = plugins.filter(p => {
+                    const searchText = [
+                        p.name,
+                        p.note,
+                        p.ver,
+                        p.quality
+                    ].join(' ').toLowerCase();
+                    
+                    return searchText.includes(query);
+                });
+            }
+            
+            // 按音质筛选
+            if (cosmicState.filters.quality) {
+                plugins = plugins.filter(p => p.quality === cosmicState.filters.quality);
+            }
+            
+            // 按大小筛选
+            if (cosmicState.filters.size) {
+                plugins = plugins.filter(p => {
+                    if (!p.file) return false;
+                    const size = p.file.size;
+                    if (cosmicState.filters.size === 'small') return size < 100 * 1024;
+                    if (cosmicState.filters.size === 'medium') return size >= 100 * 1024 && size <= 1024 * 1024;
+                    if (cosmicState.filters.size === 'large') return size > 1024 * 1024;
+                    return true;
+                });
+            }
+            
+            // 按链接筛选
+            if (cosmicState.filters.hasLinks) {
+                plugins = plugins.filter(p => p.links && p.links.length > 0);
+            }
+            
+            return plugins;
+        }
+
+        // 更新导航计数
+        function updateNavCounts() {
+            const navStars = document.querySelectorAll('.nav-star');
+            
+            navStars.forEach(star => {
+                const tab = star.dataset.tab;
+                let count;
+                
+                if (tab === 'all') {
+                    count = cosmicState.plugins.length;
+                } else {
+                    count = cosmicState.plugins.filter(p => p.tab === tab).length;
+                }
+                
+                const countElement = star.querySelector('.nav-count');
+                if (countElement) {
+                    countElement.textContent = count;
+                }
+            });
+        }
+
+        // 创建星体卡片
+        function createStellarCard(plugin) {
+            const hasFile = !!plugin.file;
+            const hasKeyConfig = !!plugin.keyConfig;
+            const hasLinks = plugin.links && plugin.links.length > 0;
+            const qualityIcon = qualityIcons[plugin.quality] || qualityIcons['未知'];
+            
+            return `
+                <div class="stellar-card" data-id="${plugin.id}">
+                    <div class="stellar-header">
+                        <div class="stellar-icon" style="background: linear-gradient(135deg, 
+                            ${qualityColors[plugin.quality] || qualityColors['未知']} 0%, 
+                            ${hexToRgba(qualityColors[plugin.quality] || qualityColors['未知'], 0.7)} 100%);">
+                            <i class="${qualityIcon}"></i>
+                        </div>
+                        <div class="stellar-info">
+                            <div class="stellar-name" title="${escapeHtml(plugin.name)}">
+                                ${escapeHtml(plugin.name)}
+                            </div>
+                            <div class="stellar-meta">
+                                ${plugin.tab ? `<span class="meta-tag">${plugin.tab}</span>` : ''}
+                                ${plugin.quality ? `<span class="meta-tag quality">${plugin.quality}</span>` : ''}
+                                ${plugin.ver ? `<span class="meta-tag">v${plugin.ver}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stellar-description" title="${escapeHtml(plugin.note)}">
+                        ${escapeHtml(plugin.note)}
+                    </div>
+                    
+                    <div class="stellar-footer">
+                        <div class="stellar-size">
+                            <i class="fas fa-weight-hanging"></i>
+                            ${hasFile ? formatFileSize(plugin.file.size) : '无文件'}
+                        </div>
+                        <div class="stellar-actions">
+                            ${hasKeyConfig ? `<span class="cosmic-btn small">Key配置</span>` : ''}
+                            ${hasLinks ? `<span class="cosmic-btn small">${plugin.links.length}链接</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 显示插件详情
+        function showPluginDetails(plugin) {
+            const modal = document.getElementById('stellar-modal');
+            const modalName = document.getElementById('modal-plugin-name');
+            const modalBody = document.getElementById('modal-body');
+            
+            // 更新模态框标题
+            modalName.textContent = plugin.name;
+            
+            // 构建详情内容
+            const hasFile = !!plugin.file;
+            const hasKeyConfig = !!plugin.keyConfig;
+            const hasLinks = plugin.links && plugin.links.length > 0;
+            
+            modalBody.innerHTML = `
+                <div class="modal-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        基本信息
+                    </h3>
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <div class="detail-label">所属星群</div>
+                            <div class="detail-value">${plugin.tab || 'LX'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">版本号</div>
+                            <div class="detail-value">${plugin.ver || '1.0.0'}</div>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <div class="detail-label">音质类型</div>
+                            <div class="detail-value">${plugin.quality || '未知'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">文件大小</div>
+                            <div class="detail-value">${hasFile ? formatFileSize(plugin.file.size) : '无文件'}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                ${plugin.note ? `
+                    <div class="modal-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-file-alt"></i>
+                            描述说明
+                        </h3>
+                        <div class="detail-value" style="white-space: pre-wrap; min-height: 80px;">${escapeHtml(plugin.note)}</div>
+                    </div>
+                ` : ''}
+                
+                <div class="modal-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-tools"></i>
+                        操作功能
+                    </h3>
+                    <div class="action-buttons">
+                        ${hasFile ? `
+                            <button class="cosmic-btn primary" onclick="downloadPlugin('${plugin.id}')">
+                                <i class="fas fa-download"></i>
+                                下载文件
+                            </button>
+                        ` : ''}
+                        
+                        ${plugin.dlLink ? `
+                            <a href="${escapeHtml(plugin.dlLink)}" target="_blank" class="cosmic-btn secondary">
+                                <i class="fas fa-external-link-alt"></i>
+                                直链下载
+                            </a>
+                        ` : ''}
+                        
+                        ${hasKeyConfig ? `
+                            <button class="cosmic-btn" onclick="showKeyConfig('${plugin.id}')">
+                                <i class="fas fa-key"></i>
+                                配置 Key
+                            </button>
+                        ` : ''}
+                        
+                        ${hasFile ? `
+                            <button class="cosmic-btn" onclick="previewCode('${plugin.id}')">
+                                <i class="fas fa-code"></i>
+                                查看源码
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                ${hasLinks ? `
+                    <div class="modal-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-link"></i>
+                            相关链接
+                        </h3>
+                        <div class="links-grid">
+                            ${plugin.links.map(link => `
+                                <a href="${escapeHtml(link.url)}" target="_blank" class="star-link">
+                                    <i class="fas fa-external-link-alt"></i>
+                                    <span>${escapeHtml(link.text)}</span>
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${hasKeyConfig ? `
+                    <div class="modal-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-cog"></i>
+                            Key 配置信息
+                        </h3>
+                        <div class="detail-row">
+                            ${plugin.keyConfig.enableUrl ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">在线导入</div>
+                                    <div class="detail-value">支持</div>
+                                </div>
+                            ` : ''}
+                            ${plugin.keyConfig.enableVar ? `
+                                <div class="detail-item">
+                                    <div class="detail-label">本地变量</div>
+                                    <div class="detail-value">${plugin.keyConfig.var || 'API_KEY'}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+            
+            // 显示模态框
+            modal.classList.add('active');
+            
+            // 重新绑定按钮事件
+            setTimeout(() => {
+                // 下载按钮
+                const downloadBtn = modalBody.querySelector('[onclick^="downloadPlugin"]');
+                if (downloadBtn) {
+                    downloadBtn.onclick = () => downloadPlugin(plugin.id);
+                }
+                
+                // Key配置按钮
+                const keyBtn = modalBody.querySelector('[onclick^="showKeyConfig"]');
+                if (keyBtn) {
+                    keyBtn.onclick = () => showKeyConfig(plugin.id);
+                }
+                
+                // 预览按钮
+                const previewBtn = modalBody.querySelector('[onclick^="previewCode"]');
+                if (previewBtn) {
+                    previewBtn.onclick = () => previewCode(plugin.id);
+                }
+            }, 0);
+        }
+
+        // ===== 插件操作函数 =====
+        function downloadPlugin(pluginId) {
+            const plugin = cosmicState.plugins.find(p => p.id == pluginId);
+            if (!plugin || !plugin.file) {
+                showNotification('无法下载：文件不存在', 'error');
+                return;
+            }
+            
+            try {
+                const a = document.createElement('a');
+                a.href = plugin.file.content;
+                a.download = plugin.name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                showNotification(`开始下载：${plugin.name}`, 'success');
+            } catch (error) {
+                console.error('下载失败:', error);
+                showNotification('下载失败：' + error.message, 'error');
+            }
+        }
+
+        function showKeyConfig(pluginId) {
+            const plugin = cosmicState.plugins.find(p => p.id == pluginId);
+            if (!plugin || !plugin.keyConfig) return;
+            
+            // 创建Key配置模态框
+            const keyModal = document.createElement('div');
+            keyModal.className = 'stellar-modal active';
+            keyModal.innerHTML = `
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header">
+                        <div class="modal-title">
+                            <i class="fas fa-key"></i>
+                            <span>Key 配置 - ${escapeHtml(plugin.name)}</span>
+                        </div>
+                        <button class="close-modal" onclick="this.parentElement.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="modal-section">
+                            ${plugin.keyConfig.enableUrl ? `
+                                <div class="mb-3">
+                                    <h3 class="section-title">在线导入</h3>
+                                    <div class="detail-row">
+                                        <div class="detail-item">
+                                            <div class="detail-label">API地址</div>
+                                            <div class="detail-value">${escapeHtml(plugin.keyConfig.url)}</div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                        <input type="text" 
+                                               id="online-key-input" 
+                                               placeholder="请输入 Key" 
+                                               class="search-input" 
+                                               style="flex: 1;">
+                                        <button class="cosmic-btn primary" onclick="importKeyOnline('${plugin.id}')">
+                                            导入
+                                        </button>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            ${plugin.keyConfig.enableVar ? `
+                                <div class="mb-3">
+                                    <h3 class="section-title">本地变量替换</h3>
+                                    <div class="detail-row">
+                                        <div class="detail-item">
+                                            <div class="detail-label">变量名</div>
+                                            <div class="detail-value">${plugin.keyConfig.var || 'API_KEY'}</div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                        <input type="text" 
+                                               id="local-key-input" 
+                                               placeholder="请输入新的 Key 值" 
+                                               class="search-input" 
+                                               style="flex: 1;">
+                                        <button class="cosmic-btn primary" onclick="generateWithKey('${plugin.id}')">
+                                            生成文件
+                                        </button>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(keyModal);
+        }
+
+        function importKeyOnline(pluginId) {
+            const plugin = cosmicState.plugins.find(p => p.id == pluginId);
+            const keyInput = document.getElementById('online-key-input');
+            
+            if (!keyInput || !keyInput.value.trim()) {
+                showNotification('请输入 Key', 'error');
+                return;
+            }
+            
+            const key = keyInput.value.trim();
+            const url = `${plugin.keyConfig.url}${encodeURIComponent(key)}`;
+            window.open(url, '_blank');
+            showNotification('正在打开 Key 导入页面...', 'info');
+        }
+
+        function generateWithKey(pluginId) {
+            const plugin = cosmicState.plugins.find(p => p.id == pluginId);
+            const keyInput = document.getElementById('local-key-input');
+            
+            if (!keyInput || !keyInput.value.trim()) {
+                showNotification('请输入 Key', 'error');
+                return;
+            }
+            
+            try {
+                if (!plugin.file) {
+                    throw new Error('文件数据不存在');
+                }
+                
+                const key = keyInput.value.trim();
+                const base64Data = plugin.file.content.split(',')[1];
+                const originalContent = atob(base64Data);
+                const varName = plugin.keyConfig.var || 'API_KEY';
+                const regex = new RegExp(`(const|let|var)\\s+${varName}\\s*=\\s*['"][^'"]*['"]`, 'g');
+                
+                if (!regex.test(originalContent)) {
+                    throw new Error(`未找到变量 ${varName}`);
+                }
+                
+                const newContent = originalContent.replace(
+                    regex,
+                    `$1 ${varName} = "${key.replace(/"/g, '\\"')}"`
+                );
+                
+                const blob = new Blob([newContent], { type: 'text/javascript' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = plugin.name.replace('.js', `-with-key.js`);
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+                showNotification('文件已生成并开始下载', 'success');
+            } catch (error) {
+                console.error('生成失败:', error);
+                showNotification('生成失败: ' + error.message, 'error');
+            }
+        }
+
+        function previewCode(pluginId) {
+            const plugin = cosmicState.plugins.find(p => p.id == pluginId);
+            if (!plugin || !plugin.file) return;
+            
+            try {
+                const base64Data = plugin.file.content.split(',')[1];
+                const content = atob(base64Data);
+                
+                const previewModal = document.createElement('div');
+                previewModal.className = 'stellar-modal active';
+                previewModal.innerHTML = `
+                    <div class="modal-content" style="max-width: 800px;">
+                        <div class="modal-header">
+                            <div class="modal-title">
+                                <i class="fas fa-code"></i>
+                                <span>源码预览 - ${escapeHtml(plugin.name)}</span>
+                            </div>
+                            <button class="close-modal" onclick="this.parentElement.parentElement.parentElement.remove()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <pre style="max-height: 60vh; overflow: auto; background: rgba(0,0,0,0.5); 
+                                  padding: 15px; border-radius: 8px; font-family: 'Monaco', 'Menlo', monospace; 
+                                  font-size: 12px; line-height: 1.4; white-space: pre-wrap; color: #e8f4ff;">${escapeHtml(content)}</pre>
+                            <div class="action-buttons" style="margin-top: 20px;">
+                                <button class="cosmic-btn" onclick="copyToClipboard('${escapeHtml(content.replace(/'/g, "\\'"))}')">
+                                    <i class="fas fa-copy"></i>
+                                    复制代码
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(previewModal);
+            } catch (error) {
+                console.error('预览失败:', error);
+                showNotification('预览失败: ' + error.message, 'error');
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('代码已复制到剪贴板', 'success');
+            }).catch(err => {
+                showNotification('复制失败: ' + err.message, 'error');
+            });
+        }
+
+        // ===== 工具函数 =====
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            const bgColor = type === 'error' ? 'rgba(212, 90, 156, 0.9)' : 
+                           type === 'success' ? 'rgba(42, 168, 208, 0.9)' : 
+                           'rgba(90, 79, 207, 0.9)';
+            
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                background: ${bgColor};
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                color: white;
+                font-size: 14px;
+                z-index: 1000;
+                animation: slideIn 0.3s ease-out;
+                max-width: 300px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            `;
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(10px)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // 全局函数
+        window.downloadPlugin = downloadPlugin;
+        window.showKeyConfig = showKeyConfig;
+        window.importKeyOnline = importKeyOnline;
+        window.generateWithKey = generateWithKey;
+        window.previewCode = previewCode;
+        window.copyToClipboard = copyToClipboard;
+    </script>
+</body>
+</html>

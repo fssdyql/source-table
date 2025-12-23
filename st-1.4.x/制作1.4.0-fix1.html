@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>插件列表管理器 v1.4.0</title>
+<style>
+    /* 基础变量与重置 */
+    :root { 
+        --primary: #3b82f6; --primary-hover: #2563eb;
+        --danger: #ef4444; --danger-hover: #dc2626;
+        --success: #10b981; --success-hover: #059669;
+        --text-main: #334155; --text-sub: #64748b;
+        --bg: #f8fafc; --border: #e2e8f0; --white: #ffffff;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 20px; font-size: 14px; display: flex; justify-content: center; }
+    * { box-sizing: border-box; outline: none; }
+    
+    /* 主窗口 */
+    .app-container { width: 100%; max-width: 1400px; background: var(--white); border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.025); display: flex; flex-direction: column; height: 92vh; border: 1px solid var(--border); overflow: hidden; }
+    
+    /* 顶部导航 */
+    .header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fff; }
+    .app-title { font-size: 20px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+    .version-badge { font-size: 12px; background: #eff6ff; color: var(--primary); padding: 2px 10px; border-radius: 99px; border: 1px solid #bfdbfe; font-weight: 600; }
+    .status-text { color: #94a3b8; font-size: 12px; font-family: monospace; }
+
+    /* 标签栏 */
+    .tabs-container { display: flex; align-items: flex-end; padding: 0 20px; background: #f1f5f9; border-bottom: 1px solid var(--border); overflow-x: auto; gap: 6px; pt: 8px; }
+    .tab-item { padding: 10px 24px; cursor: pointer; color: var(--text-sub); font-weight: 500; border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; transition: all 0.2s; position: relative; bottom: -1px; white-space: nowrap; font-size: 13px; }
+    .tab-item:hover { color: var(--text-main); background: #e2e8f0; }
+    .tab-item.active { background: var(--white); color: var(--primary); border-color: var(--border); border-bottom-color: var(--white); font-weight: 700; }
+    .tab-close { margin-left: 8px; font-size: 14px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: #cbd5e1; transition: 0.2s; }
+    .tab-close:hover { background: #fee2e2; color: var(--danger); }
+    .tab-add-btn { padding: 10px 16px; cursor: pointer; color: var(--text-sub); font-size: 18px; font-weight: bold; line-height: 1; opacity: 0.6; transition: 0.2s; }
+    .tab-add-btn:hover { opacity: 1; color: var(--primary); background: #e2e8f0; border-radius: 8px 8px 0 0; }
+
+    /* 工具栏 */
+    .toolbar { padding: 16px 24px; display: flex; gap: 12px; align-items: center; background: var(--white); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .spacer { flex: 1; }
+    .search-input { padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; width: 240px; font-size: 13px; transition: all 0.2s; background: #f8fafc; }
+    .search-input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+
+    /* 表格区域 */
+    .table-wrapper { flex: 1; overflow-y: auto; background: #fcfcfc; }
+    table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+    th { position: sticky; top: 0; background: #f8fafc; z-index: 10; padding: 14px 16px; text-align: left; font-weight: 600; color: #475569; border-bottom: 1px solid var(--border); font-size: 13px; letter-spacing: 0.02em; }
+    td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: top; background: #fff; }
+    tr:hover td { background: #f8fafc; }
+    
+    /* 按钮组件 */
+    .btn, .btn-xs { 
+        padding: 8px 16px; border-radius: 8px; border: 1px solid transparent; 
+        font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; 
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 500; user-select: none; 
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    .btn:active, .btn-xs:active { transform: translateY(1px); box-shadow: none; }
+    
+    .btn-primary { background: var(--primary); border-color: var(--primary); color: #ffffff; } 
+    .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+    
+    .btn-success { background: var(--success); border-color: var(--success); color: #ffffff; } 
+    .btn-success:hover { background: var(--success-hover); border-color: var(--success-hover); }
+    
+    .btn-danger { background: var(--danger); border-color: var(--danger); color: #ffffff; } 
+    .btn-danger:hover { background: var(--danger-hover); border-color: var(--danger-hover); }
+    
+    .btn-secondary { background: #fff; border: 1px solid var(--border); color: var(--text-main); box-shadow: 0 1px 2px 0 rgba(0,0,0,0.02); } 
+    .btn-secondary:hover { background: #f8fafc; border-color: #cbd5e1; color: var(--primary); }
+    
+    .btn-xs { padding: 4px 12px; font-size: 12px; border-radius: 6px; line-height: 1.5; height: auto; }
+    .btn-icon { width: 30px; height: 30px; padding: 0; display: inline-flex; justify-content: center; align-items: center; background: transparent; border: 1px solid transparent; border-radius: 6px; color: #94a3b8; cursor: pointer; font-size: 14px; transition: 0.2s; }
+    .btn-icon:hover { background: #f1f5f9; color: var(--primary); }
+
+    /* 表单控件 */
+    input[type="text"], select, textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; color: var(--text-main); transition: 0.2s; font-family: inherit; }
+    input[type="text"]:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+    
+    /* 标签Tag */
+    .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; border: 1px solid; display: inline-flex; align-items: center; gap: 5px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+    .tag-blue { background: #eff6ff; color: #1d4ed8; border-color: #dbeafe; }
+    .tag-orange { background: #fff7ed; color: #c2410c; border-color: #ffedd5; }
+    .tag-green { background: #f0fdf4; color: #15803d; border-color: #dcfce7; }
+    .tag-del { cursor: pointer; opacity: 0.4; font-weight: bold; font-size: 14px; line-height: 1; }
+    .tag-del:hover { opacity: 1; color: var(--danger); }
+
+    /* 弹窗通用 */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); z-index: 999; backdrop-filter: blur(4px); }
+    .modal-box { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); background: white; width: 480px; padding: 24px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); display: flex; flex-direction: column; max-height: 85vh; }
+    .modal-box.large { width: 900px; top: 5%; }
+    .modal-header { font-size: 18px; font-weight: 700; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; color: #1e293b; flex-shrink: 0; }
+    .modal-body { overflow-y: auto; flex: 1; padding-right: 4px; }
+    .modal-footer { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px; flex-shrink: 0; }
+    .form-item { margin-bottom: 16px; }
+    .form-item label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #475569; }
+    
+    /* 复选框行 */
+    .check-row { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: 0.15s; background: #fff; }
+    .check-row:hover { border-color: var(--primary); background: #f8fafc; }
+    .check-row input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+    .check-row.active { border-color: var(--primary); background: #eff6ff; }
+
+    /* 主题代码编辑器 */
+    .code-editor { font-family: 'Menlo', 'Monaco', 'Courier New', monospace; font-size: 12px; line-height: 1.5; background: #1e293b; color: #e2e8f0; padding: 16px; border-radius: 8px; width: 100%; height: 400px; resize: vertical; border: 1px solid #334155; }
+    .theme-list { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; }
+    .theme-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 16px; cursor: pointer; min-width: 120px; text-align: center; font-weight: 500; transition: 0.2s; background: #f8fafc; }
+    .theme-card:hover { border-color: #94a3b8; }
+    .theme-card.active { border-color: var(--primary); background: #eff6ff; color: var(--primary); font-weight: 700; box-shadow: 0 0 0 1px var(--primary); }
+    .var-badge { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 12px; border: 1px solid #e2e8f0; color: #db2777; }
+
+    .empty-state { padding: 80px 0; text-align: center; color: #94a3b8; }
+    .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <div class="app-title">
+            插件列表管理器 
+            <span class="version-badge">v1.4.0</span>
+        </div>
+        <div class="status-text" id="statusText">System Ready</div>
+    </div>
+
+    <div class="tabs-container" id="tabsBar"></div>
+
+    <div class="toolbar">
+        <button class="btn btn-success" onclick="app.addItem()">
+            <span style="font-size:16px;font-weight:bold">+</span> 新增文件
+        </button>
+        <button class="btn btn-secondary" onclick="app.openThemeModal()">
+            🎨 自定义主题
+        </button>
+        <button class="btn btn-primary" onclick="app.exportHtml()">
+            <span style="font-size:14px">📤</span> 导出列表HTML
+        </button>
+        <button class="btn btn-secondary" onclick="app.exportJson()">
+            💾 备份数据JSON
+        </button>
+        <div class="spacer"></div>
+        <input type="file" id="importFile" hidden onchange="app.importJson(this)">
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
+            📂 导入备份/旧版
+        </button>
+        <button class="btn btn-danger" onclick="app.clearTab()">
+            🗑️ 清空当前页
+        </button>
+        <input type="text" class="search-input" placeholder="🔍 搜索文件名..." id="searchInput" oninput="app.render()">
+    </div>
+
+    <div class="table-wrapper">
+        <table id="mainTable">
+            <thead>
+                <tr>
+                    <th width="70" style="text-align:center">排序</th>
+                    <th width="25%">文件信息</th>
+                    <th width="20%">音质 & 版本</th>
+                    <th width="35%">配置信息 (备注 / 链接 / Key)</th>
+                    <th width="120">操作</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modalTheme" class="modal-overlay">
+    <div class="modal-box large">
+        <div class="modal-header">自定义导出主题 <span style="cursor:pointer;color:#94a3b8" onclick="ui.close()">×</span></div>
+        <div class="modal-body">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <label class="check-row" style="margin:0; padding:8px 16px;">
+                    <input type="checkbox" id="theme_enable" onchange="app.toggleThemeEnable()"> 
+                    启用自定义主题
+                </label>
+                <div style="font-size:12px; color:#64748b;">
+                    启用后导出HTML将使用下方选中的模板
+                </div>
+            </div>
+
+            <div id="themeArea" style="opacity:0.5; pointer-events:none; transition:0.3s">
+                <label style="font-size:13px; font-weight:600; color:#475569; display:block; margin-bottom:8px;">选择主题预设:</label>
+                <div class="theme-list" id="themeList"></div>
+
+                <div class="form-item">
+                    <label style="display:flex; justify-content:space-between;">
+                        <span>模板代码 (HTML):</span>
+                        <div style="font-weight:400; font-size:12px; color:#64748b">
+                            可用变量: <span class="var-badge">{{DATA}}</span> <span class="var-badge">{{DATE}}</span> <span class="var-badge">{{TITLE}}</span>
+                        </div>
+                    </label>
+                    <textarea id="themeCode" class="code-editor" spellcheck="false" placeholder="在此粘贴HTML代码..."></textarea>
+                </div>
+                
+                <div style="background:#f0f9ff; padding:12px; border-radius:8px; border:1px solid #bae6fd; font-size:12px; color:#0369a1; line-height:1.6;">
+                    <strong>💡 自定义指南:</strong><br>
+                    1. <strong>结构自由:</strong> 这是导出文件的完整HTML源码，你可以修改任何CSS样式、隐藏标签栏、或重写JS逻辑。<br>
+                    2. <strong>核心数据:</strong> 系统会在导出时将 <span class="var-badge">{{DATA}}</span> 替换为当前的JSON数据。<br>
+                    3. <strong>逻辑处理:</strong> 模板内需包含解析 <span class="var-badge">{{DATA}}</span> 并生成DOM的 JavaScript 代码 (参考默认主题)。
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <input type="file" id="importThemeFile" hidden accept=".html" onchange="app.importThemeFromFile(this)">
+            <button class="btn btn-secondary" onclick="document.getElementById('importThemeFile').click()">📂 导入HTML模板</button>
+            <button class="btn btn-secondary" onclick="app.resetThemeToDefault()">↺ 恢复选中预设</button>
+            <button class="btn btn-primary" onclick="app.saveThemeConfig()">保存配置</button>
+        </div>
+    </div>
+</div>
+
+<div id="modalTabs" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">标签页管理 <span style="cursor:pointer;color:#94a3b8" onclick="ui.close()">×</span></div>
+        <div class="form-item">
+            <label>内置标签页开关:</label>
+            <div style="display:flex; gap:12px">
+                <label class="check-row" style="flex:1">
+                    <input type="checkbox" id="chk_mf" onchange="app.toggleTabConfig('showMF')"> 
+                    Music Free
+                </label>
+                <label class="check-row" style="flex:1">
+                    <input type="checkbox" id="chk_ly" onchange="app.toggleTabConfig('showLY')"> 
+                    澜音
+                </label>
+            </div>
+        </div>
+        <div class="form-item" style="border-top:1px dashed #e2e8f0; margin-top:24px; padding-top:20px">
+            <label>新增自定义标签页:</label>
+            <div style="display:flex; gap:10px">
+                <input type="text" id="newTabName" placeholder="输入名称 (如: MyPlugin)...">
+                <button class="btn btn-primary" onclick="app.addCustomTab()">添加</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modalKey" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">配置 Key (LX专用) <span style="cursor:pointer;color:#94a3b8" onclick="ui.close()">×</span></div>
+        <div class="form-item p-3 border rounded bg-slate-50 mb-4" style="border:1px solid #e2e8f0; padding:16px; border-radius:8px; background:#f8fafc; margin-bottom:16px">
+            <label class="check-row" style="margin-bottom:12px; border:none; padding:0; background:transparent">
+                <input type="checkbox" id="k_enable_url"> 
+                <span style="font-weight:600;color:#334155">启用在线导入 (URL拼接)</span>
+            </label>
+            <input type="text" id="k_url" placeholder="例如: https://api.example.com?key=" style="background:#fff">
+        </div>
+        <div class="form-item p-3 border rounded bg-slate-50" style="border:1px solid #e2e8f0; padding:16px; border-radius:8px; background:#f8fafc">
+            <label class="check-row" style="margin-bottom:12px; border:none; padding:0; background:transparent">
+                <input type="checkbox" id="k_enable_var"> 
+                <span style="font-weight:600;color:#334155">启用本地导入 (变量替换)</span>
+            </label>
+            <input type="text" id="k_var" placeholder="变量名, 默认: API_KEY" style="background:#fff">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="ui.close()">取消</button>
+            <button class="btn btn-primary" onclick="app.saveKey()">保存配置</button>
+        </div>
+    </div>
+</div>
+
+<div id="modalLink" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">添加链接 <span style="cursor:pointer;color:#94a3b8" onclick="ui.close()">×</span></div>
+        <div class="form-item"><label>显示文本:</label><input type="text" id="l_text" placeholder="例如: 官网 / 购买页 / 使用说明"></div>
+        <div class="form-item"><label>URL地址:</label><input type="text" id="l_url" placeholder="http://..."></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="ui.close()">取消</button>
+            <button class="btn btn-primary" onclick="app.saveLink()">确认添加</button>
+        </div>
+    </div>
+</div>
+
+<div id="modalDl" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">配置直链下载 <span style="cursor:pointer;color:#94a3b8" onclick="ui.close()">×</span></div>
+        <div class="form-item">
+            <label>直链 URL:</label>
+            <input type="text" id="d_url" placeholder="http://...">
+            <div style="font-size:12px; color:#64748b; margin-top:8px; line-height:1.5; background:#f1f5f9; padding:10px; border-radius:6px">
+                设置直链后，导出列表中将显示独立的“直链下载”按钮。
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="ui.close()">取消</button>
+            <button class="btn btn-primary" onclick="app.saveDl()">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Application Logic v1.4.0
+ * 新增：自定义主题系统 (Theme System) & 兼容旧版导入
+ */
+const QUALITY_PRESETS = ['128k', '320k', 'flac', 'flac24bit', 'master', 'dolby', 'sky'];
+
+// --- 默认导出模板 ---
+const DEFAULT_THEME_TEMPLATE = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TITLE}}</title>
+<style>
+body{font-family:-apple-system,"Segoe UI",Roboto,sans-serif;background:#f8fafc;color:#334155;padding:20px;margin:0}
+.box{max-width:900px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.05);overflow:hidden;border:1px solid #e2e8f0}
+.h{padding:24px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;background:#fff}
+.h h1{font-size:18px;margin:0;color:#0f172a}
+.tabs{background:#f1f5f9;display:flex;gap:4px;padding:10px 20px 0;overflow-x:auto}
+.tab{padding:10px 20px;cursor:pointer;font-weight:600;color:#64748b;border-radius:8px 8px 0 0;font-size:14px;transition:0.2s}
+.tab:hover{background:#e2e8f0;color:#334155}
+.tab.active{background:#fff;color:#2563eb;box-shadow:0 -4px 6px -1px rgba(0,0,0,0.02)}
+.list{padding:0}
+table{width:100%;border-collapse:collapse}
+td{padding:16px 24px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover{background:#f8fafc}
+.tag{display:inline-block;padding:3px 8px;font-size:12px;border-radius:6px;margin-right:6px;background:#f1f5f9;color:#475569;font-weight:500;border:1px solid #e2e8f0}
+.tag-ver{background:#eff6ff;color:#2563eb;border-color:#dbeafe}
+.action-box { display: flex; flex-direction: column; gap: 8px; }
+.btn-row { display: flex; gap: 8px; width: 100%; }
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border-radius:8px;text-decoration:none;font-size:13px;cursor:pointer;border:none;font-weight:600;transition:0.2s;line-height:1.4}
+.btn:hover{filter:brightness(0.95)}
+.btn:active{transform:translateY(1px)}
+.btn-dl{background:#2563eb;color:#fff;flex:1;text-align:center}
+.btn-direct{background:#10b981;color:#fff;flex:1;text-align:center}
+.btn-lnk{background:#fff;border:1px solid #cbd5e1;color:#475569;display:inline-block;margin-right:4px;margin-bottom:4px;font-size:12px;padding:4px 10px}
+.btn-lnk:hover{border-color:#2563eb;color:#2563eb}
+.key-box{margin-top:8px;display:flex;flex-direction:column;gap:8px;padding-top:8px;border-top:1px dashed #e2e8f0}
+.key-row{display:flex;gap:6px}
+.key-in{flex:1;border:1px solid #cbd5e1;padding:6px 10px;border-radius:6px;font-size:12px;outline:none}
+.key-in:focus{border-color:#2563eb}
+.key-btn{padding:0 12px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;font-weight:bold;color:#475569}
+.key-btn:hover{background:#e2e8f0;color:#2563eb}
+.empty{padding:60px;text-align:center;color:#94a3b8}
+</style>
+</head>
+<body>
+<div class="box">
+    <div class="h"><h1>📦 插件列表</h1><span style="font-size:12px;color:#94a3b8;font-family:monospace">{{DATE}}</span></div>
+    <div class="tabs" id="t"></div>
+    <div class="list" id="c"></div>
+</div>
+<script>
+const DB={{DATA}};
+let cur='LX';
+function rT(){
+    let ts=['LX'];
+    if(DB.config.showMF) ts.push('Music Free');
+    if(DB.config.showLY) ts.push('澜音');
+    ts = ts.concat(DB.customTabs);
+    if(!ts.includes(cur)) cur='LX';
+    document.getElementById('t').innerHTML = ts.map(t=>'<div class="tab '+(t===cur?'active':'')+'" onclick="sT(\\''+t+'\\')">'+t+'</div>').join('');
+    rL();
+}
+function sT(t){cur=t;rT();}
+function rL(){
+    const l = DB.items.filter(i=>(i.tab||'LX')===cur);
+    const b = document.getElementById('c');
+    if(!l.length){b.innerHTML='<div class="empty">暂无内容</div>';return;}
+    let h='<table>';
+    h+=l.map(i=>{
+        let meta='';
+        if(i.quality) meta+='<span class="tag">'+i.quality+'</span>';
+        if(i.ver) meta+='<span class="tag tag-ver">v'+i.ver+'</span>';
+        let ls = (i.links||[]).map(k=>'<a href="'+k.url+'" target="_blank" class="btn btn-lnk">🔗 '+k.text+'</a>').join('');
+        
+        let act = '<div class="action-box">';
+        let btns = '';
+        if(i.dlLink) btns += '<a href="'+i.dlLink+'" target="_blank" class="btn btn-direct">🌐 直链下载</a>';
+        if(i.file && i.file.content) btns += '<button class="btn btn-dl" onclick="D('+i.id+')">⬇️ 下载文件</button>';
+        
+        if(btns) act += '<div class="btn-row">' + btns + '</div>';
+        
+        if(i.file && i.file.content){
+            const k = i.keyConfig||{};
+            const su = (cur==='LX' && k.enableUrl && k.url);
+            const sv = (cur==='LX' && k.enableVar && k.var);
+            if(su || sv) {
+                act += '<div class="key-box">';
+                if(su) act += '<div class="key-row"><input class="key-in" id="ku_'+i.id+'" placeholder="输入Key在线导入"><button class="key-btn" onclick="KU('+i.id+')">➡️</button></div>';
+                if(sv) act += '<div class="key-row"><input class="key-in" id="kv_'+i.id+'" placeholder="输入Key生成文件"><button class="key-btn" onclick="KV('+i.id+')">⬇️</button></div>';
+                act += '</div>';
+            }
+        }
+        act += '</div>';
+
+        return '<tr><td><div style="font-weight:bold;font-size:15px;margin-bottom:6px;color:#1e293b">'+i.name+'</div>'+meta+'</td><td style="color:#64748b;font-size:13px;line-height:1.5">'+(i.note||'-')+'<br><div style="margin-top:8px">'+ls+'</div></td><td width="260">'+act+'</td></tr>';
+    }).join('');
+    b.innerHTML = h+'</table>';
+}
+window.D=id=>{const i=DB.items.find(x=>x.id==id); save(i.file.content,i.name);};
+window.KU=id=>{const i=DB.items.find(x=>x.id==id);const v=document.getElementById('ku_'+id).value; if(v)window.open(i.keyConfig.url+v);};
+window.KV=id=>{
+    const i=DB.items.find(x=>x.id==id);
+    const v=document.getElementById('kv_'+id).value;
+    if(!v)return alert('请输入Key');
+    try{
+        const raw=atob(i.file.content.split(',')[1]);
+        const u8=new Uint8Array(raw.length);
+        for(let n=0;n<raw.length;n++)u8[n]=raw.charCodeAt(n);
+        let txt=new TextDecoder().decode(u8);
+        const vn=i.keyConfig.var;
+        const re=new RegExp('((?:const|var|let)\\\\s+'+vn+'\\\\s*[:=]\\\\s*)[\\'\\"][\\'\\"]','g');
+        if(re.test(txt)){
+            txt=txt.replace(re,'$1"'+v+'"');
+            const b=new Blob([txt],{type:'text/javascript'});
+            const a=document.createElement('a');
+            a.href=URL.createObjectURL(b);
+            a.download=i.name;
+            a.click();
+        }else{alert('变量名未找到: '+vn);}
+    }catch(e){console.error(e);alert('生成失败');}
+};
+function save(u,n){const a=document.createElement('a');a.href=u;a.download=n;a.click();}
+rT();
+<\/script>
+</body></html>`;
+
+// --- 内置：极简列表主题 ---
+const MINIMAL_THEME_TEMPLATE = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"><title>{{TITLE}}</title>
+<style>
+body{font-family:sans-serif;max-width:800px;margin:20px auto;line-height:1.6;color:#333}
+h1{border-bottom:2px solid #333;padding-bottom:10px}
+.item{border-bottom:1px solid #eee;padding:15px 0}
+.name{font-weight:bold;font-size:1.1em}
+.meta{font-size:0.9em;color:#666;margin:5px 0}
+.btn{background:#333;color:#fff;text-decoration:none;padding:5px 10px;font-size:0.8em;border-radius:4px;display:inline-block}
+</style>
+</head>
+<body>
+<h1>📂 {{TITLE}} ({{DATE}})</h1>
+<div id="list"></div>
+<script>
+const data = {{DATA}};
+const items = data.items.filter(i => i.tab === 'LX');
+document.getElementById('list').innerHTML = items.map(i => {
+    let dlBtn = '';
+    if(i.file) dlBtn = \`<a href="#" class="btn" onclick="downloadFile(\${i.id});return false">下载文件</a>\`;
+    if(i.dlLink) dlBtn += \` <a href="\${i.dlLink}" target="_blank" class="btn">直链</a>\`;
+    return \`<div class="item">
+        <div class="name">\${i.name} <span style="font-weight:normal;font-size:0.8em">v\${i.ver}</span></div>
+        <div class="meta">\${i.note || ''} [\${i.quality}]</div>
+        \${dlBtn}
+    </div>\`;
+}).join('') || '无数据';
+
+function downloadFile(id) {
+    const item = data.items.find(x => x.id == id);
+    const a = document.createElement('a');
+    a.href = item.file.content; a.download = item.name; a.click();
+}
+<\/script></body></html>`;
+
+const app = {
+    data: {
+        config: { showMF: false, showLY: false },
+        customTabs: [],
+        items: [],
+        activeTab: 'LX',
+        themeConfig: {
+            enabled: false,
+            activeId: 'default',
+            themes: [
+                { id: 'default', name: '默认主题', content: DEFAULT_THEME_TEMPLATE, locked: true },
+                { id: 'simple', name: '极简列表 (示例)', content: MINIMAL_THEME_TEMPLATE, locked: false }
+            ]
+        }
+    },
+    state: { editId: null },
+
+    init() {
+        this.load();
+        this.renderTabs();
+        this.render();
+    },
+
+    // --- 数据存储 ---
+    save() {
+        try {
+            localStorage.setItem('pm_v140_data', JSON.stringify(this.data));
+            const time = new Date();
+            document.getElementById('statusText').innerText = '已保存 ' + time.getHours() + ':' + time.getMinutes().toString().padStart(2, '0') + ':' + time.getSeconds().toString().padStart(2, '0');
+        } catch(e) { console.error(e); }
+    },
+    load() {
+        let raw = localStorage.getItem('pm_v140_data');
+        if (!raw) {
+            // 尝试迁移 v1.3.x 数据
+            raw = localStorage.getItem('pm_v136_data');
+        }
+        
+        if(raw) {
+            try { 
+                const loaded = JSON.parse(raw);
+                this.data = { ...this.data, ...loaded };
+                // 确保 themeConfig 存在
+                if (!this.data.themeConfig) {
+                    this.data.themeConfig = {
+                        enabled: false,
+                        activeId: 'default',
+                        themes: [
+                            { id: 'default', name: '默认主题', content: DEFAULT_THEME_TEMPLATE, locked: true },
+                            { id: 'simple', name: '极简列表 (示例)', content: MINIMAL_THEME_TEMPLATE, locked: false }
+                        ]
+                    };
+                }
+            } catch(e){}
+        }
+    },
+
+    // --- 标签页 ---
+    getTabs() {
+        let tabs = ['LX'];
+        if(this.data.config.showMF) tabs.push('Music Free');
+        if(this.data.config.showLY) tabs.push('澜音');
+        return tabs.concat(this.data.customTabs);
+    },
+    renderTabs() {
+        const tabs = this.getTabs();
+        if(!tabs.includes(this.data.activeTab)) this.data.activeTab = 'LX';
+        
+        const html = tabs.map(t => {
+            const isActive = t === this.data.activeTab;
+            const isCustom = this.data.customTabs.includes(t);
+            const delBtn = isCustom ? `<span class="tab-close" onclick="app.delCustomTab('${t}', event)">×</span>` : '';
+            return `<div class="tab-item ${isActive?'active':''}" onclick="app.switchTab('${t}')">${t} ${delBtn}</div>`;
+        }).join('');
+        document.getElementById('tabsBar').innerHTML = html + `<div class="tab-add-btn" onclick="ui.openTabOpt()">+</div>`;
+    },
+    switchTab(t) {
+        this.data.activeTab = t;
+        this.save();
+        this.renderTabs();
+        this.render();
+    },
+    toggleTabConfig(key) {
+        this.data.config[key] = document.getElementById(key==='showMF'?'chk_mf':'chk_ly').checked;
+        this.save();
+        this.renderTabs();
+        this.render();
+    },
+    addCustomTab() {
+        const name = document.getElementById('newTabName').value.trim();
+        if(!name || this.getTabs().includes(name)) return;
+        this.data.customTabs.push(name);
+        this.data.activeTab = name;
+        this.save();
+        this.renderTabs();
+        this.render();
+        ui.close();
+        document.getElementById('newTabName').value = '';
+    },
+    delCustomTab(name, e) {
+        e.stopPropagation();
+        if(confirm('删除此标签页？数据将被隐藏。')) {
+            this.data.customTabs = this.data.customTabs.filter(t => t !== name);
+            if(this.data.activeTab === name) this.data.activeTab = 'LX';
+            this.save();
+            this.renderTabs();
+            this.render();
+        }
+    },
+    clearTab() {
+        if(confirm('清空当前页所有数据？')) {
+            this.data.items = this.data.items.filter(i => i.tab !== this.data.activeTab);
+            this.save();
+            this.render();
+        }
+    },
+
+    // --- 列表渲染 ---
+    render() {
+        const tbody = document.getElementById('tableBody');
+        const kw = document.getElementById('searchInput').value.toLowerCase();
+        const curTab = this.data.activeTab;
+        
+        const list = this.data.items.filter(i => {
+            const t = i.tab || 'LX';
+            return t === curTab && (!kw || (i.name||'').toLowerCase().includes(kw));
+        });
+
+        if(list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="empty-state"><div class="empty-state-icon">📂</div>暂无数据，请点击上方“新增文件”或“导入备份”</td></tr>`;
+            return;
+        }
+
+        const supportPreset = ['LX', '澜音'].includes(curTab);
+        const accept = curTab === 'Music Free' ? '.js,.json' : '.js';
+
+        tbody.innerHTML = list.map(item => {
+            const hasFile = !!(item.file && item.file.content);
+            const status = hasFile 
+                ? `<span style="color:#15803d;background:#dcfce7;font-size:12px;padding:2px 6px;border-radius:4px;font-weight:500;border:1px solid #bbf7d0">✅ 已传 ${fmtSize(item.file.size)}</span>`
+                : `<span style="color:#b91c1c;background:#fee2e2;font-size:12px;padding:2px 6px;border-radius:4px;font-weight:500;border:1px solid #fecaca">⚠️ 缺文件</span>`;
+
+            let qualityUi = '';
+            if(supportPreset) {
+                const isCustom = item.quality && !QUALITY_PRESETS.includes(item.quality);
+                if(isCustom) {
+                    qualityUi = `<div style="display:flex;gap:4px"><input type="text" value="${esc(item.quality)}" onchange="app.updateItem(${item.id}, 'quality', this.value)"><button class="btn-icon" onclick="app.updateItem(${item.id}, 'quality', '')" title="重置">↺</button></div>`;
+                } else {
+                    const opts = QUALITY_PRESETS.map(q => `<option value="${q}" ${item.quality===q?'selected':''}>${q}</option>`).join('');
+                    qualityUi = `<select onchange="if(this.value==='_C_'){app.updateItem(${item.id},'quality','自定义')}else{app.updateItem(${item.id},'quality',this.value)}"><option value="">选择音质...</option>${opts}<option value="_C_">✎ 自定义...</option></select>`;
+                }
+            } else {
+                qualityUi = `<input type="text" value="${esc(item.quality)}" onchange="app.updateItem(${item.id}, 'quality', this.value)" placeholder="音质">`;
+            }
+            qualityUi += `<input type="text" value="${esc(item.ver)}" onchange="app.updateItem(${item.id}, 'ver', this.value)" placeholder="版本号" style="margin-top:4px;color:#64748b">`;
+
+            let tags = '';
+            if(item.dlLink) tags += `<span class="tag tag-green">直链 <span class="tag-del" onclick="app.updateItem(${item.id},'dlLink','')">×</span></span>`;
+            (item.links||[]).forEach((l,i) => {
+                tags += `<span class="tag tag-blue"><a href="${l.url}" target="_blank" style="text-decoration:none;color:inherit">${l.text}</a> <span class="tag-del" onclick="app.delLink(${item.id},${i})">×</span></span>`;
+            });
+            if(curTab === 'LX') {
+                if(item.keyConfig?.enableUrl) tags += `<span class="tag tag-orange">Key在线 <span class="tag-del" onclick="app.toggleKey(${item.id},'enableUrl',false)">×</span></span>`;
+                if(item.keyConfig?.enableVar) tags += `<span class="tag tag-orange">Key本地 <span class="tag-del" onclick="app.toggleKey(${item.id},'enableVar',false)">×</span></span>`;
+            }
+
+            return `
+                <tr>
+                    <td align="center">
+                        <div style="display:flex;flex-direction:column;gap:2px">
+                            <button class="btn-icon" onclick="app.moveItem(${item.id}, -1)">▲</button>
+                            <button class="btn-icon" onclick="app.moveItem(${item.id}, 1)">▼</button>
+                        </div>
+                    </td>
+                    <td>
+                        <input type="text" value="${esc(item.name)}" onchange="app.updateItem(${item.id}, 'name', this.value)" placeholder="文件名" style="font-weight:700;margin-bottom:6px;font-size:14px">
+                        <div style="display:flex;align-items:center;gap:6px">
+                            ${status}
+                            <input type="file" id="f_${item.id}" hidden accept="${accept}" onchange="app.uploadFile(${item.id}, this)">
+                            <button class="btn-xs btn-primary" style="margin-left:auto" onclick="document.getElementById('f_${item.id}').click()">${hasFile?'📄 重传':'📄 上传'}</button>
+                        </div>
+                    </td>
+                    <td valign="top">${qualityUi}</td>
+                    <td>
+                        <input type="text" value="${esc(item.note)}" onchange="app.updateItem(${item.id}, 'note', this.value)" placeholder="备注..." style="margin-bottom:6px">
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+                            <button class="btn-xs btn-secondary" onclick="app.openLinkModal(${item.id})">+ 链接</button>
+                            <button class="btn-xs btn-secondary" onclick="app.openDlModal(${item.id})">+ 直链</button>
+                            ${curTab==='LX' ? `<button class="btn-xs btn-secondary" onclick="app.openKeyModal(${item.id})">⚙️ Key</button>` : ''}
+                        </div>
+                        <div class="tag-list">${tags}</div>
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:6px;flex-direction:column">
+                            ${hasFile ? `<button class="btn btn-success btn-xs" style="width:100%" onclick="app.dlLocal(${item.id})">下载</button>` : ''}
+                            <button class="btn btn-danger btn-xs" style="width:100%" onclick="app.delItem(${item.id})">删除</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    // --- 核心逻辑 ---
+    addItem() {
+        this.data.items.push({
+            id: Date.now(),
+            tab: this.data.activeTab,
+            name: '', ver: '', quality: '', note: '',
+            file: null, links: [], dlLink: '',
+            keyConfig: { enableUrl: false, url: '', enableVar: false, var: '' }
+        });
+        this.save();
+        this.render();
+    },
+    updateItem(id, k, v) {
+        const i = this.data.items.find(x => x.id === id);
+        if(i) {
+            i[k] = v;
+            this.save();
+            if(k === 'quality' || k === 'dlLink') this.render();
+        }
+    },
+    toggleKey(id, k, v) {
+        const i = this.data.items.find(x => x.id === id);
+        if(i && i.keyConfig) { i.keyConfig[k] = v; this.save(); this.render(); }
+    },
+    delItem(id) {
+        if(confirm('删除此项？')) {
+            this.data.items = this.data.items.filter(x => x.id !== id);
+            this.save();
+            this.render();
+        }
+    },
+    moveItem(id, dir) {
+        const idx = this.data.items.findIndex(x => x.id === id);
+        if(idx > -1) {
+            const t = idx + dir;
+            if(t >= 0 && t < this.data.items.length) {
+                [this.data.items[idx], this.data.items[t]] = [this.data.items[t], this.data.items[idx]];
+                this.save();
+                this.render();
+            }
+        }
+    },
+    uploadFile(id, input) {
+        const f = input.files[0];
+        if(!f) return;
+        const r = new FileReader();
+        r.onload = e => {
+            const i = this.data.items.find(x => x.id === id);
+            if(i) {
+                if(!i.name) i.name = f.name;
+                i.file = { content: e.target.result, size: f.size };
+                this.save();
+                this.render();
+            }
+        };
+        r.readAsDataURL(f);
+        input.value = '';
+    },
+    dlLocal(id) {
+        const i = this.data.items.find(x => x.id === id);
+        if(i?.file) saveAs(i.file.content, i.name);
+    },
+
+    // --- 弹窗逻辑 ---
+    openLinkModal(id) { this.state.editId = id; ui.setVal('l_text',''); ui.setVal('l_url',''); ui.open('modalLink'); },
+    saveLink() {
+        const i = this.data.items.find(x => x.id === this.state.editId);
+        const t = ui.getVal('l_text'), u = ui.getVal('l_url');
+        if(i && t && u) {
+            if(!i.links) i.links = [];
+            i.links.push({text:t, url:u});
+            this.save(); this.render();
+        }
+        ui.close();
+    },
+    delLink(id, idx) {
+        const i = this.data.items.find(x => x.id === id);
+        if(i && i.links) { i.links.splice(idx, 1); this.save(); this.render(); }
+    },
+    openDlModal(id) {
+        this.state.editId = id;
+        const i = this.data.items.find(x => x.id === id);
+        ui.setVal('d_url', i.dlLink || '');
+        ui.open('modalDl');
+    },
+    saveDl() {
+        this.updateItem(this.state.editId, 'dlLink', ui.getVal('d_url'));
+        ui.close();
+    },
+    openKeyModal(id) {
+        this.state.editId = id;
+        const i = this.data.items.find(x => x.id === id);
+        const k = i.keyConfig || {};
+        ui.setCheck('k_enable_url', k.enableUrl);
+        ui.setVal('k_url', k.url||'');
+        ui.setCheck('k_enable_var', k.enableVar);
+        ui.setVal('k_var', k.var || 'API_KEY');
+        ui.open('modalKey');
+    },
+    saveKey() {
+        const i = this.data.items.find(x => x.id === this.state.editId);
+        if(i) {
+            i.keyConfig = {
+                enableUrl: ui.getCheck('k_enable_url'), url: ui.getVal('k_url'),
+                enableVar: ui.getCheck('k_enable_var'), var: ui.getVal('k_var')
+            };
+            this.save(); this.render();
+        }
+        ui.close();
+    },
+
+    // --- 主题系统 v1.4.0 ---
+    openThemeModal() {
+        ui.setCheck('theme_enable', this.data.themeConfig.enabled);
+        this.renderThemeList();
+        this.updateThemeEditor();
+        ui.open('modalTheme');
+    },
+    renderThemeList() {
+        const listEl = document.getElementById('themeList');
+        const activeId = this.data.themeConfig.activeId;
+        listEl.innerHTML = this.data.themeConfig.themes.map(t => 
+            `<div class="theme-card ${t.id === activeId ? 'active' : ''}" onclick="app.switchTheme('${t.id}')">
+                ${t.name}
+                ${t.locked ? '<br><span style="font-size:10px;opacity:0.6">🔒 内置</span>' : ''}
+             </div>`
+        ).join('');
+        
+        // UI状态联动
+        const enabled = document.getElementById('theme_enable').checked;
+        document.getElementById('themeArea').style.opacity = enabled ? '1' : '0.5';
+        document.getElementById('themeArea').style.pointerEvents = enabled ? 'auto' : 'none';
+    },
+    toggleThemeEnable() {
+        this.data.themeConfig.enabled = document.getElementById('theme_enable').checked;
+        this.renderThemeList();
+        // 不立即保存，等待点击保存按钮
+    },
+    switchTheme(id) {
+        this.data.themeConfig.activeId = id;
+        this.renderThemeList();
+        this.updateThemeEditor();
+    },
+    updateThemeEditor() {
+        const active = this.data.themeConfig.themes.find(t => t.id === this.data.themeConfig.activeId);
+        if(active) {
+            document.getElementById('themeCode').value = active.content;
+        }
+    },
+    saveThemeConfig() {
+        const activeId = this.data.themeConfig.activeId;
+        const code = document.getElementById('themeCode').value;
+        const themeIndex = this.data.themeConfig.themes.findIndex(t => t.id === activeId);
+        
+        if(themeIndex > -1) {
+            const theme = this.data.themeConfig.themes[themeIndex];
+            if(theme.locked) {
+                if(theme.content !== code) {
+                    if(confirm('内置主题不可直接修改，是否保存为新主题副本？')) {
+                        const newId = 'custom_' + Date.now();
+                        this.data.themeConfig.themes.push({
+                            id: newId,
+                            name: theme.name + ' (副本)',
+                            content: code,
+                            locked: false
+                        });
+                        this.data.themeConfig.activeId = newId;
+                    } else {
+                        return;
+                    }
+                }
+            } else {
+                theme.content = code;
+            }
+        }
+        
+        this.data.themeConfig.enabled = document.getElementById('theme_enable').checked;
+        this.save();
+        ui.close();
+        alert('主题配置已保存');
+    },
+    importThemeFromFile(input) {
+        const file = input.files[0];
+        if(!file) return;
+        const r = new FileReader();
+        r.onload = e => {
+            document.getElementById('themeCode').value = e.target.result;
+            const newId = 'imported_' + Date.now();
+            this.data.themeConfig.themes.push({
+                id: newId,
+                name: '导入的主题 ' + new Date().toLocaleTimeString(),
+                content: e.target.result,
+                locked: false
+            });
+            this.data.themeConfig.activeId = newId;
+            this.renderThemeList();
+            alert('模板导入成功，请点击保存');
+        };
+        r.readAsText(file);
+        input.value = '';
+    },
+    resetThemeToDefault() {
+        const activeId = this.data.themeConfig.activeId;
+        if(activeId === 'default') {
+            document.getElementById('themeCode').value = DEFAULT_THEME_TEMPLATE;
+        } else if(activeId === 'simple') {
+            document.getElementById('themeCode').value = MINIMAL_THEME_TEMPLATE;
+        } else {
+            if(confirm('重置此自定义主题的内容为默认模板？')) {
+                document.getElementById('themeCode').value = DEFAULT_THEME_TEMPLATE;
+            }
+        }
+    },
+
+    // --- 导入导出 ---
+    exportJson() {
+        const blob = new Blob([JSON.stringify(this.data, null, 2)], {type:'application/json'});
+        saveAs(URL.createObjectURL(blob), `备份_v140_${Date.now()}.json`);
+    },
+    
+    importJson(input) {
+        const file = input.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                const json = JSON.parse(e.target.result);
+                
+                // 兼容 v1.1.5 及之前的数组格式
+                if(Array.isArray(json)) {
+                    if(confirm('检测到旧版备份数据 (v1.x)，是否将其导入到 LX 标签页？\n(注意：这将覆盖当前 LX 标签页的数据)')) {
+                        // 转换旧数据结构 -> 新数据结构
+                        const newItems = json.map(old => ({
+                            id: old.id || Date.now() + Math.random(),
+                            tab: 'LX',
+                            name: old.fileName || old.name || '未知文件',
+                            ver: '', // 旧版无此字段
+                            quality: old.quality || '',
+                            note: old.note || '',
+                            file: old.fileContent ? { content: old.fileContent, size: old.fileSize || 0 } : null,
+                            links: old.links || [],
+                            dlLink: old.directUrl || '',
+                            keyConfig: {
+                                // 尝试智能转换 Key 配置
+                                enableUrl: (old.keyMode === 'link' || (!!old.keyUrl && old.keyUrl.length > 0)),
+                                url: old.keyUrl || '',
+                                enableVar: (old.keyVariable && old.keyVariable.length > 0),
+                                var: old.keyVariable || ''
+                            }
+                        }));
+
+                        // 保留其他标签页的数据，仅替换 LX 标签页
+                        this.data.items = this.data.items.filter(i => i.tab !== 'LX').concat(newItems);
+                        this.data.activeTab = 'LX';
+                        
+                        // 确保 themeConfig 存在
+                        if(!this.data.themeConfig) {
+                            this.data.themeConfig = {
+                                enabled: false,
+                                activeId: 'default',
+                                themes: [
+                                    { id: 'default', name: '默认主题', content: DEFAULT_THEME_TEMPLATE, locked: true },
+                                    { id: 'simple', name: '极简列表', content: MINIMAL_THEME_TEMPLATE, locked: false }
+                                ]
+                            };
+                        }
+
+                        this.save();
+                        this.renderTabs();
+                        this.render();
+                        alert('旧版数据导入成功！');
+                    }
+                    return;
+                }
+                
+                // 标准 v1.3+ 对象格式
+                if(json.items) {
+                    if(confirm('是否导入备份数据？\n(当前数据将被覆盖)')) {
+                        // 深度合并配置
+                        this.data.config = json.config || this.data.config;
+                        this.data.customTabs = json.customTabs || this.data.customTabs;
+                        this.data.items = json.items;
+                        
+                        // 兼容处理：如果导入的包里没有 themeConfig (v1.3数据)，保留当前的或初始化默认的
+                        if (json.themeConfig) {
+                             this.data.themeConfig = json.themeConfig;
+                        } else if (!this.data.themeConfig) {
+                             this.data.themeConfig = {
+                                enabled: false,
+                                activeId: 'default',
+                                themes: [
+                                    { id: 'default', name: '默认主题', content: DEFAULT_THEME_TEMPLATE, locked: true },
+                                    { id: 'simple', name: '极简列表', content: MINIMAL_THEME_TEMPLATE, locked: false }
+                                ]
+                            };
+                        }
+                        
+                        this.save();
+                        this.renderTabs();
+                        this.render();
+                        alert('导入成功！');
+                    }
+                } else {
+                    alert('无法识别的文件格式');
+                }
+            } catch(err) { 
+                console.error(err); 
+                alert('解析失败: ' + err.message); 
+            }
+        };
+        reader.readAsText(file);
+        input.value = '';
+    },
+
+    exportHtml() {
+        const html = generateExportHtml(this.data);
+        const blob = new Blob([html], {type:'text/html'});
+        saveAs(URL.createObjectURL(blob), `插件列表_${new Date().toISOString().slice(0,10)}.html`);
+    }
+};
+
+const ui = {
+    open(id) { document.getElementById(id).style.display = 'block'; },
+    close() { document.querySelectorAll('.modal-overlay').forEach(e=>e.style.display='none'); app.state.editId=null; },
+    openTabOpt() {
+        document.getElementById('chk_mf').checked = app.data.config.showMF;
+        document.getElementById('chk_ly').checked = app.data.config.showLY;
+        this.open('modalTabs');
+    },
+    getVal(id) { return document.getElementById(id).value; },
+    setVal(id, v) { document.getElementById(id).value = v; },
+    getCheck(id) { return document.getElementById(id).checked; },
+    setCheck(id, v) { document.getElementById(id).checked = v; }
+};
+
+function esc(s) { return s ? s.replace(/"/g, "&quot;") : ""; }
+function fmtSize(b) { 
+    if(!b) return ''; 
+    if(b<1024) return b+'B'; 
+    if(b<1048576) return (b/1024).toFixed(1)+'KB'; 
+    return (b/1048576).toFixed(1)+'MB'; 
+}
+function saveAs(url, name) {
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.click();
+}
+
+// --- 导出逻辑 (支持自定义主题) ---
+function generateExportHtml(data) {
+    let template = DEFAULT_THEME_TEMPLATE;
+    
+    if (data.themeConfig && data.themeConfig.enabled) {
+        const activeTheme = data.themeConfig.themes.find(t => t.id === data.themeConfig.activeId);
+        if (activeTheme) {
+            template = activeTheme.content;
+        }
+    }
+
+    const jsonStr = JSON.stringify(data);
+    
+    let result = template
+        .replace(/{{DATA}}/g, jsonStr)
+        .replace(/{{DATE}}/g, new Date().toISOString().slice(0,10))
+        .replace(/{{TITLE}}/g, "插件列表");
+
+    return result;
+}
+
+app.init();
+</script>
+</body>
+</html>

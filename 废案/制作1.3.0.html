@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>插件列表管理器 v1.3.0</title>
+  <style>
+    /* 全局重置 */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #f0f2f5; padding: 20px; color: #333; min-height: 100vh; }
+    
+    .container { max-width: 1600px; margin: 0 auto; background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+    
+    /* 头部 */
+    .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; }
+    h1 { font-size: 24px; color: #2c3e50; margin-bottom: 5px; }
+    .subtitle { font-size: 12px; color: #999; }
+
+    /* 标签页系统 */
+    .tabs-wrapper { display: flex; align-items: center; border-bottom: 2px solid #e9ecef; margin-bottom: 15px; gap: 5px; }
+    .tab-btn { padding: 10px 25px; border: none; background: transparent; cursor: pointer; font-size: 14px; font-weight: 500; color: #666; border-radius: 8px 8px 0 0; transition: all 0.2s; position: relative; }
+    .tab-btn:hover { background: #f8f9fa; color: #333; }
+    .tab-btn.active { background: #fff; color: #667eea; font-weight: bold; border: 1px solid #e9ecef; border-bottom: 2px solid #fff; margin-bottom: -2px; z-index: 1; }
+    .tab-add-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px dashed #ccc; background: transparent; cursor: pointer; color: #999; font-size: 18px; margin-left: 5px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .tab-add-btn:hover { border-color: #667eea; color: #667eea; background: #f0f4ff; }
+    .tab-close { font-size: 10px; margin-left: 8px; opacity: 0.5; border-radius: 50%; padding: 0 4px; }
+    .tab-close:hover { background: #ffcccc; color: #cc0000; opacity: 1; }
+
+    /* 工具栏 */
+    .toolbar { display: flex; gap: 10px; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+    .search-box { padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; width: 220px; }
+    .spacer { flex: 1; }
+    
+    /* LX 专属开关 */
+    .lx-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; background: #e3f2fd; padding: 6px 12px; border-radius: 4px; border: 1px solid #bbdefb; color: #0d47a1; margin-left: 10px; }
+    .lx-toggle input { cursor: pointer; width: 16px; height: 16px; }
+
+    /* 按钮样式 */
+    .btn { padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-size: 13px; color: white; transition: opacity 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+    .btn:hover { opacity: 0.9; }
+    .btn-green { background: #28a745; }
+    .btn-blue { background: #667eea; }
+    .btn-info { background: #17a2b8; }
+    .btn-gray { background: #6c757d; }
+    .btn-red { background: #dc3545; }
+    
+    /* 表格内小按钮 */
+    .btn-xs { padding: 4px 8px; font-size: 12px; border-radius: 3px; border: none; cursor: pointer; color: white; margin-right: 2px; margin-bottom: 2px; display: inline-block; }
+    .btn-cfg { background: #f0ad4e; color: white; }
+    .btn-link { background: #5bc0de; color: white; }
+    .btn-del { background: #d9534f; }
+    .btn-up { background: #5a6268; }
+
+    /* 表格样式 */
+    .table-container { overflow-x: auto; border: 1px solid #eee; border-radius: 8px; background: white; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f8f9fa; padding: 12px 10px; text-align: left; font-weight: 600; color: #444; border-bottom: 2px solid #eee; white-space: nowrap; }
+    td { padding: 10px; border-bottom: 1px solid #f1f1f1; vertical-align: top; }
+    tr:hover { background: #fafafa; }
+    
+    input[type="text"], select { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; transition: border 0.2s; }
+    input[type="text"]:focus, select:focus { border-color: #667eea; outline: none; }
+
+    /* 状态与标签 */
+    .status-ok { background: #d4edda; color: #155724; padding: 2px 6px; border-radius: 3px; font-size: 11px; display: inline-block; border: 1px solid #c3e6cb; }
+    .status-no { background: #f8d7da; color: #721c24; padding: 2px 6px; border-radius: 3px; font-size: 11px; display: inline-block; border: 1px solid #f5c6cb; }
+    
+    .tag-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+    .tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #eef2ff; color: #5a67d8; border: 1px solid #dbeafe; display: flex; align-items: center; gap: 4px; }
+    .tag-key { background: #fff3cd; color: #856404; border-color: #ffeeba; }
+    .tag-remove { cursor: pointer; font-weight: bold; opacity: 0.6; }
+    .tag-remove:hover { opacity: 1; color: #dc3545; }
+
+    /* 弹窗 */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+    .modal-content { background: white; width: 400px; margin: 100px auto; padding: 20px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: popIn 0.2s; }
+    @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .modal-header { font-weight: bold; font-size: 16px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 13px; }
+    
+    .empty-state { padding: 40px; text-align: center; color: #aaa; font-style: italic; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>插件列表管理器</h1>
+    <p class="subtitle">更新时间: <span id="updateTime">-</span></p>
+  </div>
+
+  <!-- 标签页 -->
+  <div class="tabs-wrapper" id="tabsContainer">
+    <!-- 动态生成 -->
+  </div>
+
+  <!-- 工具栏 -->
+  <div class="toolbar">
+    <button class="btn btn-green" onclick="addNewRow()">➕ 添加文件</button>
+    <button class="btn btn-blue" onclick="exportData('json')">💾 备份数据</button>
+    <button class="btn btn-info" onclick="exportData('html')">📤 导出列表</button>
+    <button class="btn btn-red" onclick="clearCurrentTab()">🗑️ 清空当前页</button>
+    
+    <!-- LX 专属开关 -->
+    <div class="lx-toggle" id="lxScriptToggle" style="display:none">
+        <input type="checkbox" id="enableScript" onchange="saveData(); renderTable();">
+        <label for="enableScript">启用一键导入脚本</label>
+    </div>
+
+    <div class="spacer"></div>
+    <input type="file" id="importInput" style="display:none" onchange="importData(this)">
+    <button class="btn btn-gray" onclick="document.getElementById('importInput').click()">📂 导入旧版/备份</button>
+    <input type="text" class="search-box" placeholder="🔍 搜索文件名..." oninput="renderTable()">
+  </div>
+
+  <!-- 表格 -->
+  <div class="table-container">
+    <table id="mainTable">
+      <thead>
+        <tr>
+          <th width="60">排序</th>
+          <th width="300">文件名 & 状态</th>
+          <th width="150">音质/版本</th>
+          <th width="350">备注 & 配置</th>
+          <th width="200">操作</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 弹窗：添加标签页 -->
+<div id="tabModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">添加新标签页 <span style="cursor:pointer" onclick="closeModal('tabModal')">×</span></div>
+    <div class="form-group">
+        <label>快速选择：</label>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <button class="btn btn-info btn-xs" onclick="quickAddTab('Music Free')">Music Free</button>
+            <button class="btn btn-info btn-xs" onclick="quickAddTab('澜音')">澜音</button>
+        </div>
+        <label>或 自定义名称：</label>
+        <input type="text" id="newTabName" placeholder="输入名称...">
+    </div>
+    <div style="text-align:right"><button class="btn btn-blue" onclick="confirmAddTab()">确定</button></div>
+  </div>
+</div>
+
+<!-- 弹窗：链接配置 -->
+<div id="linkModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">添加链接 <span style="cursor:pointer" onclick="closeModal('linkModal')">×</span></div>
+    <div class="form-group"><label>显示文字：</label><input type="text" id="linkText" placeholder="如: 官网"></div>
+    <div class="form-group"><label>跳转地址：</label><input type="text" id="linkUrl" placeholder="https://..."></div>
+    <div style="text-align:right"><button class="btn btn-blue" onclick="confirmAddLink()">添加</button></div>
+  </div>
+</div>
+
+<!-- 弹窗：Key配置 (仅LX) -->
+<div id="keyModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">配置脚本下载参数 <span style="cursor:pointer" onclick="closeModal('keyModal')">×</span></div>
+    <div class="form-group">
+        <label>🔑 在线 Key 模式 (URL拼接)</label>
+        <input type="text" id="keyUrl" placeholder="模板: https://api.com?key=">
+        <small style="color:#666">用户输入的Key将直接拼接到此链接后。</small>
+    </div>
+    <div class="form-group">
+        <label>📂 本地 Key 模式 (变量替换)</label>
+        <input type="text" id="keyVar" placeholder="变量名: API_KEY">
+        <small style="color:#666">替换 JS 文件中 <code>const API_KEY = ""</code> 的值。</small>
+    </div>
+    <div style="text-align:right"><button class="btn btn-blue" onclick="confirmKeyConfig()">保存</button></div>
+  </div>
+</div>
+
+<script>
+// --- 全局数据 ---
+let app = {
+    tabs: ['LX'],
+    currentTab: 'LX',
+    files: [],
+    // LX 专属设置
+    lxScriptEnabled: true
+};
+
+// 预设音质模板
+const QUALITY_OPTIONS = ['128k', '320k', 'flac', 'flac24bit', 'master', 'sky', 'dolby'];
+
+let currentEditId = null;
+
+// --- 初始化 ---
+window.onload = function() {
+    loadData();
+    renderTabs();
+    renderTable();
+};
+
+function loadData() {
+    const raw = localStorage.getItem('plugin_mgr_v4');
+    if (raw) {
+        try {
+            const data = JSON.parse(raw);
+            // 简单的数据迁移/校验
+            if (Array.isArray(data)) { 
+                // 旧版数组结构兼容
+                app.files = data.map(f => ({...f, tab: 'LX'}));
+            } else {
+                app = data;
+            }
+        } catch(e) { console.error('Data load error', e); }
+    }
+    // 确保有默认页
+    if(!app.tabs.includes('LX')) app.tabs.unshift('LX');
+    if(!app.tabs.includes(app.currentTab)) app.currentTab = 'LX';
+    
+    // 恢复开关状态
+    document.getElementById('enableScript').checked = app.lxScriptEnabled;
+    updateTime();
+}
+
+function saveData() {
+    app.lxScriptEnabled = document.getElementById('enableScript').checked;
+    localStorage.setItem('plugin_mgr_v4', JSON.stringify(app));
+    updateTime();
+}
+
+function updateTime() {
+    document.getElementById('updateTime').innerText = new Date().toLocaleString('zh-CN');
+}
+
+// --- 标签页逻辑 ---
+function renderTabs() {
+    const container = document.getElementById('tabsContainer');
+    container.innerHTML = '';
+    
+    app.tabs.forEach(tab => {
+        const btn = document.createElement('button');
+        btn.className = `tab-btn ${tab === app.currentTab ? 'active' : ''}`;
+        
+        let label = tab === 'LX' ? 'LX Music' : tab;
+        let html = `<span>${label}</span>`;
+        if (tab !== 'LX') { // LX 不可删除
+            html += `<span class="tab-close" onclick="deleteTab('${tab}', event)">✕</span>`;
+        }
+        btn.innerHTML = html;
+        btn.onclick = (e) => {
+            if(e.target.className !== 'tab-close') switchTab(tab);
+        };
+        container.appendChild(btn);
+    });
+
+    // 添加按钮
+    const addBtn = document.createElement('button');
+    addBtn.className = 'tab-add-btn';
+    addBtn.innerHTML = '+';
+    addBtn.onclick = () => openModal('tabModal');
+    container.appendChild(addBtn);
+    
+    // 控制 LX 专属开关显示
+    document.getElementById('lxScriptToggle').style.display = (app.currentTab === 'LX') ? 'flex' : 'none';
+}
+
+function switchTab(tab) {
+    app.currentTab = tab;
+    renderTabs();
+    renderTable();
+}
+
+function quickAddTab(name) {
+    document.getElementById('newTabName').value = name;
+    confirmAddTab();
+}
+
+function confirmAddTab() {
+    const name = document.getElementById('newTabName').value.trim();
+    if (name && !app.tabs.includes(name)) {
+        app.tabs.push(name);
+        switchTab(name);
+        closeModal('tabModal');
+        document.getElementById('newTabName').value = '';
+    } else {
+        alert('名称无效或已存在');
+    }
+}
+
+function deleteTab(tab, e) {
+    e.stopPropagation();
+    if(confirm(`确定删除 "${tab}" 及其所有文件吗？`)) {
+        app.files = app.files.filter(f => f.tab !== tab);
+        app.tabs = app.tabs.filter(t => t !== tab);
+        if(app.currentTab === tab) app.currentTab = 'LX';
+        saveData();
+        renderTabs();
+        renderTable();
+    }
+}
+
+// --- 表格渲染 ---
+function renderTable() {
+    const tbody = document.getElementById('tableBody');
+    const keyword = document.querySelector('.search-box').value.toLowerCase();
+    
+    // 筛选：当前标签页 + 关键词
+    const list = app.files.filter(f => {
+        const fTab = f.tab || 'LX'; // 兼容旧数据
+        return fTab === app.currentTab && (!keyword || (f.fileName||'').toLowerCase().includes(keyword));
+    });
+
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">当前列表为空，请点击上方“添加文件”</td></tr>`;
+        return;
+    }
+
+    const isLX = app.currentTab === 'LX';
+    const isLanyin = app.currentTab === '澜音';
+    const isMF = app.currentTab === 'Music Free';
+    const showScript = isLX && app.lxScriptEnabled;
+    const acceptTypes = isMF ? ".js,.json" : ".js";
+
+    tbody.innerHTML = list.map((f, index) => {
+        // 1. 音质输入渲染 (核心逻辑：固定模板+自定义)
+        let qualityInputHtml = '';
+        if (isLX || isLanyin) {
+            // 如果当前值在预设列表中，显示下拉；否则显示文本框
+            const isCustom = f.quality && !QUALITY_OPTIONS.includes(f.quality);
+            if (!isCustom) {
+                qualityInputHtml = `
+                <select onchange="handleQualityChange(${f.id}, this.value)">
+                    <option value="">请选择...</option>
+                    ${QUALITY_OPTIONS.map(opt => `<option value="${opt}" ${f.quality===opt?'selected':''}>${opt}</option>`).join('')}
+                    <option value="CUSTOM_ENTRY">✎ 自定义...</option>
+                </select>`;
+            } else {
+                qualityInputHtml = `<input type="text" value="${f.quality}" onblur="updateFile(${f.id}, 'quality', this.value)" placeholder="输入自定义音质">`;
+            }
+        } else {
+            // MF 或其他：纯文本
+            qualityInputHtml = `<input type="text" value="${f.quality||''}" onchange="updateFile(${f.id}, 'quality', this.value)" placeholder="版本/音质">`;
+        }
+
+        // 2. 状态与标签
+        const sizeStr = f.fileContent ? formatSize(f.fileSize) : '';
+        let tagsHtml = (f.links||[]).map((l, i) => 
+            `<span class="tag"><a href="${l.url}" target="_blank" style="color:inherit;text-decoration:none">${l.text}</a><span class="tag-remove" onclick="removeLink(${f.id}, ${i})">×</span></span>`
+        ).join('');
+        
+        // 显示Key标签 (仅当脚本开启且在LX下)
+        if (showScript) {
+            if (f.keyUrl) tagsHtml += `<span class="tag tag-key" title="${f.keyUrl}">在线Key <span class="tag-remove" onclick="updateFile(${f.id}, 'keyUrl', '')">×</span></span>`;
+            if (f.keyVariable) tagsHtml += `<span class="tag tag-key" title="${f.keyVariable}">本地Key <span class="tag-remove" onclick="updateFile(${f.id}, 'keyVariable', '')">×</span></span>`;
+        }
+
+        // 3. 按钮组
+        let btnsHtml = `
+            <input type="file" id="file-${f.id}" style="display:none" accept="${acceptTypes}" onchange="uploadFile(${f.id}, this)">
+            <button class="btn-xs btn-up" onclick="document.getElementById('file-${f.id}').click()">${f.fileContent ? '🔄 重传' : '📤 上传'}</button>
+            ${f.fileContent ? `<button class="btn-xs btn-green" onclick="downloadFile(${f.id})">⬇️ 下载</button>` : ''}
+            <button class="btn-xs btn-del" onclick="deleteRow(${f.id})">删除</button>
+        `;
+
+        // 4. 配置按钮
+        let configBtns = `<button class="btn-xs btn-link" onclick="openLinkModal(${f.id})">+ 链接</button>`;
+        if (showScript) {
+            configBtns += ` <button class="btn-xs btn-cfg" onclick="openKeyModal(${f.id})">⚙️ Key配置</button>`;
+        }
+
+        return `
+            <tr>
+                <td>
+                   <button class="btn-xs btn-gray" onclick="moveRow(${f.id}, -1)">↑</button>
+                   <button class="btn-xs btn-gray" onclick="moveRow(${f.id}, 1)">↓</button>
+                </td>
+                <td>
+                    <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">
+                        <span style="font-size:16px">📄</span>
+                        <input type="text" value="${f.fileName}" onchange="updateFile(${f.id}, 'fileName', this.value)" placeholder="文件名" style="font-weight:bold;width:200px">
+                    </div>
+                    ${f.fileContent ? `<span class="status-ok">✅ 已上传 ${sizeStr}</span>` : `<span class="status-no">⚠️ 未上传</span>`}
+                </td>
+                <td>${qualityInputHtml}</td>
+                <td>
+                    <input type="text" value="${f.note||''}" onchange="updateFile(${f.id}, 'note', this.value)" placeholder="备注信息...">
+                    <div class="tag-container">
+                        ${configBtns} ${tagsHtml}
+                    </div>
+                </td>
+                <td>${btnsHtml}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// --- 文件操作逻辑 ---
+function addNewRow() {
+    app.files.push({
+        id: Date.now(),
+        tab: app.currentTab,
+        fileName: '',
+        quality: '',
+        note: '',
+        links: [],
+        fileContent: null, // Base64
+        fileSize: 0,
+        keyUrl: '',
+        keyVariable: ''
+    });
+    saveData();
+    renderTable();
+}
+
+function updateFile(id, key, val) {
+    const f = app.files.find(x => x.id === id);
+    if(f) { f[key] = val; saveData(); renderTable(); }
+}
+
+function handleQualityChange(id, val) {
+    if (val === 'CUSTOM_ENTRY') {
+        // 切换为自定义输入，这里通过重新渲染，在渲染逻辑中判断值不在列表中来显示输入框
+        // 我们给它一个临时特殊值或者空值，让用户输入
+        const f = app.files.find(x => x.id === id);
+        f.quality = "自定义"; // 设一个临时值，用户需要修改它
+        saveData();
+        renderTable(); // 重新渲染会变成输入框
+    } else {
+        updateFile(id, 'quality', val);
+    }
+}
+
+function uploadFile(id, input) {
+    const file = input.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const f = app.files.find(x => x.id === id);
+        if(f) {
+            f.fileContent = e.target.result;
+            f.fileName = f.fileName || file.name;
+            f.fileSize = file.size;
+            saveData();
+            renderTable();
+        }
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+}
+
+function downloadFile(id) {
+    const f = app.files.find(x => x.id === id);
+    if(f && f.fileContent) {
+        const a = document.createElement('a');
+        a.href = f.fileContent;
+        a.download = f.fileName;
+        a.click();
+    }
+}
+
+function deleteRow(id) {
+    if(confirm('删除此文件?')) {
+        app.files = app.files.filter(x => x.id !== id);
+        saveData();
+        renderTable();
+    }
+}
+
+function moveRow(id, dir) {
+    const idx = app.files.findIndex(x => x.id === id);
+    if (idx < 0) return;
+    const target = idx + dir;
+    if (target >= 0 && target < app.files.length) {
+        [app.files[idx], app.files[target]] = [app.files[target], app.files[idx]];
+        saveData();
+        renderTable();
+    }
+}
+
+function clearCurrentTab() {
+    if(confirm('确定清空当前标签页的所有文件吗？')) {
+        app.files = app.files.filter(f => (f.tab||'LX') !== app.currentTab);
+        saveData();
+        renderTable();
+    }
+}
+
+// --- 弹窗逻辑 ---
+function openModal(id) { document.getElementById(id).style.display = 'block'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; currentEditId = null; }
+
+function openLinkModal(id) {
+    currentEditId = id;
+    document.getElementById('linkText').value = '';
+    document.getElementById('linkUrl').value = '';
+    openModal('linkModal');
+}
+
+function confirmAddLink() {
+    const f = app.files.find(x => x.id === currentEditId);
+    const t = document.getElementById('linkText').value;
+    const u = document.getElementById('linkUrl').value;
+    if(f && t && u) {
+        if(!f.links) f.links = [];
+        f.links.push({text:t, url:u});
+        saveData();
+        renderTable();
+    }
+    closeModal('linkModal');
+}
+
+function removeLink(fid, idx) {
+    const f = app.files.find(x => x.id === fid);
+    if(f) { f.links.splice(idx, 1); saveData(); renderTable(); }
+}
+
+function openKeyModal(id) {
+    currentEditId = id;
+    const f = app.files.find(x => x.id === id);
+    document.getElementById('keyUrl').value = f.keyUrl || '';
+    document.getElementById('keyVar').value = f.keyVariable || '';
+    openModal('keyModal');
+}
+
+function confirmKeyConfig() {
+    const f = app.files.find(x => x.id === currentEditId);
+    if(f) {
+        f.keyUrl = document.getElementById('keyUrl').value;
+        f.keyVariable = document.getElementById('keyVar').value;
+        saveData();
+        renderTable();
+    }
+    closeModal('keyModal');
+}
+
+// --- 辅助 ---
+function formatSize(bytes) {
+    if(!bytes) return '';
+    const i = Math.floor(Math.log(bytes)/Math.log(1024));
+    return (bytes/Math.pow(1024,i)).toFixed(1) + ['B','KB','MB'][i];
+}
+
+// --- 导入导出 (兼容性核心) ---
+function exportData(type) {
+    if(type === 'json') {
+        const blob = new Blob([JSON.stringify(app, null, 2)], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `备份_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+    } else {
+        exportHtmlReport();
+    }
+}
+
+function importData(input) {
+    const f = input.files[0];
+    if(!f) return;
+    const r = new FileReader();
+    r.onload = e => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (Array.isArray(data)) {
+                // 完美兼容旧版：旧版是数组，属性名为 fileName/fileContent
+                // 直接映射到 files，tab 设为 LX
+                app.files = data.map(item => ({
+                    ...item,
+                    tab: 'LX' // 归入默认分页
+                }));
+                // 确保 LX 存在
+                app.tabs = ['LX'];
+            } else {
+                // 新版结构
+                app = data;
+            }
+            saveData();
+            renderTabs();
+            renderTable();
+            alert('导入成功！');
+        } catch(err) {
+            alert('文件格式错误');
+            console.error(err);
+        }
+    };
+    r.readAsText(f);
+    input.value = '';
+}
+
+// --- HTML 导出生成器 ---
+function exportHtmlReport() {
+    // 准备数据
+    const exportObj = {
+        tabs: app.tabs,
+        files: app.files,
+        lxScriptEnabled: app.lxScriptEnabled
+    };
+    
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>插件列表</title>
+<style>
+body{font-family:'Microsoft YaHei',sans-serif;background:#f9f9f9;padding:20px;max-width:1200px;margin:0 auto;color:#333}
+h1{border-bottom:2px solid #667eea;padding-bottom:10px;margin-bottom:20px;color:#444}
+.tab-bar{display:flex;border-bottom:1px solid #ddd;margin-bottom:20px;gap:5px}
+.tab{padding:10px 20px;border:none;background:none;cursor:pointer;font-size:14px;color:#666;border-radius:5px 5px 0 0}
+.tab.active{background:#fff;color:#667eea;font-weight:bold;border:1px solid #ddd;border-bottom:2px solid #fff;margin-bottom:-1px}
+table{width:100%;border-collapse:collapse;background:white;box-shadow:0 2px 5px rgba(0,0,0,0.05)}
+th{background:#f5f5f5;padding:10px;text-align:left;font-size:13px}
+td{padding:10px;border-bottom:1px solid #eee;vertical-align:top}
+.btn{display:inline-block;padding:5px 10px;color:white;text-decoration:none;border-radius:3px;font-size:12px;margin:2px;cursor:pointer;border:none}
+.bg-green{background:#28a745}.bg-blue{background:#667eea}.bg-yellow{background:#f0ad4e}
+.tag{background:#eef2ff;color:#5a67d8;padding:2px 6px;border-radius:4px;font-size:11px;margin-right:4px;text-decoration:none;display:inline-block}
+.key-box{margin-top:5px;background:#fffbe6;padding:5px;border:1px solid #ffe58f;display:flex;gap:5px;border-radius:3px}
+.key-in{flex:1;border:1px solid #ddd;padding:3px;font-size:12px}
+</style>
+</head>
+<body>
+<h1>插件列表 <span style="font-size:12px;color:#999;font-weight:normal">更新于 ${new Date().toLocaleString()}</span></h1>
+
+<div class="tab-bar" id="tabBar"></div>
+<div id="content"></div>
+
+<script>
+const DATA = ${JSON.stringify(exportObj)};
+let curTab = DATA.tabs[0];
+
+function init() {
+    const bar = document.getElementById('tabBar');
+    bar.innerHTML = DATA.tabs.map(t => 
+        '<button class="tab ' + (t===curTab?'active':'') + '" onclick="switchTab(\\''+t+'\\')">' + (t==='LX'?'LX Music':t) + '</button>'
+    ).join('');
+    render();
+}
+
+function switchTab(t) {
+    curTab = t;
+    init(); // Re-render tabs
+}
+
+function render() {
+    const list = DATA.files.filter(f => (f.tab||'LX') === curTab);
+    const div = document.getElementById('content');
+    
+    if(list.length === 0) {
+        div.innerHTML = '<div style="padding:20px;text-align:center;color:#999">此标签页无文件</div>';
+        return;
+    }
+
+    // 只有在 LX 标签页 且 开关开启时，才显示脚本功能
+    const showScript = (curTab === 'LX' && DATA.lxScriptEnabled);
+
+    let html = '<table><thead><tr><th>文件名</th><th>音质</th><th>备注</th><th>下载/操作</th></tr></thead><tbody>';
+    
+    html += list.map((f, idx) => {
+        let tags = (f.links||[]).map(l => '<a href="'+l.url+'" target="_blank" class="tag">🔗 '+l.text+'</a>').join('');
+        
+        let btns = '';
+        if(f.fileContent) {
+            btns += '<button class="btn bg-green" onclick="download('+idx+')">⬇️ 下载文件</button> ';
+            if(showScript) {
+                btns += '<button class="btn bg-blue" onclick="genScript('+idx+', false)">🚀 一键导入</button>';
+            }
+        }
+        
+        // Key 区域
+        if(showScript && f.fileContent) {
+            if(f.keyUrl) {
+                btns += '<div class="key-box"><input id="k1-'+idx+'" class="key-in" placeholder="输入Key"><button class="btn bg-yellow" onclick="dlKey('+idx+')">下载</button></div>';
+            }
+            if(f.keyVariable) {
+                btns += '<div class="key-box"><input id="k2-'+idx+'" class="key-in" placeholder="输入本地Key"><button class="btn bg-blue" onclick="genScript('+idx+', true)">含Key导入</button></div>';
+            }
+        }
+
+        return '<tr><td><b>'+f.fileName+'</b></td><td>'+f.quality+'</td><td>'+f.note+'<br>'+tags+'</td><td>'+btns+'</td></tr>';
+    }).join('');
+    
+    html += '</tbody></table>';
+    div.innerHTML = html;
+}
+
+function download(idx) {
+    const list = DATA.files.filter(f => (f.tab||'LX') === curTab);
+    const f = list[idx];
+    saveAs(b64toBlob(f.fileContent), f.fileName);
+}
+
+function dlKey(idx) {
+    const list = DATA.files.filter(f => (f.tab||'LX') === curTab);
+    const f = list[idx];
+    const k = document.getElementById('k1-'+idx).value;
+    if(k) window.open(f.keyUrl + k);
+}
+
+function b64toBlob(b64) {
+    const bin = atob(b64.split(',')[1]);
+    const arr = new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], {type: 'application/javascript'});
+}
+
+function saveAs(blob, name) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+}
+
+// 注入脚本生成逻辑
+${getClientLogic()}
+
+init();
+<\/script>
+</body>
+</html>`;
+
+    const blob = new Blob([html], {type: 'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `插件列表_${new Date().toISOString().slice(0,10)}.html`;
+    a.click();
+}
+
+function getClientLogic() {
+    function logic() {
+        window.genScript = function(idx, useKey) {
+            // 获取当前显示的列表中的文件对象
+            const list = DATA.files.filter(f => (f.tab||'LX') === curTab);
+            const f = list[idx];
+            
+            const btn = event.target;
+            const orgTxt = btn.innerText;
+            btn.innerText = "生成中...";
+            btn.disabled = true;
+
+            try {
+                let content = atob(f.fileContent.split(',')[1]);
+                // 解码UTF8
+                const decoder = new TextDecoder('utf-8');
+                const rawArr = new Uint8Array([...content].map(c=>c.charCodeAt(0)));
+                let txt = decoder.decode(rawArr);
+
+                if(useKey) {
+                    const k = document.getElementById('k2-'+idx).value;
+                    if(!k) throw new Error("请输入Key");
+                    const v = f.keyVariable || 'API_KEY';
+                    // 替换变量
+                    const reg = new RegExp('const\\\\s+' + v + '\\\\s*=\\\\s*[\\\'\\"][\\\'\\"]');
+                    if(reg.test(txt)) {
+                        txt = txt.replace(reg, 'const ' + v + ' = "' + k + '"');
+                    } else {
+                        // 尝试简单替换
+                         txt = txt.replace(v + '=""', v + '="' + k + '"');
+                         txt = txt.replace(v + "=''", v + "='" + k + "'");
+                    }
+                }
+
+                // 生成 Powershell 脚本逻辑
+                const encoder = new TextEncoder();
+                const bytes = encoder.encode(txt);
+                let binStr = '';
+                for(let i=0; i<bytes.length; i++) binStr += String.fromCharCode(bytes[i]);
+                const b64 = btoa(binStr);
+                
+                // 构造BAT文件内容：调用Powershell将Base64解码并写入桌面文件
+                const ps = [
+                    '$content = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("' + b64 + '"))',
+                    '$path = [Environment]::GetFolderPath("Desktop") + "\\' + (f.fileName || 'plugin.js') + '"',
+                    '[System.IO.File]::WriteAllText($path, $content)',
+                    'Write-Host "文件已保存到桌面: " $path -ForegroundColor Green',
+                    'Write-Host "请前往 LX Music 设置 -> 自定义源 -> 导入此文件" -ForegroundColor Yellow',
+                    'Start-Sleep -Seconds 5'
+                ].join('\\r\\n');
+
+                const bat = '@echo off\\r\\npowershell -Command "' + ps.replace(/"/g, '\\"') + '"';
+                
+                const blob = new Blob([bat], {type: 'text/plain;charset=gbk'});
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = '一键安装_' + f.fileName + '.bat';
+                a.click();
+            } catch(e) {
+                alert('错误: ' + e.message);
+            } finally {
+                btn.innerText = orgTxt;
+                btn.disabled = false;
+            }
+        };
+    }
+    const s = logic.toString();
+    return s.substring(s.indexOf('{')+1, s.lastIndexOf('}'));
+}
+</script>
+</body>
+</html>

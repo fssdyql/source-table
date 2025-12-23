@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{{TITLE}}</title>
+    <style>
+        :root { --main-color: #00f2ff; --bg-color: #0b0c10; --card-bg: rgba(20, 25, 35, 0.95); --text-color: #fff; }
+        body { margin: 0; overflow: hidden; background-color: var(--bg-color); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; touch-action: none; } /* 禁止浏览器默认触摸行为 */
+
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+        .header { text-align: center; margin-top: 4vh; opacity: 0; animation: fadeIn 1.5s forwards; }
+        .header h1 { color: var(--text-color); margin: 0; font-weight: 300; letter-spacing: 2px; text-shadow: 0 0 10px var(--main-color); font-size: 24px; }
+        .header p { color: #888; font-size: 12px; margin-top: 5px; }
+
+        .tab-indicator { position: absolute; bottom: 30px; width: 100%; text-align: center; display: flex; justify-content: center; gap: 8px; }
+        .dot-nav { width: 8px; height: 8px; background: #333; border-radius: 50%; transition: 0.3s; }
+        .dot-nav.active { background: var(--main-color); transform: scale(1.4); box-shadow: 0 0 8px var(--main-color); }
+        .tab-name { position: absolute; bottom: 50px; width: 100%; text-align: center; color: rgba(255,255,255,0.5); font-size: 14px; pointer-events: auto; }
+
+        #detail-card {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
+            width: 340px; max-width: 90%; background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 12px;
+            padding: 20px; color: var(--text-color); box-shadow: 0 0 40px rgba(0,0,0,0.6);
+            opacity: 0; pointer-events: none; transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            backdrop-filter: blur(10px); z-index: 10; display: flex; flex-direction: column;
+        }
+        #detail-card.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+        
+        .card-head { margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .card-title { font-size: 18px; margin: 0; color: var(--main-color); font-weight: bold; }
+        .card-meta { font-size: 12px; color: #aaa; margin-top: 4px; display: flex; gap: 10px; }
+        .tag { background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 3px; }
+        .card-desc { font-size: 13px; line-height: 1.5; color: #ddd; margin-bottom: 15px; max-height: 120px; overflow-y: auto; white-space: pre-wrap; }
+        
+        .btn-list { display: flex; flex-direction: column; gap: 8px; }
+        .btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; padding: 10px; border-radius: 6px; text-align: center;
+            cursor: pointer; text-decoration: none; font-size: 13px; transition: 0.2s;
+            position: relative; overflow: hidden;
+        }
+        .btn:hover { background: var(--main-color); color: #000; border-color: transparent; }
+        .btn-close { margin-top: 15px; background: transparent; border: none; color: #666; width: 100%; cursor: pointer; padding: 5px; }
+
+        @keyframes fadeIn { to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <canvas id="galaxy"></canvas>
+
+    <div id="ui-layer">
+        <div class="header">
+            <h1>{{TITLE}}</h1>
+            <p>更新于: {{DATE}}</p>
+        </div>
+        <div class="tab-name" id="current-tab-name"></div>
+        <div class="tab-indicator" id="dots-container"></div>
+    </div>
+
+    <div id="detail-card">
+        <div id="card-content"></div>
+        <button class="btn-close" onclick="closeDetail()">返回星系</button>
+    </div>
+
+<script>
+    // 1. 数据解析 (严格模式)
+    let data;
+    try {
+        data = JSON.parse('{{DATA}}');
+    } catch (e) {
+        console.error("JSON Error", e);
+        data = { config: {}, items: [] };
+    }
+
+    // 2. 数据处理与Tab构建
+    const tabs = [];
+    const tabSet = new Set();
+    
+    // 确保顺序：LX -> MF/LY -> Custom -> Others
+    if (data.items.some(i => i.tab === 'LX')) tabSet.add('LX');
+    if (data.config?.showMF) tabSet.add('Music Free');
+    if (data.config?.showLY) tabSet.add('澜音');
+    if (data.config?.customTabs) data.config.customTabs.forEach(t => tabSet.add(t));
+    data.items.forEach(item => {
+        if (item.tab && !tabSet.has(item.tab)) tabSet.add(item.tab);
+        if (!item.tab && !tabSet.has('LX')) tabSet.add('LX');
+    });
+
+    let tabIndexCounter = 0;
+    tabSet.forEach(name => {
+        tabs.push({
+            name: name,
+            index: tabIndexCounter++,
+            items: data.items.filter(i => (i.tab === name) || (!i.tab && name === 'LX'))
+        });
+    });
+    if (tabs.length === 0) tabs.push({ name: '默认', index: 0, items: [] });
+
+    // UI初始化
+    const dotsContainer = document.getElementById('dots-container');
+    const tabNameDisplay = document.getElementById('current-tab-name');
+    dotsContainer.innerHTML = tabs.map((_, i) => `<div class="dot-nav ${i===0?'active':''}"></div>`).join('');
+    tabNameDisplay.innerText = tabs[0].name;
+
+    // 3. Canvas 引擎
+    const canvas = document.getElementById('galaxy');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    
+    // 核心状态变量
+    let particles = [];
+    let cameraX = 0;
+    let targetCameraX = 0;
+    let focusedParticle = null;
+    
+    // 交互状态变量 (Fix的核心)
+    let isDown = false;
+    let startX = 0;
+    let lastCameraX = 0;
+    let isDragAction = false; // 是否触发了拖拽行为
+
+    const CONF = {
+        baseRadius: 100, spacing: 18, color: '#00f2ff', friction: 0.1
+    };
+
+    class Particle {
+        constructor(item, tabData, indexInTab) {
+            this.item = item;
+            this.tabIndex = tabData.index;
+            this.total = tabData.items.length;
+            this.orbitRadius = Math.max(CONF.baseRadius, this.total * CONF.spacing / 2);
+            this.angle = (indexInTab / this.total) * Math.PI * 2;
+            this.x = 0; this.y = 0; this.size = 0; this.targetSize = 4;
+            this.hovered = false;
+        }
+
+        update(centerY) {
+            const tabCenterX = (width / 2) + (this.tabIndex * width) - cameraX;
+            let tx, ty;
+
+            if (focusedParticle === this) {
+                tx = width / 2; ty = height / 2; this.targetSize = 100;
+            } else if (focusedParticle) {
+                const dist = 1200;
+                tx = tabCenterX + Math.cos(this.angle) * dist;
+                ty = centerY + Math.sin(this.angle) * dist;
+            } else {
+                tx = tabCenterX + Math.cos(this.angle) * this.orbitRadius;
+                ty = centerY + Math.sin(this.angle) * this.orbitRadius;
+                this.targetSize = this.hovered ? 14 : 5;
+            }
+
+            this.x += (tx - this.x) * CONF.friction;
+            this.y += (ty - this.y) * CONF.friction;
+            this.size += (this.targetSize - this.size) * CONF.friction;
+        }
+
+        draw() {
+            if (this.x < -100 || this.x > width + 100) return;
+            const alpha = Math.max(0, 1 - Math.abs(this.x - width/2) / (width * 0.8));
+            if (alpha < 0.01) return;
+
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = CONF.color;
+            ctx.shadowBlur = this.hovered ? 20 : 0;
+            ctx.shadowColor = CONF.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, Math.max(0, this.size), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            if (this.hovered && !focusedParticle) {
+                ctx.fillStyle = "#fff";
+                ctx.font = "14px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(this.item.name, this.x, this.y - 25);
+            }
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    function init() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+        particles = [];
+        tabs.forEach(tab => {
+            tab.items.forEach((item, i) => particles.push(new Particle(item, tab, i)));
+        });
+    }
+
+    function loop() {
+        ctx.clearRect(0, 0, width, height);
+        cameraX += (targetCameraX - cameraX) * CONF.friction;
+
+        if (!focusedParticle) {
+            ctx.strokeStyle = "rgba(255,255,255,0.05)";
+            ctx.lineWidth = 1;
+            tabs.forEach(tab => {
+                const cx = (width / 2) + (tab.index * width) - cameraX;
+                if (cx > -width && cx < width * 2) {
+                    const r = Math.max(CONF.baseRadius, tab.items.length * CONF.spacing / 2);
+                    ctx.beginPath(); ctx.arc(cx, height/2, r, 0, Math.PI*2); ctx.stroke();
+                }
+            });
+        }
+
+        particles.forEach(p => { p.update(height/2); p.draw(); });
+        requestAnimationFrame(loop);
+    }
+
+    // ==========================================
+    // 4. 修复后的交互逻辑 (核心修改)
+    // ==========================================
+    
+    // 获取事件坐标
+    const getX = (e) => e.touches ? e.touches[0].clientX : e.clientX;
+    const getY = (e) => e.touches ? e.touches[0].clientY : e.clientY;
+
+    const handleStart = (e) => {
+        if (focusedParticle) return;
+        isDown = true;
+        isDragAction = false; // 重置拖拽标记
+        startX = getX(e);
+        lastCameraX = cameraX;
+        canvas.style.cursor = 'grabbing';
+    };
+
+    const handleMove = (e) => {
+        const x = getX(e);
+        const y = getY(e);
+
+        // 1. 拖拽判定
+        if (isDown) {
+            const deltaX = x - startX;
+            // 只有移动超过 5px 才视为拖拽，避免点击时的微小抖动被误判
+            if (Math.abs(deltaX) > 5) {
+                isDragAction = true; 
+            }
+            
+            if (isDragAction) {
+                targetCameraX = lastCameraX - deltaX;
+            }
+        } 
+        
+        // 2. 悬停判定 (仅在非拖拽状态下)
+        if (!isDragAction && !focusedParticle) {
+            let found = null;
+            // 倒序遍历，保证点不到被遮挡的点
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                const dx = p.x - x;
+                const dy = p.y - y;
+                if (dx*dx + dy*dy < 1600) { // 40px 感应半径
+                    found = p;
+                    break;
+                }
+            }
+            particles.forEach(p => p.hovered = (p === found));
+            canvas.style.cursor = found ? 'pointer' : (isDown ? 'grabbing' : 'default');
+        }
+    };
+
+    const handleEnd = (e) => {
+        isDown = false;
+        canvas.style.cursor = 'default';
+
+        if (focusedParticle) return;
+
+        // 分支 A: 这是一个点击事件 (未触发拖拽)
+        if (!isDragAction) {
+            const p = particles.find(p => p.hovered);
+            if (p) {
+                showDetail(p);
+                return; // 结束，不执行回弹
+            }
+        }
+
+        // 分支 B: 这是一个拖拽结束 (或者点击空白处) -> 执行磁吸回弹
+        const idx = Math.round(targetCameraX / width);
+        const clampedIdx = Math.max(0, Math.min(idx, tabs.length - 1));
+        targetCameraX = clampedIdx * width;
+        
+        // 更新UI
+        document.querySelectorAll('.dot-nav').forEach((d, i) => d.classList.toggle('active', i === clampedIdx));
+        tabNameDisplay.innerText = tabs[clampedIdx].name;
+    };
+
+    // 绑定事件 (统一处理 Mouse 和 Touch)
+    window.addEventListener('resize', init);
+    
+    canvas.addEventListener('mousedown', handleStart);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+
+    canvas.addEventListener('touchstart', handleStart, {passive: false});
+    window.addEventListener('touchmove', (e) => { 
+        e.preventDefault(); // 防止滚动屏幕
+        handleMove(e); 
+    }, {passive: false});
+    window.addEventListener('touchend', handleEnd);
+
+    // ==========================================
+    // 5. 业务逻辑
+    // ==========================================
+    function showDetail(p) {
+        focusedParticle = p;
+        const item = p.item;
+        
+        let btns = '';
+        // 逻辑：所有下载方式并存
+        if(item.file) btns += `<button class="btn" onclick="act.dl(${item.id})">💾 Base64下载 ${item.file.size?`(${item.file.size})`:''}</button>`;
+        if(item.dlLink) btns += `<a class="btn" href="${item.dlLink}" target="_blank">🔗 直链下载</a>`;
+        if(item.keyConfig?.enableUrl) btns += `<button class="btn" onclick="act.imp(${item.id})">🔑 在线导入Key</button>`;
+        if(item.keyConfig?.enableVar && item.file) btns += `<button class="btn" onclick="act.rep(${item.id})">🛠️ 替换Key下载</button>`;
+        if(item.links) item.links.forEach(l => btns += `<a class="btn" href="${l.url}" target="_blank">🌐 ${l.name}</a>`);
+
+        document.getElementById('card-content').innerHTML = `
+            <div class="card-head">
+                <h2 class="card-title">${item.name}</h2>
+                <div class="card-meta"><span class="tag">${item.ver||'v1.0'}</span><span class="tag">${item.quality||'Standard'}</span></div>
+            </div>
+            <div class="card-desc">${item.note || '暂无描述'}</div>
+            <div class="btn-list">${btns}</div>
+        `;
+        document.getElementById('detail-card').classList.add('show');
+    }
+
+    window.closeDetail = () => {
+        document.getElementById('detail-card').classList.remove('show');
+        focusedParticle = null;
+    }
+
+    window.act = {
+        dl: (id) => {
+            const i = data.items.find(x=>x.id==id);
+            if(i?.file) {
+                const a = document.createElement('a');
+                a.href = i.file.content; a.download = i.name; a.click();
+            }
+        },
+        imp: (id) => {
+            const i = data.items.find(x=>x.id==id);
+            const k = prompt('输入Key:');
+            if(k) window.location.href = i.keyConfig.url + encodeURIComponent(k);
+        },
+        rep: (id) => {
+            const i = data.items.find(x=>x.id==id);
+            const k = prompt(`输入Key替换 ${i.keyConfig.var}:`);
+            if(!k) return;
+            try {
+                const raw = decodeURIComponent(escape(atob(i.file.content.split(',')[1]||i.file.content)));
+                const fix = raw.replace(new RegExp(`${i.keyConfig.var}\\s*=\\s*['"].*?['"]`), `${i.keyConfig.var}="${k}"`);
+                const b = new Blob([fix], {type:'text/javascript;charset=utf-8'});
+                const u = URL.createObjectURL(b);
+                const a = document.createElement('a'); a.href=u; a.download=`[Key]${i.name}`; a.click();
+            } catch(e){ alert('错误:'+e.message)}
+        }
+    };
+
+    init();
+    loop();
+</script>
+</body>
+</html>
