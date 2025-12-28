@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>插件列表管理器 v1.4.7</title>
+<title>插件列表管理器 v1.4.8</title>
 <style>
     /* 基础变量与重置 */
     :root { 
@@ -189,7 +189,7 @@
     <div class="header">
         <div class="app-title">
             插件列表管理器 
-            <span class="version-badge">v1.4.7</span>
+            <span class="version-badge">v1.4.8</span>
         </div>
         <div class="status-text">
             <span id="statusText">System Ready</span>
@@ -624,15 +624,16 @@ function toggleDarkMode() {
 
 <script>
 /**
- * Application Logic v1.4.7
+ * Application Logic v1.4.8
  * 1. 内置标签页排序（根据勾选先后顺序）
  * 2. 主题预设排序功能
  * 3. 自定义标签页排序功能
  * 4. 导出为Markdown功能
+ * 5. 默认主题增强（复制链接/复制Key）
  */
 const QUALITY_PRESETS = ['128k', '320k', 'flac', 'flac24bit', 'master', 'dolby', 'sky'];
 
-// --- 默认导出模板 ---
+// --- 默认导出模板 v1.4.8 (包含复制功能) ---
 const DEFAULT_THEME_TEMPLATE = `<!DOCTYPE html>
 <html>
 <head>
@@ -663,13 +664,14 @@ tr:hover{background:#f8fafc}
 .btn:active{transform:translateY(1px)}
 .btn-dl{background:#2563eb;color:#fff;flex:1;text-align:center}
 .btn-direct{background:#10b981;color:#fff;flex:1;text-align:center}
+.btn-copy{background:#8b5cf6;color:#fff;flex:1;text-align:center}
 .btn-lnk{background:#fff;border:1px solid #cbd5e1;color:#475569;display:inline-block;margin-right:4px;margin-bottom:4px;font-size:12px;padding:4px 10px}
 .btn-lnk:hover{border-color:#2563eb;color:#2563eb}
 .key-box{margin-top:8px;display:flex;flex-direction:column;gap:8px;padding-top:8px;border-top:1px dashed #e2e8f0}
 .key-row{display:flex;gap:6px}
 .key-in{flex:1;border:1px solid #cbd5e1;padding:6px 10px;border-radius:6px;font-size:12px;outline:none}
 .key-in:focus{border-color:#2563eb}
-.key-btn{padding:0 12px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;font-weight:bold;color:#475569}
+.key-btn{padding:0 12px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;font-weight:bold;color:#475569;min-width: 40px; display: flex; align-items: center; justify-content: center;}
 .key-btn:hover{background:#e2e8f0;color:#2563eb}
 .empty{padding:60px;text-align:center;color:#94a3b8}
 
@@ -728,7 +730,10 @@ function rL(){
         
         let act = '<div class="action-box">';
         let btns = '';
-        if(i.dlLink) btns += '<a href="'+i.dlLink+'" target="_blank" class="btn btn-direct">🌐 直链下载</a>';
+        if(i.dlLink) {
+            btns += '<a href="'+i.dlLink+'" target="_blank" class="btn btn-direct">🌐 直链下载</a>';
+            btns += '<button class="btn btn-copy" onclick="CP('+i.id+', this)">📋 复制链接</button>';
+        }
         if(i.file && i.file.content) btns += '<button class="btn btn-dl" onclick="D('+i.id+')">⬇️ 下载文件</button>';
         
         if(btns) act += '<div class="btn-row">' + btns + '</div>';
@@ -739,8 +744,8 @@ function rL(){
             const sv = (cur==='LX' && k.enableVar && k.var);
             if(su || sv) {
                 act += '<div class="key-box">';
-                if(su) act += '<div class="key-row"><input class="key-in" id="ku_'+i.id+'" placeholder="输入Key在线导入"><button class="key-btn" onclick="KU('+i.id+')">➡️ 导入</button></div>';
-                if(sv) act += '<div class="key-row"><input class="key-in" id="kv_'+i.id+'" placeholder="输入Key生成文件"><button class="key-btn" onclick="KV('+i.id+')">⬇️ 生成</button></div>';
+                if(su) act += '<div class="key-row"><input class="key-in" id="ku_'+i.id+'" placeholder="输入Key在线导入"><button class="key-btn" onclick="KCP('+i.id+', this)" title="复制完整链接">📋</button><button class="key-btn" onclick="KU('+i.id+')" title="在线导入">➡️</button></div>';
+                if(sv) act += '<div class="key-row"><input class="key-in" id="kv_'+i.id+'" placeholder="输入Key生成文件"><button class="key-btn" onclick="KV('+i.id+')" title="生成文件">⬇️</button></div>';
                 act += '</div>';
             }
         }
@@ -752,6 +757,13 @@ function rL(){
 }
 window.D=id=>{const i=DB.items.find(x=>x.id==id); save(i.file.content,i.name);};
 window.KU=id=>{const i=DB.items.find(x=>x.id==id);const v=document.getElementById('ku_'+id).value; if(v)window.open(i.keyConfig.url+v);};
+window.KCP=(id,el)=>{
+    const i=DB.items.find(x=>x.id==id);
+    const v=document.getElementById('ku_'+id).value;
+    if(!v) return alert('请先输入Key');
+    const fullUrl = i.keyConfig.url + v;
+    copyTxt(fullUrl, el);
+};
 window.KV=id=>{
     const i=DB.items.find(x=>x.id==id);
     const v=document.getElementById('kv_'+id).value;
@@ -773,6 +785,23 @@ window.KV=id=>{
         }else{alert('变量名未找到: '+vn);}
     }catch(e){console.error(e);alert('生成失败');}
 };
+window.CP=(id,el)=>{
+    const i=DB.items.find(x=>x.id==id);
+    if(i&&i.dlLink) copyTxt(i.dlLink, el);
+};
+function copyTxt(txt, el){
+    if(navigator.clipboard && window.isSecureContext){
+        navigator.clipboard.writeText(txt).then(()=>{
+            const old=el.innerHTML; el.innerHTML='✅';
+            setTimeout(()=>el.innerHTML=old, 1500);
+        });
+    }else{
+        const ta=document.createElement('textarea');
+        ta.value=txt; document.body.appendChild(ta); ta.select();
+        try{document.execCommand('copy'); alert('已复制');}catch(e){alert('复制失败');}
+        document.body.removeChild(ta);
+    }
+}
 function save(u,n){const a=document.createElement('a');a.href=u;a.download=n;a.click();}
 rT();
 <\/script>
@@ -933,7 +962,7 @@ const app = {
                 themeConfig: this.data.themeConfig
             };
             
-            localStorage.setItem('pm_v147_data', JSON.stringify(compressedData));
+            localStorage.setItem('pm_v148_data', JSON.stringify(compressedData));
             
             // 清除存储警告
             this.hideStorageWarning();
@@ -981,14 +1010,15 @@ const app = {
     
     load() {
         try {
-            let raw = localStorage.getItem('pm_v147_data');
+            let raw = localStorage.getItem('pm_v148_data');
             
             // 尝试迁移旧版本数据
             if (!raw) {
-                raw =localStorage.getItem('pm_v146_data') || 
-	      localStorage.getItem('pm_v145_data') || 
-	      localStorage.getItem('pm_v144_data') || 
-	      localStorage.getItem('pm_v143_data') || 
+                raw = localStorage.getItem('pm_v147_data') ||
+                      localStorage.getItem('pm_v146_data') || 
+                      localStorage.getItem('pm_v145_data') || 
+                      localStorage.getItem('pm_v144_data') || 
+                      localStorage.getItem('pm_v143_data') || 
                       localStorage.getItem('pm_v140_data') || 
                       localStorage.getItem('pm_v136_data') ||
                       localStorage.getItem('pm_v135_data');
@@ -1035,9 +1065,12 @@ const app = {
                         };
                     }
                     
-                    // 确保所有主题都有正确的locked属性
+                    // 确保所有主题都有正确的locked属性，并且更新默认主题模板
                     this.data.themeConfig.themes.forEach(theme => {
-                        if (theme.id === 'default' || theme.id === 'simple') {
+                        if (theme.id === 'default') {
+                            theme.content = DEFAULT_THEME_TEMPLATE; // 强制更新默认模板以包含新功能
+                            theme.locked = true;
+                        } else if (theme.id === 'simple') {
                             theme.locked = true;
                         } else if (typeof theme.locked === 'undefined') {
                             theme.locked = false;
@@ -1633,7 +1666,7 @@ const app = {
         ui.close();
     },
 
-    // --- 主题系统 v1.4.7 - 排序功能 ---
+    // --- 主题系统 v1.4.8 - 排序功能 ---
     openThemeModal() {
         ui.setCheck('theme_enable', this.data.themeConfig.enabled);
         this.renderThemeList();
@@ -2059,6 +2092,8 @@ const app = {
                                 });
                             } else {
                                 defaultTheme.locked = true;
+                                // 强制更新默认模板内容以确保新功能可用
+                                defaultTheme.content = DEFAULT_THEME_TEMPLATE;
                             }
                             
                             if (!simpleTheme) {
