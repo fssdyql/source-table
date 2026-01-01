@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>插件列表管理器 v1.4.8-fix1 </title>
+<title>插件列表管理器 v1.4.8-fix2 </title>
 <style>
     /* 基础变量与重置 */
     :root { 
@@ -189,7 +189,7 @@
     <div class="header">
         <div class="app-title">
             插件列表管理器 
-            <span class="version-badge">v1.4.8-fix1</span>
+            <span class="version-badge">v1.4.8-fix2</span>
         </div>
         <div class="status-text">
             <span id="statusText">System Ready</span>
@@ -571,7 +571,7 @@ function toggleDarkMode() {
 
 <div id="modalKey" class="modal-overlay">
     <div class="modal-box">
-        <div class="modal-header">配置 Key (LX专用) <span style="cursor:pointer;color:#94a3b8" onclick="ui.close()">×</span></div>
+        <div class="modal-header">配置 Key (LX/澜音专用) <span style="cursor:pointer;color:#94a3b8" onclick="ui.close()">×</span></div>
         <div class="form-item p-3 border rounded bg-slate-50 mb-4" style="border:1px solid #e2e8f0; padding:16px; border-radius:8px; background:#f8fafc; margin-bottom:16px">
             <label class="check-row" style="margin-bottom:12px; border:none; padding:0; background:transparent">
                 <input type="checkbox" id="k_enable_url"> 
@@ -739,10 +739,13 @@ function rL(){
         if(btns) act += '<div class="btn-row">' + btns + '</div>';
 	
         const k = i.keyConfig||{};
-        // 在线导入（Key URL）不需要文件
-        const su = (cur==='LX' && k.enableUrl && k.url);
-        // 本地导入（变量替换）必须有文件
-        const sv = (cur==='LX' && k.enableVar && k.var && i.file && i.file.content);
+// 定义通用判断条件
+const isLxOrLy = (cur==='LX' || cur==='澜音'); 
+
+// 在线导入（Key URL）不需要文件
+const su = (isLxOrLy && k.enableUrl && k.url);
+// 本地导入（变量替换）必须有文件
+const sv = (isLxOrLy && k.enableVar && k.var && i.file && i.file.content);
         
         if(su || sv) {
             act += '<div class="key-box">';
@@ -1491,7 +1494,7 @@ const app = {
             (item.links||[]).forEach((l,i) => {
                 tags += `<span class="tag tag-blue"><a href="${l.url}" target="_blank" style="text-decoration:none;color:inherit">${l.text}</a> <span class="tag-del" onclick="app.delLink(${item.id},${i})">×</span></span>`;
             });
-            if(curTab === 'LX') {
+            if(curTab === 'LX' || curTab === '澜音') {
                 if(item.keyConfig?.enableUrl) tags += `<span class="tag tag-orange">Key在线 <span class="tag-del" onclick="app.toggleKey(${item.id},'enableUrl',false)">×</span></span>`;
                 if(item.keyConfig?.enableVar) tags += `<span class="tag tag-orange">Key本地 <span class="tag-del" onclick="app.toggleKey(${item.id},'enableVar',false)">×</span></span>`;
             }
@@ -1521,7 +1524,7 @@ const app = {
                         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
                             <button class="btn-xs btn-secondary" onclick="app.openLinkModal(${item.id})">+ 链接</button>
                             <button class="btn-xs btn-secondary" onclick="app.openDlModal(${item.id})">+ 直链</button>
-                            ${curTab==='LX' ? `<button class="btn-xs btn-secondary" onclick="app.openKeyModal(${item.id})">⚙️ Key</button>` : ''}
+                            ${(curTab==='LX' || curTab==='澜音') ? `<button class="btn-xs btn-secondary" onclick="app.openKeyModal(${item.id})">⚙️ Key</button>` : ''}
                         </div>
                         <div class="tag-list">${tags}</div>
                     </td>
