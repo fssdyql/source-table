@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>插件列表管理器 v1.4.8</title>
+<title>插件列表管理器 v1.4.8-fix1 </title>
 <style>
     /* 基础变量与重置 */
     :root { 
@@ -189,7 +189,7 @@
     <div class="header">
         <div class="app-title">
             插件列表管理器 
-            <span class="version-badge">v1.4.8</span>
+            <span class="version-badge">v1.4.8-fix1</span>
         </div>
         <div class="status-text">
             <span id="statusText">System Ready</span>
@@ -737,17 +737,18 @@ function rL(){
         if(i.file && i.file.content) btns += '<button class="btn btn-dl" onclick="D('+i.id+')">⬇️ 下载文件</button>';
         
         if(btns) act += '<div class="btn-row">' + btns + '</div>';
+	
+        const k = i.keyConfig||{};
+        // 在线导入（Key URL）不需要文件
+        const su = (cur==='LX' && k.enableUrl && k.url);
+        // 本地导入（变量替换）必须有文件
+        const sv = (cur==='LX' && k.enableVar && k.var && i.file && i.file.content);
         
-        if(i.file && i.file.content){
-            const k = i.keyConfig||{};
-            const su = (cur==='LX' && k.enableUrl && k.url);
-            const sv = (cur==='LX' && k.enableVar && k.var);
-            if(su || sv) {
-                act += '<div class="key-box">';
-                if(su) act += '<div class="key-row"><input class="key-in" id="ku_'+i.id+'" placeholder="输入Key在线导入"><button class="key-btn" onclick="KCP('+i.id+', this)" title="复制完整链接">📋</button><button class="key-btn" onclick="KU('+i.id+')" title="在线导入">➡️</button></div>';
-                if(sv) act += '<div class="key-row"><input class="key-in" id="kv_'+i.id+'" placeholder="输入Key生成文件"><button class="key-btn" onclick="KV('+i.id+')" title="生成文件">⬇️</button></div>';
-                act += '</div>';
-            }
+        if(su || sv) {
+            act += '<div class="key-box">';
+            if(su) act += '<div class="key-row"><input class="key-in" id="ku_'+i.id+'" placeholder="输入Key在线导入"><button class="key-btn" onclick="KCP('+i.id+', this)" title="复制完整链接">📋</button><button class="key-btn" onclick="KU('+i.id+')" title="在线导入">➡️</button></div>';
+            if(sv) act += '<div class="key-row"><input class="key-in" id="kv_'+i.id+'" placeholder="输入Key生成文件"><button class="key-btn" onclick="KV('+i.id+')" title="生成文件">⬇️</button></div>';
+            act += '</div>';
         }
         act += '</div>';
 
