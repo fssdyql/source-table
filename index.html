@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>插件列表管理器 v1.4.8-fix2 </title>
+<title>插件列表管理器 v1.4.9 </title>
 <style>
     /* 基础变量与重置 */
     :root { 
@@ -189,7 +189,7 @@
     <div class="header">
         <div class="app-title">
             插件列表管理器 
-            <span class="version-badge">v1.4.8-fix2</span>
+            <span class="version-badge">v1.4.9</span>
         </div>
         <div class="status-text">
             <span id="statusText">System Ready</span>
@@ -520,13 +520,6 @@ function toggleDarkMode() {
                         <input type="checkbox" id="chk_mf" onchange="app.toggleTabConfig('showMF', this.checked)"> 
                         Music Free
                     </label>
-                    <label class="check-row" style="flex:1">
-                        <input type="checkbox" id="chk_ly" onchange="app.toggleTabConfig('showLY', this.checked)"> 
-                        澜音
-                    </label>
-                </div>
-                <div style="font-size:12px; color:#64748b; margin-top:8px;">
-                    提示：标签页顺序根据勾选顺序自动排列（后勾选的排在后面）
                 </div>
             </div>
             
@@ -571,13 +564,19 @@ function toggleDarkMode() {
 
 <div id="modalKey" class="modal-overlay">
     <div class="modal-box">
-        <div class="modal-header">配置 Key (LX/澜音专用) <span style="cursor:pointer;color:#94a3b8" onclick="ui.close()">×</span></div>
+        <div class="modal-header">Key 通用配置 <span style="cursor:pointer;color:#94a3b8" onclick="ui.close()">×</span></div>
         <div class="form-item p-3 border rounded bg-slate-50 mb-4" style="border:1px solid #e2e8f0; padding:16px; border-radius:8px; background:#f8fafc; margin-bottom:16px">
             <label class="check-row" style="margin-bottom:12px; border:none; padding:0; background:transparent">
                 <input type="checkbox" id="k_enable_url"> 
-                <span style="font-weight:600;color:#334155">启用在线导入 (URL拼接)</span>
+                <span style="font-weight:600;color:#334155">启用在线导入 (URL拼接/替换)</span>
             </label>
-            <input type="text" id="k_url" placeholder="例如: https://api.example.com?key=" style="background:#fff">
+            <div style="display:flex; gap:6px;">
+                <input type="text" id="k_url" placeholder="例如: https://api.com?key={user_key}" style="background:#fff; flex:1">
+                <button class="btn btn-secondary btn-xs" onclick="ui.insertText('k_url', '{user_key}')" title="插入占位符">+ {user_key}</button>
+            </div>
+            <div style="font-size:11px; color:#64748b; margin-top:6px; line-height:1.4">
+                提示：点击按钮插入 <b>{user_key}</b> 作为占位符，导入时会自动替换为输入的Key。<br>如果不包含占位符，默认将Key拼接到链接末尾。
+            </div>
         </div>
         <div class="form-item p-3 border rounded bg-slate-50" style="border:1px solid #e2e8f0; padding:16px; border-radius:8px; background:#f8fafc">
             <label class="check-row" style="margin-bottom:12px; border:none; padding:0; background:transparent">
@@ -624,16 +623,17 @@ function toggleDarkMode() {
 
 <script>
 /**
- * Application Logic v1.4.8
+ * Application Logic v1.4.9
  * 1. 内置标签页排序（根据勾选先后顺序）
  * 2. 主题预设排序功能
  * 3. 自定义标签页排序功能
  * 4. 导出为Markdown功能
  * 5. 默认主题增强（复制链接/复制Key）
+ * 6. 移除“澜音”标签页开关，Key配置通用化
  */
 const QUALITY_PRESETS = ['128k', '320k', 'flac', 'flac24bit', 'master', 'dolby', 'sky'];
 
-// --- 默认导出模板 v1.4.8 (包含复制功能) ---
+// --- 默认导出模板 v1.4.9 (支持 {user_key} 替换) ---
 const DEFAULT_THEME_TEMPLATE = `<!DOCTYPE html>
 <html>
 <head>
@@ -739,13 +739,10 @@ function rL(){
         if(btns) act += '<div class="btn-row">' + btns + '</div>';
 	
         const k = i.keyConfig||{};
-// 定义通用判断条件
-const isLxOrLy = (cur==='LX' || cur==='澜音'); 
-
-// 在线导入（Key URL）不需要文件
-const su = (isLxOrLy && k.enableUrl && k.url);
-// 本地导入（变量替换）必须有文件
-const sv = (isLxOrLy && k.enableVar && k.var && i.file && i.file.content);
+        // 在线导入（Key URL）不需要文件
+        const su = (k.enableUrl && k.url);
+        // 本地导入（变量替换）必须有文件
+        const sv = (k.enableVar && k.var && i.file && i.file.content);
         
         if(su || sv) {
             act += '<div class="key-box">';
@@ -760,12 +757,29 @@ const sv = (isLxOrLy && k.enableVar && k.var && i.file && i.file.content);
     b.innerHTML = h+'</tbody></table>';
 }
 window.D=id=>{const i=DB.items.find(x=>x.id==id); save(i.file.content,i.name);};
-window.KU=id=>{const i=DB.items.find(x=>x.id==id);const v=document.getElementById('ku_'+id).value; if(v)window.open(i.keyConfig.url+v);};
+window.KU=id=>{
+    const i=DB.items.find(x=>x.id==id);
+    const v=document.getElementById('ku_'+id).value;
+    if(v && i.keyConfig.url) {
+        let u = i.keyConfig.url;
+        if(u.includes('{user_key}')) {
+            u = u.replace('{user_key}', v);
+        } else {
+            u = u + v;
+        }
+        window.open(u);
+    }
+};
 window.KCP=(id,el)=>{
     const i=DB.items.find(x=>x.id==id);
     const v=document.getElementById('ku_'+id).value;
     if(!v) return alert('请先输入Key');
-    const fullUrl = i.keyConfig.url + v;
+    let fullUrl = i.keyConfig.url;
+    if(fullUrl.includes('{user_key}')) {
+        fullUrl = fullUrl.replace('{user_key}', v);
+    } else {
+        fullUrl = fullUrl + v;
+    }
     copyTxt(fullUrl, el);
 };
 window.KV=id=>{
@@ -966,7 +980,7 @@ const app = {
                 themeConfig: this.data.themeConfig
             };
             
-            localStorage.setItem('pm_v148_data', JSON.stringify(compressedData));
+            localStorage.setItem('pm_v149_data', JSON.stringify(compressedData));
             
             // 清除存储警告
             this.hideStorageWarning();
@@ -1014,11 +1028,12 @@ const app = {
     
     load() {
         try {
-            let raw = localStorage.getItem('pm_v148_data');
+            let raw = localStorage.getItem('pm_v149_data');
             
             // 尝试迁移旧版本数据
             if (!raw) {
-                raw = localStorage.getItem('pm_v147_data') ||
+                raw = localStorage.getItem('pm_v148_data') ||
+                      localStorage.getItem('pm_v147_data') ||
                       localStorage.getItem('pm_v146_data') || 
                       localStorage.getItem('pm_v145_data') || 
                       localStorage.getItem('pm_v144_data') || 
@@ -1429,7 +1444,7 @@ const app = {
     
     openTabOpt() {
         document.getElementById('chk_mf').checked = this.data.config.showMF;
-        document.getElementById('chk_ly').checked = this.data.config.showLY;
+        // 移除了澜音的勾选状态设置，因为它已从UI中删除
         this.renderHiddenTabsList();
         this.renderTabSortList(); // 渲染标签页排序列表
         ui.open('modalTabs');
@@ -1494,10 +1509,10 @@ const app = {
             (item.links||[]).forEach((l,i) => {
                 tags += `<span class="tag tag-blue"><a href="${l.url}" target="_blank" style="text-decoration:none;color:inherit">${l.text}</a> <span class="tag-del" onclick="app.delLink(${item.id},${i})">×</span></span>`;
             });
-            if(curTab === 'LX' || curTab === '澜音') {
-                if(item.keyConfig?.enableUrl) tags += `<span class="tag tag-orange">Key在线 <span class="tag-del" onclick="app.toggleKey(${item.id},'enableUrl',false)">×</span></span>`;
-                if(item.keyConfig?.enableVar) tags += `<span class="tag tag-orange">Key本地 <span class="tag-del" onclick="app.toggleKey(${item.id},'enableVar',false)">×</span></span>`;
-            }
+            
+            // Key 配置现在对所有标签页生效
+            if(item.keyConfig?.enableUrl) tags += `<span class="tag tag-orange">Key在线 <span class="tag-del" onclick="app.toggleKey(${item.id},'enableUrl',false)">×</span></span>`;
+            if(item.keyConfig?.enableVar) tags += `<span class="tag tag-orange">Key本地 <span class="tag-del" onclick="app.toggleKey(${item.id},'enableVar',false)">×</span></span>`;
 
             return `
                 <tr>
@@ -1524,7 +1539,7 @@ const app = {
                         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
                             <button class="btn-xs btn-secondary" onclick="app.openLinkModal(${item.id})">+ 链接</button>
                             <button class="btn-xs btn-secondary" onclick="app.openDlModal(${item.id})">+ 直链</button>
-                            ${(curTab==='LX' || curTab==='澜音') ? `<button class="btn-xs btn-secondary" onclick="app.openKeyModal(${item.id})">⚙️ Key</button>` : ''}
+                            <button class="btn-xs btn-secondary" onclick="app.openKeyModal(${item.id})">⚙️ Key</button>
                         </div>
                         <div class="tag-list">${tags}</div>
                     </td>
@@ -2217,7 +2232,7 @@ const app = {
                 if (item.file && item.file.content) {
                     actions.push('文件已上传');
                 }
-                if (curTab === 'LX' && item.keyConfig) {
+                if (item.keyConfig) {
                     if (item.keyConfig.enableUrl) {
                         actions.push('Key在线');
                     }
@@ -2259,7 +2274,7 @@ const ui = {
     close() { document.querySelectorAll('.modal-overlay').forEach(e=>e.style.display='none'); app.state.editId=null; },
     openTabOpt() {
         document.getElementById('chk_mf').checked = app.data.config.showMF;
-        document.getElementById('chk_ly').checked = app.data.config.showLY;
+        // 移除了澜音设置
         app.renderHiddenTabsList();
         app.renderTabSortList(); // 渲染标签页排序列表
         this.open('modalTabs');
@@ -2267,7 +2282,24 @@ const ui = {
     getVal(id) { return document.getElementById(id).value; },
     setVal(id, v) { document.getElementById(id).value = v; },
     getCheck(id) { return document.getElementById(id).checked; },
-    setCheck(id, v) { document.getElementById(id).checked = v; }
+    setCheck(id, v) { document.getElementById(id).checked = v; },
+    
+    // 在光标位置或末尾插入文本
+    insertText(id, text) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+        const val = el.value;
+        
+        // 插入文本
+        el.value = val.substring(0, start) + text + val.substring(end);
+        
+        // 恢复焦点并移动光标
+        el.focus();
+        el.selectionStart = el.selectionEnd = start + text.length;
+    }
 };
 
 function esc(s) { return s ? s.replace(/"/g, "&quot;") : ""; }
